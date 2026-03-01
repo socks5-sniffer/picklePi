@@ -6,13 +6,3 @@ coverage/
 *.log
 .env*
 !.env.example
-
-# Security audit and scan reports
-SECURITY*.md
-*SECURITY*.md
-security-report.*
-audit-report.*
-vulnerability-scan.*
-
-# Keep docs directory structure but not necessarily all contents
-!docs/screenshots/.gitkeep

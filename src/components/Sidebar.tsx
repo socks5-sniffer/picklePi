@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, CheckCircle, Circle, PlayCircle, Award, LayoutDashboard, NotebookPen, Lock, X } from 'lucide-react';
+import { BookOpen, CheckCircle, Circle, PlayCircle, Award, LayoutDashboard, NotebookPen, Lock } from 'lucide-react';
 import { curriculum } from '../data/curriculum';
 import { UserProgress } from '../types';
 
@@ -10,59 +10,29 @@ interface SidebarProps {
   activeProjectId: string;
   onSelectProject: (id: string) => void;
   isProjectLocked: (id: string) => boolean;
-  isMobileMenuOpen: boolean;
-  onCloseMobileMenu: () => void;
 }
 
-export default function Sidebar({ activeTab, setActiveTab, progress, activeProjectId, onSelectProject, isProjectLocked, isMobileMenuOpen, onCloseMobileMenu }: SidebarProps) {
-  const handleTabChange = (tab: 'curriculum' | 'progress' | 'notebook') => {
-    setActiveTab(tab);
-    onCloseMobileMenu(); // Close menu when tab changes on mobile
-  };
-
+export default function Sidebar({ activeTab, setActiveTab, progress, activeProjectId, onSelectProject, isProjectLocked }: SidebarProps) {
   return (
-    <>
-      {/* Mobile Overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
-          onClick={onCloseMobileMenu}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div className={`
-        fixed lg:static inset-y-0 left-0 z-50
-        w-80 bg-slate-900 text-slate-300 h-full flex flex-col border-r border-slate-800
-        transform transition-transform duration-300 ease-in-out
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <BookOpen className="text-emerald-400" />
-            picklePi
-          </h1>
-          {/* Mobile Close Button */}
-          <button
-            onClick={onCloseMobileMenu}
-            className="lg:hidden text-slate-400 hover:text-white transition-colors p-1"
-            aria-label="Close menu"
-          >
-            <X size={24} />
-          </button>
-        </div>
+    <div className="w-80 bg-slate-900 text-slate-300 h-full flex flex-col border-r border-slate-800">
+      <div className="p-6 border-b border-slate-800">
+        <h1 className="text-xl font-bold text-white flex items-center gap-2">
+          <BookOpen className="text-emerald-400" />
+          RPi Electronics Lab
+        </h1>
+      </div>
 
       <div className="flex-1 overflow-y-auto py-4">
         <div className="px-4 mb-6 space-y-1">
           <button 
-            onClick={() => handleTabChange('progress')}
+            onClick={() => setActiveTab('progress')}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'progress' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
           >
             <LayoutDashboard size={18} />
             <span className="font-medium">Progress Tracker</span>
           </button>
           <button 
-            onClick={() => handleTabChange('notebook')}
+            onClick={() => setActiveTab('notebook')}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'notebook' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
           >
             <NotebookPen size={18} />
@@ -139,7 +109,6 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
           </div>
         </div>
       )}
-      </div>
-    </>
+    </div>
   );
 }

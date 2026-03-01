@@ -8,7 +8,7 @@ export default function ProgressTracker({ progress }: { progress: UserProgress }
     <div className="space-y-8 animate-in fade-in duration-500">
       <header className="space-y-2">
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Progress Tracker</h1>
-        <p className="text-slate-500">Track your journey through picklePi's electronics curriculum.</p>
+        <p className="text-slate-500">Track your journey through the Raspberry Pi Electronics Lab.</p>
       </header>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">

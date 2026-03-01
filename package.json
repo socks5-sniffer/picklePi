@@ -1,24 +1,7 @@
 {
-  "name": "picklePi",
-  "description": "picklePi: A gamified, project-based learning platform for mastering electronics and Python with the Raspberry Pi",
-  "version": "1.0.0",
-  "author": "socks5-sniffer",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/socks5-sniffer/picklePi.git"
-  },
-  "keywords": [
-    "raspberry-pi",
-    "electronics",
-    "education",
-    "learning",
-    "python",
-    "gpio",
-    "maker",
-    "stem"
-  ],
+  "name": "react-example",
   "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
