@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, CheckCircle, Circle, PlayCircle, Award, LayoutDashboard, NotebookPen } from 'lucide-react';
+import { BookOpen, CheckCircle, Circle, PlayCircle, Award, LayoutDashboard, NotebookPen, Lock } from 'lucide-react';
 import { curriculum } from '../data/curriculum';
 import { UserProgress } from '../types';
 
@@ -9,9 +9,10 @@ interface SidebarProps {
   progress: UserProgress;
   activeProjectId: string;
   onSelectProject: (id: string) => void;
+  isProjectLocked: (id: string) => boolean;
 }
 
-export default function Sidebar({ activeTab, setActiveTab, progress, activeProjectId, onSelectProject }: SidebarProps) {
+export default function Sidebar({ activeTab, setActiveTab, progress, activeProjectId, onSelectProject, isProjectLocked }: SidebarProps) {
   return (
     <div className="w-80 bg-slate-900 text-slate-300 h-full flex flex-col border-r border-slate-800">
       <div className="p-6 border-b border-slate-800">
@@ -57,18 +58,23 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
                   {levelProjects.map(project => {
                     const status = progress.projectStatuses[project.id];
                     const isActive = activeTab === 'curriculum' && activeProjectId === project.id;
+                    const locked = isProjectLocked(project.id);
                     
                     return (
                       <button
                         key={project.id}
-                        onClick={() => onSelectProject(project.id)}
+                        onClick={() => !locked && onSelectProject(project.id)}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
                           isActive 
                             ? 'bg-slate-800 text-white shadow-sm' 
+                            : locked
+                            ? 'opacity-50 cursor-not-allowed'
                             : 'hover:bg-slate-800/50'
                         }`}
                       >
-                        {status === 'Completed' ? (
+                        {locked ? (
+                          <Lock size={16} className="text-slate-600 shrink-0" />
+                        ) : status === 'Completed' ? (
                           <CheckCircle size={16} className="text-emerald-400 shrink-0" />
                         ) : status === 'In Progress' ? (
                           <PlayCircle size={16} className="text-amber-400 shrink-0" />

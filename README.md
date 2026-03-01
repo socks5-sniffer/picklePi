@@ -1,20 +1,62 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Raspberry Pi Electronics Lab
 
-# Run and deploy your AI Studio app
+A structured, gamified, project-based learning system for electronics and Python, built with React, Tailwind CSS, and Vite.
 
-This contains everything you need to run your app locally.
+## Local Development Setup (VS Code)
 
-View your app in AI Studio: https://ai.studio/apps/a98efe0c-6b52-4f04-bf60-ed2c638d0406
+To run this project locally in VS Code, follow these steps:
 
-## Run Locally
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or newer recommended)
+- [Visual Studio Code](https://code.visualstudio.com/)
 
-**Prerequisites:**  Node.js
+### Installation
 
+1. **Clone or Download the Repository**
+   Open the project folder in VS Code.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. **Install Dependencies**
+   Open the integrated terminal in VS Code (\`Ctrl + \`\`) and run:
+   ```bash
+   npm install
+   ```
+
+3. **Environment Variables**
+   Copy the \`.env.example\` file to a new file named \`.env\`:
+   ```bash
+   cp .env.example .env
+   ```
+   *(Note: For this specific frontend-only app, the Gemini API key is not strictly required unless you add AI features later, but it's good practice to set it up).*
+
+4. **Start the Development Server**
+   Run the following command to start the Vite dev server:
+   ```bash
+   npm run dev
+   ```
+   
+5. **View the App**
+   Open your browser and navigate to the URL provided in the terminal (usually \`http://localhost:3000\` or \`http://localhost:5173\`).
+
+### Building for Production
+
+To create a production build, run:
+```bash
+npm run build
+```
+The compiled assets will be in the \`dist\` directory. You can preview the production build locally using:
+```bash
+npm run preview
+```
+
+## Project Structure
+
+- \`src/components/\`: React components (Sidebar, ProjectView, ProgressTracker, etc.)
+- \`src/data/curriculum.ts\`: The core curriculum data, including project steps, code, and explanations.
+- \`src/types.ts\`: TypeScript interfaces for the application state and data models.
+- \`src/App.tsx\`: Main application component handling state and routing between tabs.
+
+## Customization
+
+To add more projects or fill out the content for Levels 2-7, edit the \`src/data/curriculum.ts\` file. The app is designed to automatically render the content based on this data structure.
+
+Currently, the level locking mechanism is temporarily disabled for testing. To re-enable it, uncomment the logic in \`isProjectLocked\` inside \`src/App.tsx\`.

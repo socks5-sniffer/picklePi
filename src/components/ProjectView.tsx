@@ -5,18 +5,29 @@ import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wre
 interface ProjectViewProps {
   project: Project;
   status: ProjectStatus;
+  isLocked: boolean;
   onComplete: () => void;
 }
 
-export default function ProjectView({ project, status, onComplete }: ProjectViewProps) {
+export default function ProjectView({ project, status, isLocked, onComplete }: ProjectViewProps) {
   const [copied, setCopied] = useState(false);
 
-  if (!project.content) {
+  if (isLocked) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-slate-500 py-20">
         <FlaskConical size={48} className="mb-4 text-slate-300" />
         <h2 className="text-2xl font-semibold mb-2">Level {project.level} Locked</h2>
         <p>Complete previous levels to unlock this project.</p>
+      </div>
+    );
+  }
+
+  if (!project.content) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-slate-500 py-20">
+        <FlaskConical size={48} className="mb-4 text-slate-300" />
+        <h2 className="text-2xl font-semibold mb-2">Content Coming Soon</h2>
+        <p>This project is unlocked, but the content is still being written.</p>
       </div>
     );
   }

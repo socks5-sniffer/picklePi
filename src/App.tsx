@@ -29,6 +29,25 @@ export default function App() {
 
   const activeProject = curriculum.find(p => p.id === activeProjectId) || curriculum[0];
 
+  const isProjectLocked = (projectId: string) => {
+    // Override to leave all levels unlocked for now
+    return false;
+    
+    /* 
+    // Actual logic for when we want to lock levels:
+    const project = curriculum.find(p => p.id === projectId);
+    if (!project || project.level === 1) return false;
+    
+    // Check if ALL projects from the previous level are completed
+    const previousLevelProjects = curriculum.filter(p => p.level === project.level - 1);
+    const isPreviousLevelCompleted = previousLevelProjects.every(
+      p => progress.projectStatuses[p.id] === 'Completed'
+    );
+    
+    return !isPreviousLevelCompleted;
+    */
+  };
+
   const handleStartProject = (projectId: string) => {
     setProgress(prev => ({
       ...prev,
@@ -83,6 +102,7 @@ export default function App() {
         progress={progress}
         activeProjectId={activeProjectId}
         onSelectProject={handleStartProject}
+        isProjectLocked={isProjectLocked}
       />
       
       <main className="flex-1 overflow-y-auto p-8">
@@ -91,6 +111,7 @@ export default function App() {
             <ProjectView 
               project={activeProject} 
               status={progress.projectStatuses[activeProject.id]}
+              isLocked={isProjectLocked(activeProject.id)}
               onComplete={() => handleCompleteProjectClick(activeProject)}
             />
           )}
