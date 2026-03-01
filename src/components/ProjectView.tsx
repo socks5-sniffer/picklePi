@@ -134,17 +134,17 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
         </h2>
         
         <div className="relative group">
-          <div className="absolute right-4 top-4">
+          <div className="absolute right-4 top-4 z-10">
             <button 
               onClick={handleCopyCode}
-              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md transition-colors flex items-center gap-2 text-sm font-medium"
+              className="p-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-md transition-colors flex items-center gap-2 text-sm font-medium shadow-lg"
             >
               {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
-          <pre className="bg-[#0d1117] text-[#c9d1d9] p-6 rounded-2xl overflow-x-auto text-sm font-mono leading-relaxed shadow-inner border border-slate-800">
-            <code>{content.code}</code>
+          <pre className="bg-[#1a1f2e] text-[#e2e8f0] p-6 rounded-2xl text-sm font-mono leading-relaxed shadow-inner border border-slate-700 overflow-hidden">
+            <code className="whitespace-pre-wrap break-words">{content.code}</code>
           </pre>
         </div>
 
