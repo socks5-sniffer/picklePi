@@ -97,7 +97,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="flex h-screen bg-[#1e2530] text-slate-100 font-sans">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -113,7 +113,7 @@ export default function App() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsMobileMenuOpen(true)}
-          className="lg:hidden fixed top-4 left-4 z-40 bg-slate-900 text-white p-3 rounded-lg shadow-lg hover:bg-slate-800 transition-colors"
+          className="lg:hidden fixed top-4 left-4 z-40 bg-slate-700 text-white p-3 rounded-lg shadow-lg hover:bg-slate-600 transition-colors border border-slate-600"
           aria-label="Open menu"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
