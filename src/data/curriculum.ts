@@ -6,12 +6,12 @@ export const curriculum: Project[] = [
     level: 1,
     levelName: 'Digital Output Basics',
     title: 'Hello, LED',
-    skillsLearned: ['GPIO Basics', 'Digital Out', 'Basic Python'],
+    skillsLearned: ['gpiozero LED', 'blink() method', 'signal.pause()'],
     badgeEarned: 'GPIO Initiate',
     content: {
       overview: {
         description: 'We are building the "Hello World" of electronics: making an LED blink! This is your first step into controlling physical hardware with code.',
-        concepts: ['Digital Output (High/Low)', 'Circuits', 'Python loops'],
+        concepts: ['Digital Output', 'gpiozero LED class', 'Background threads'],
         difficulty: 1,
         estimatedTime: '15 mins'
       },
@@ -30,13 +30,13 @@ export const curriculum: Project[] = [
         ],
         explanation: 'Electricity flows from the GPIO pin (when turned HIGH, providing 3.3V), through the resistor (which limits the current), through the LED (lighting it up), and back to the Ground (GND) pin, completing the circuit.'
       },
-      code: `import RPi.GPIO as GPIO\nimport time\n\n# Pin Setup\nLED_PIN = 17 # Using BCM GPIO 17 (Physical Pin 11)\n\n# Configure the GPIO library\nGPIO.setmode(GPIO.BCM) # Use BCM numbering\nGPIO.setwarnings(False) # Disable warnings\nGPIO.setup(LED_PIN, GPIO.OUT) # Set pin as output\n\ntry:\n    # Main loop\n    while True:\n        print("LED ON")\n        GPIO.output(LED_PIN, GPIO.HIGH) # Turn LED on (3.3V)\n        time.sleep(1)                   # Wait 1 second\n        \n        print("LED OFF")\n        GPIO.output(LED_PIN, GPIO.LOW)  # Turn LED off (0V)\n        time.sleep(1)                   # Wait 1 second\n\nexcept KeyboardInterrupt:\n    # Handle Ctrl+C gracefully\n    print("Exiting program")\n\nfinally:\n    # Cleanup process\n    GPIO.cleanup() # Reset GPIO pins to safe state`,
+      code: `#!/usr/bin/env python3\n"""\nLevel 1: Hello, LED - Blink an LED using gpiozero\n\n🔒 SECURITY HARDENING:\n- Always use a 220Ω-330Ω current-limiting resistor with LEDs\n- Disable unused interfaces: sudo raspi-config -> Interface Options\n  (disable SPI, I2C, Serial if not needed to reduce attack surface)\n- Keep your Pi's OS updated: sudo apt update && sudo apt upgrade\n\n📚 EDUCATIONAL MOMENT:\ngpiozero uses "source/values" properties for declarative hardware control,\nmeaning you describe WHAT should happen, not HOW to do it step-by-step.\n"""\n\nfrom gpiozero import LED\nfrom signal import pause\n\n# ============================================\n# HARDWARE ABSTRACTION\n# gpiozero automatically handles pin setup!\n# ============================================\n\n# Create an LED object on GPIO 17 (BCM numbering by default)\nstatus_led = LED(17)\n\n# ============================================\n# HIGH-LEVEL LOGIC\n# The blink() method handles the timing loop internally\n# ============================================\n\nprint("🟢 LED blinking... Press Ctrl+C to exit.")\n\n# Blink the LED: 1 second on, 1 second off\n# No manual loops needed - gpiozero handles this in a background thread\nstatus_led.blink(on_time=1, off_time=1)\n\n# Keep the program running until interrupted\n# pause() is more efficient than while True: sleep()\ntry:\n    pause()\nexcept KeyboardInterrupt:\n    print("\n🔴 Exiting... LED turned off.")\n    status_led.off()\n\n# Note: gpiozero automatically cleans up GPIO pins on exit!`,
       codeWalkthrough: [
-        { section: 'Imports', explanation: '`RPi.GPIO` lets us control the pins. `time` lets us add delays (sleep).' },
-        { section: 'Pin Setup', explanation: 'We define `LED_PIN = 17` so we can easily change it later if needed. `GPIO.setmode(GPIO.BCM)` tells the Pi we are using the Broadcom (BCM) GPIO numbers, not the physical pin numbers.' },
-        { section: 'Loops', explanation: '`while True:` creates an infinite loop. Everything indented under it runs forever until we stop it.' },
-        { section: 'Conditionals / Logic', explanation: '`GPIO.output(..., GPIO.HIGH)` sends 3.3V to turn it on. `GPIO.LOW` sends 0V to turn it off.' },
-        { section: 'Cleanup process', explanation: "The `try...except...finally` block ensures that even if we stop the program (Ctrl+C), `GPIO.cleanup()` runs. This is crucial for safety, resetting pins so they don't accidentally stay powered." }
+        { section: 'Imports', explanation: '`from gpiozero import LED` gives us a high-level LED class. `from signal import pause` lets us wait efficiently without a busy loop.' },
+        { section: 'Hardware Abstraction', explanation: '`LED(17)` creates an LED object on GPIO 17. gpiozero automatically handles `setmode`, `setup`, and uses BCM numbering by default.' },
+        { section: 'The blink() Method', explanation: '`status_led.blink(on_time=1, off_time=1)` runs in a background thread. No `while True` loop needed!' },
+        { section: 'pause()', explanation: '`pause()` keeps the script running without consuming CPU. It waits for a signal (like Ctrl+C) efficiently.' },
+        { section: 'Automatic Cleanup', explanation: 'gpiozero automatically resets GPIO pins when your script exits. No manual `GPIO.cleanup()` required!' }
       ],
       conceptDeepDive: {
         hardware: "The Raspberry Pi acts as a switchable power source. When a pin is HIGH, it pushes electrons out. The resistor acts like a narrow pipe, slowing down the electrons so they don't overwhelm and pop the LED.",
@@ -44,9 +44,9 @@ export const curriculum: Project[] = [
         connection: 'Software commands translate into physical voltage changes. 1s and 0s in code become 3.3V and 0V in reality.'
       },
       experimentMode: {
-        tweak: 'Change `time.sleep(1)` to `time.sleep(0.1)`. What happens to the blinking?',
-        logic: 'Make the LED stay ON for 2 seconds, but OFF for only 0.5 seconds.',
-        creative: 'Can you make the LED blink a heartbeat pattern? (Ba-bum... Ba-bum...)'
+        tweak: 'Change `on_time=1` to `on_time=0.1`. What happens to the blinking speed?',
+        logic: 'Change the blink pattern to stay ON for 2 seconds but OFF for only 0.5 seconds.',
+        creative: 'Can you make the LED blink a heartbeat pattern? Try `blink(on_time=0.1, off_time=0.1, n=2)` then `sleep(0.6)` in a loop!'
       },
       troubleshooting: [
         { issue: "LED doesn't light up", solution: 'Check LED polarity. Long leg goes to resistor/GPIO, short leg to GND.' },
@@ -60,12 +60,12 @@ export const curriculum: Project[] = [
     level: 2,
     levelName: 'Digital Input',
     title: 'Button controls LED',
-    skillsLearned: ['Digital In', 'Pull-up/down resistors', 'Conditionals'],
+    skillsLearned: ['Button class', 'Event callbacks', 'Source binding'],
     badgeEarned: 'Input Investigator',
     content: {
       overview: {
         description: 'We will use a push button to control our LED. This introduces digital inputs, letting our code react to the physical world.',
-        concepts: ['Digital Input', 'Pull-up/Pull-down Resistors', 'If/Else Conditionals'],
+        concepts: ['Digital Input', 'Event-Driven Programming', 'Source Binding'],
         difficulty: 2,
         estimatedTime: '20 mins'
       },
@@ -82,11 +82,12 @@ export const curriculum: Project[] = [
         ],
         explanation: 'When the button is pressed, it bridges the gap, allowing 3.3V to flow into GPIO 22. The Pi reads this as a HIGH signal.'
       },
-      code: `import RPi.GPIO as GPIO\nimport time\n\nLED_PIN = 17\nBUTTON_PIN = 22\n\nGPIO.setmode(GPIO.BCM)\nGPIO.setwarnings(False)\n\n# Setup LED as output\nGPIO.setup(LED_PIN, GPIO.OUT)\n\n# Setup Button as input with an internal pull-down resistor\nGPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)\n\ntry:\n    print("Press the button to turn on the LED.")\n    while True:\n        # Read the state of the button\n        button_state = GPIO.input(BUTTON_PIN)\n        \n        if button_state == GPIO.HIGH:\n            GPIO.output(LED_PIN, GPIO.HIGH)\n        else:\n            GPIO.output(LED_PIN, GPIO.LOW)\n            \n        time.sleep(0.1) # Small delay to prevent CPU hogging\n\nexcept KeyboardInterrupt:\n    print("Exiting...")\n\nfinally:\n    GPIO.cleanup()`,
+      code: `#!/usr/bin/env python3\n"""\nLevel 2: Button Controls LED - Event-driven input handling\n\n🔒 SECURITY HARDENING:\n- Use internal pull-down resistors (gpiozero default) to prevent floating inputs\n- Never connect button directly between 5V and GPIO (use 3.3V only!)\n- Disable SSH password auth if not needed: edit /etc/ssh/sshd_config\n\n📚 EDUCATIONAL MOMENT:\n"source" and "values" in gpiozero create a reactive data flow.\nled.source = button means \"the LED's state comes FROM the button's state\".\n"""\n\nfrom gpiozero import LED, Button\nfrom signal import pause\n\n# ============================================\n# HARDWARE ABSTRACTION\n# Button() automatically configures pull-down resistor\n# ============================================\n\nstatus_led = LED(17)\ncontrol_button = Button(22, pull_up=False)  # pull_up=False = pull-down resistor\n\n# ============================================\n# EVENT-DRIVEN LOGIC (No polling loops!)\n# ============================================\n\n# Method 1: Direct source binding (most elegant)\n# The LED's state is "sourced" directly from the button's state\nstatus_led.source = control_button\n\nprint("🔘 Press and hold the button to light the LED.")\nprint("   Press Ctrl+C to exit.")\n\n# Alternative Method 2: Event callbacks (commented out)\n# control_button.when_pressed = status_led.on\n# control_button.when_released = status_led.off\n\ntry:\n    pause()\nexcept KeyboardInterrupt:\n    print("\n👋 Exiting...")`,
       codeWalkthrough: [
-        { section: 'Pin Setup', explanation: '`pull_up_down=GPIO.PUD_DOWN` activates an internal resistor that connects the pin to Ground by default. This prevents the pin from "floating" and reading random noise when the button is not pressed.' },
-        { section: 'Conditionals', explanation: '`if button_state == GPIO.HIGH:` checks if the button is pressed (receiving 3.3V). If true, it turns the LED on. `else:` turns it off.' },
-        { section: 'time.sleep(0.1)', explanation: "Without this, the `while True` loop would run millions of times a second, maxing out the Raspberry Pi's CPU." }
+        { section: 'Button Object', explanation: '`Button(22, pull_up=False)` creates a button on GPIO 22 with an internal pull-down resistor. gpiozero handles all the low-level setup.' },
+        { section: 'Source Binding', explanation: '`led.source = button` creates a reactive link. The LED automatically mirrors the button state - no loop needed!' },
+        { section: 'Event Callbacks', explanation: '`.when_pressed` and `.when_released` let you attach functions that run automatically when events occur. This is event-driven programming.' },
+        { section: 'No CPU Waste', explanation: 'Unlike polling with `while True`, event-driven code only runs when something happens. The CPU stays idle otherwise.' }
       ],
       conceptDeepDive: {
         hardware: 'A push button is a momentary switch. It only completes the circuit while held down. The internal pull-down resistor acts like a weak spring, pulling the voltage to 0V when the button is released.',
@@ -94,9 +95,9 @@ export const curriculum: Project[] = [
         connection: 'The physical press changes the voltage on the pin to 3.3V. The software reads this 3.3V as a logical `True` or `HIGH`, triggering the LED code.'
       },
       experimentMode: {
-        tweak: 'Can you reverse the logic so the LED is ON by default, and turns OFF when you press the button?',
-        logic: 'Make the button act as a toggle switch (press once to turn on, press again to turn off). Hint: You will need a variable to store the LED state.',
-        creative: 'Add a second LED and make the button switch which LED is currently lit.'
+        tweak: 'Swap the source binding to invert the logic: `led.source_delay = 0; led.source = lambda: not button.value`',
+        logic: 'Make the button act as a toggle using `.when_pressed` with a function that calls `led.toggle()`.',
+        creative: 'Add a second LED and make the button alternate which LED is lit using `toggle()` on both.'
       },
       troubleshooting: [
         { issue: "LED is always on", solution: "You might have connected the button to 3.3V on both sides, or the pull-down resistor isn't configured in code." },
@@ -109,12 +110,12 @@ export const curriculum: Project[] = [
     level: 3,
     levelName: 'PWM & Analog Concepts',
     title: 'PWM brightness',
-    skillsLearned: ['PWM', 'Duty Cycle', 'Fading'],
+    skillsLearned: ['PWMLED', 'pulse() & value', 'Background threads'],
     badgeEarned: 'PWM Tamer',
     content: {
       overview: {
         description: 'Instead of just ON and OFF, we will use Pulse Width Modulation (PWM) to fade an LED in and out, simulating an analog output.',
-        concepts: ['Pulse Width Modulation (PWM)', 'Duty Cycle', 'Frequency', 'For Loops'],
+        concepts: ['PWM & Duty Cycle', 'PWMLED class', 'Value property (0.0-1.0)'],
         difficulty: 3,
         estimatedTime: '25 mins'
       },
@@ -127,11 +128,12 @@ export const curriculum: Project[] = [
         ],
         explanation: 'We are changing how we control the pin in software. Instead of a steady 3.3V, we will turn the pin on and off very fast to simulate a lower voltage.'
       },
-      code: `import RPi.GPIO as GPIO\nimport time\n\nLED_PIN = 17\n\nGPIO.setmode(GPIO.BCM)\nGPIO.setup(LED_PIN, GPIO.OUT)\n\n# Initialize PWM on LED_PIN at 100Hz frequency\npwm_led = GPIO.PWM(LED_PIN, 100)\n\n# Start PWM with 0% duty cycle (Off)\npwm_led.start(0)\n\ntry:\n    while True:\n        # Fade In\n        for duty_cycle in range(0, 101, 5):\n            pwm_led.ChangeDutyCycle(duty_cycle)\n            time.sleep(0.05)\n            \n        # Fade Out\n        for duty_cycle in range(100, -1, -5):\n            pwm_led.ChangeDutyCycle(duty_cycle)\n            time.sleep(0.05)\n\nexcept KeyboardInterrupt:\n    pass\n\nfinally:\n    pwm_led.stop() # Stop the PWM\n    GPIO.cleanup()`,
+      code: `#!/usr/bin/env python3\n"""\nLevel 3: PWM Brightness - Smooth LED fading with PWMLED\n\n🔒 SECURITY HARDENING:\n- PWM frequency is software-controlled; use hardware PWM pins (GPIO 12, 13, 18, 19) for precision\n- Limit script permissions: chmod 700 script.py (owner only)\n- Consider running as non-root user with gpio group membership\n\n📚 EDUCATIONAL MOMENT:\nPWMLED.pulse() uses a background thread with sinusoidal easing,\ncreating smooth fades without blocking your main program.\n"""\n\nfrom gpiozero import PWMLED\nfrom signal import pause\n\n# ============================================\n# HARDWARE ABSTRACTION\n# PWMLED handles PWM setup automatically\n# ============================================\n\n# Create a PWM-capable LED (supports brightness 0.0 to 1.0)\nfading_led = PWMLED(17)\n\n# ============================================\n# HIGH-LEVEL LOGIC\n# pulse() handles the fade animation internally\n# ============================================\n\nprint("✨ LED pulsing smoothly... Press Ctrl+C to exit.")\n\n# Pulse the LED: fade in over 1 sec, fade out over 1 sec\n# This runs in a background thread - non-blocking!\nfading_led.pulse(fade_in_time=1, fade_out_time=1)\n\n# Alternative: Manual brightness control\n# fading_led.value = 0.5  # Set to 50% brightness\n# fading_led.value = 0    # Off\n# fading_led.value = 1    # Full brightness\n\ntry:\n    pause()\nexcept KeyboardInterrupt:\n    print("\n🌙 Fading out...")\n    fading_led.off()`,
       codeWalkthrough: [
-        { section: 'PWM Initialization', explanation: '`GPIO.PWM(LED_PIN, 100)` sets up PWM on the pin at 100 Hertz (it will turn on and off 100 times per second).' },
-        { section: 'Duty Cycle', explanation: '`pwm_led.start(0)` starts the PWM. Duty cycle is the percentage of time the pin is ON. 0% is off, 100% is fully on, 50% is half brightness.' },
-        { section: 'For Loops', explanation: '`range(0, 101, 5)` generates numbers from 0 to 100, stepping by 5. We use this to gradually increase, then decrease, the duty cycle.' }
+        { section: 'PWMLED Class', explanation: '`PWMLED(17)` creates an LED with PWM capability. Unlike `LED`, it supports fractional brightness values from 0.0 to 1.0.' },
+        { section: 'The pulse() Method', explanation: '`pulse()` creates a smooth breathing effect using sinusoidal easing. It runs in a background thread automatically.' },
+        { section: 'Value Property', explanation: '`fading_led.value = 0.5` sets brightness to 50%. This is more intuitive than raw duty cycle percentages.' },
+        { section: 'Background Threading', explanation: 'gpiozero runs animations in separate threads, so your main code can do other things while the LED pulses.' }
       ],
       conceptDeepDive: {
         hardware: 'Digital pins can only output 3.3V or 0V. They cannot output 1.5V. PWM tricks the LED (and our eyes) by pulsing the 3.3V so fast that it averages out to a lower brightness.',
@@ -139,9 +141,9 @@ export const curriculum: Project[] = [
         connection: 'A 50% duty cycle means the pin is HIGH for half the time and LOW for half the time. The LED flickers so fast it just looks dimmer.'
       },
       experimentMode: {
-        tweak: 'Change the frequency from 100 to 5. What happens to the LED? Can you see it flickering now?',
-        logic: 'Change the step in the `range()` function from 5 to 1. How does this affect the fading animation?',
-        creative: 'Combine this with the button from Level 2: Make the LED get brighter only while you hold the button down.'
+        tweak: 'Change `fade_in_time=1` to `fade_in_time=3`. How does the animation feel?',
+        logic: 'Instead of `pulse()`, use a loop with `fading_led.value = x/100` to manually control brightness.',
+        creative: 'Combine with the button: `led.source = lambda: button.value * 0.5 + 0.5` to show half-brightness when released, full when pressed.'
       },
       troubleshooting: [
         { issue: 'LED flickers visibly', solution: 'Your PWM frequency is too low. Ensure it is set to at least 50Hz or 100Hz.' },
@@ -154,12 +156,12 @@ export const curriculum: Project[] = [
     level: 4,
     levelName: 'Sensors & Reactive Systems',
     title: 'Buzzer tones',
-    skillsLearned: ['Frequencies', 'Active vs Passive Buzzer'],
+    skillsLearned: ['TonalBuzzer', 'Tone class', 'Musical notes'],
     badgeEarned: 'Signal Wrangler',
     content: {
       overview: {
         description: 'We will use a passive buzzer to generate different musical tones and sound effects using PWM frequencies.',
-        concepts: ['Frequencies', 'Sound Waves', 'Active vs Passive Components'],
+        concepts: ['TonalBuzzer', 'Musical Notes & Tone class', 'Lists & Loops'],
         difficulty: 3,
         estimatedTime: '20 mins'
       },
@@ -173,11 +175,12 @@ export const curriculum: Project[] = [
         ],
         explanation: 'A passive buzzer contains a piezoelectric crystal. When voltage is applied, it flexes. By pulsing the voltage at specific frequencies, we make it vibrate and produce sound.'
       },
-      code: `import RPi.GPIO as GPIO\nimport time\n\nBUZZER_PIN = 18\n\nGPIO.setmode(GPIO.BCM)\nGPIO.setup(BUZZER_PIN, GPIO.OUT)\n\n# Start PWM at 440Hz (Middle A note) with 50% duty cycle\nbuzzer = GPIO.PWM(BUZZER_PIN, 440)\n\ntry:\n    # Play a sequence of notes\n    notes = [261, 293, 329, 349, 392, 440, 493, 523] # C4 to C5\n    \n    buzzer.start(50) # 50% duty cycle is best for volume\n    \n    for note in notes:\n        buzzer.ChangeFrequency(note)\n        time.sleep(0.5)\n        \n    buzzer.stop()\n\nexcept KeyboardInterrupt:\n    pass\n\nfinally:\n    GPIO.cleanup()`,
+      code: `#!/usr/bin/env python3\n"""\nLevel 4: Buzzer Tones - Play melodies with TonalBuzzer\n\n🔒 SECURITY HARDENING:\n- Passive buzzers draw more current than an LED; consider a transistor driver for louder output\n- Use GPIO 18 (hardware PWM) for cleanest audio tones\n- Avoid running audio scripts at boot (noisy on startup = security giveaway)\n\n📚 EDUCATIONAL MOMENT:\nTonalBuzzer uses musical note names (like \"C4\", \"A4\") instead of raw frequencies,\nmaking code more readable and less error-prone.\n"""\n\nfrom gpiozero import TonalBuzzer\nfrom gpiozero.tones import Tone\nfrom time import sleep\n\n# ============================================\n# HARDWARE ABSTRACTION\n# TonalBuzzer handles PWM frequency calculation\n# ============================================\n\nmelody_buzzer = TonalBuzzer(18)\n\n# ============================================\n# HIGH-LEVEL LOGIC\n# Use musical note names instead of frequencies!\n# ============================================\n\n# Define a melody using note names (C4 = Middle C, A4 = 440Hz)\nmelody = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5']\nnote_duration = 0.4\n\nprint("🎵 Playing C major scale...")\n\ntry:\n    for note in melody:\n        print(f"  ♪ {note}")\n        melody_buzzer.play(Tone(note))  # Play the note\n        sleep(note_duration)\n    \n    melody_buzzer.stop()\n    print("🎶 Scale complete!")\n    \n    # Bonus: Play a simple tune (Twinkle Twinkle)\n    sleep(1)\n    print("\n🌟 Bonus: Twinkle Twinkle...")\n    twinkle = ['C4', 'C4', 'G4', 'G4', 'A4', 'A4', 'G4', None,\n               'F4', 'F4', 'E4', 'E4', 'D4', 'D4', 'C4']\n    \n    for note in twinkle:\n        if note:\n            melody_buzzer.play(Tone(note))\n        else:\n            melody_buzzer.stop()  # Rest\n        sleep(0.3)\n    \n    melody_buzzer.stop()\n    \nexcept KeyboardInterrupt:\n    melody_buzzer.stop()\n    print("\n🔇 Stopped.")`,
       codeWalkthrough: [
-        { section: 'PWM Frequency', explanation: 'Unlike the LED where we changed the Duty Cycle (brightness), here we change the Frequency (pitch). 440Hz means 440 vibrations per second.' },
-        { section: 'Lists and Loops', explanation: '`notes = [...]` is a list of frequencies corresponding to musical notes. The `for` loop iterates through them one by one.' },
-        { section: 'Duty Cycle for Sound', explanation: 'We keep the duty cycle at 50% because that gives the crystal equal time to flex and relax, producing the loudest and clearest tone.' }
+        { section: 'TonalBuzzer', explanation: '`TonalBuzzer(18)` creates a buzzer that accepts musical notes. GPIO 18 is a hardware PWM pin for cleaner tones.' },
+        { section: 'Tone Objects', explanation: '`Tone("C4")` converts a note name to a frequency. C4 is Middle C (261Hz), A4 is concert pitch (440Hz).' },
+        { section: 'play() and stop()', explanation: '`buzzer.play(tone)` starts a note, `buzzer.stop()` silences it. Use `None` in a melody list for rests.' },
+        { section: 'Readable Code', explanation: 'Note names like "G4" are much easier to read and debug than magic numbers like "392".' }
       ],
       conceptDeepDive: {
         hardware: 'The piezoelectric buzzer translates electrical pulses into mechanical movement (sound waves). The faster the pulses, the higher the pitch.',
@@ -185,9 +188,9 @@ export const curriculum: Project[] = [
         connection: 'Code frequency directly maps to audio frequency. 261Hz in code creates a 261Hz sound wave in the air (Middle C).'
       },
       experimentMode: {
-        tweak: 'Change the `time.sleep(0.5)` to `0.1` to make the notes play faster.',
-        logic: 'Create a siren effect by rapidly alternating between two frequencies (e.g., 400Hz and 600Hz) inside a `while True` loop.',
-        creative: 'Look up the frequencies for your favorite simple song (like "Mary Had a Little Lamb") and program the Pi to play it!'
+        tweak: 'Change `note_duration = 0.4` to `0.15` to play the scale faster.',
+        logic: 'Create a siren effect: `for note in ["A4", "E4"] * 10: buzzer.play(Tone(note)); sleep(0.1)`',
+        creative: 'Look up note names for "Mary Had a Little Lamb" and program the Pi to play it! (E4, D4, C4, D4, E4, E4, E4...)'
       },
       troubleshooting: [
         { issue: 'Buzzer only clicks or makes a harsh static noise', solution: 'You might have an Active buzzer instead of a Passive one. Active buzzers cannot play melodies.' },
@@ -200,12 +203,12 @@ export const curriculum: Project[] = [
     level: 5,
     levelName: 'Displays & User Feedback',
     title: 'Motion or Light sensor',
-    skillsLearned: ['Analog/Digital Sensors', 'Event Detection'],
+    skillsLearned: ['MotionSensor', 'when_motion callback', 'Warm-up delay'],
     badgeEarned: 'Sensor Specialist',
     content: {
       overview: {
         description: 'We will use a PIR (Passive Infrared) motion sensor to detect movement and trigger an action. This introduces event-driven programming.',
-        concepts: ['Digital Sensors', 'Event Detection', 'Callbacks'],
+        concepts: ['MotionSensor class', 'Event Callbacks', 'Asynchronous Code'],
         difficulty: 4,
         estimatedTime: '30 mins'
       },
@@ -221,11 +224,12 @@ export const curriculum: Project[] = [
         ],
         explanation: 'The PIR sensor detects changes in infrared radiation (body heat). When a person moves, it sends a 3.3V HIGH signal on its OUT pin.'
       },
-      code: `import RPi.GPIO as GPIO\nimport time\n\nPIR_PIN = 23\nLED_PIN = 17\n\nGPIO.setmode(GPIO.BCM)\nGPIO.setup(PIR_PIN, GPIO.IN)\nGPIO.setup(LED_PIN, GPIO.OUT)\n\n# This function will run whenever motion is detected\ndef motion_detected(channel):\n    print("Motion Detected!")\n    GPIO.output(LED_PIN, GPIO.HIGH)\n    time.sleep(2)\n    GPIO.output(LED_PIN, GPIO.LOW)\n\n# Add an event detect listener\nGPIO.add_event_detect(PIR_PIN, GPIO.RISING, callback=motion_detected)\n\ntry:\n    print("Waiting for motion...")\n    while True:\n        # The main loop does nothing! The callback handles the work.\n        time.sleep(1)\n\nexcept KeyboardInterrupt:\n    print("Exiting...")\n\nfinally:\n    GPIO.cleanup()`,
+      code: `#!/usr/bin/env python3\n"""\nLevel 5: Motion Sensor - Event-driven PIR detection\n\n🔒 SECURITY HARDENING:\n- PIR sensors need 5V power but output 3.3V signals (safe for GPIO)\n- Add a 1-minute warm-up delay before arming sensor (reduces false triggers)\n- Consider rate-limiting callbacks to prevent log flooding attacks\n\n📚 EDUCATIONAL MOMENT:\nMotionSensor.when_motion and .when_no_motion are "event hooks\" -\nthey register callback functions that execute asynchronously when triggered.\n"""\n\nfrom gpiozero import MotionSensor, LED\nfrom signal import pause\nfrom time import sleep\n\n# ============================================\n# HARDWARE ABSTRACTION\n# MotionSensor wraps PIR sensor functionality\n# ============================================\n\npir_sensor = MotionSensor(23)  # PIR OUT pin on GPIO 23\nalert_led = LED(17)            # Indicator LED on GPIO 17\n\n# ============================================\n# EVENT-DRIVEN CALLBACKS\n# Functions that run automatically on motion events\n# ============================================\n\ndef on_motion_detected():\n    """Called when PIR detects movement."""\n    print("🚨 Motion Detected!")\n    alert_led.on()\n\ndef on_motion_ended():\n    """Called when PIR no longer detects movement."""\n    print("✅ All Clear.")\n    alert_led.off()\n\n# Register the event callbacks\npir_sensor.when_motion = on_motion_detected\npir_sensor.when_no_motion = on_motion_ended\n\n# ============================================\n# MAIN PROGRAM\n# ============================================\n\nprint("🔍 PIR Sensor Warming Up (10 seconds)...")\nsleep(10)  # PIR sensors need time to calibrate\nprint("✅ Sensor Ready! Waiting for motion...")\nprint("   Press Ctrl+C to exit.\n")\n\ntry:\n    pause()  # Wait efficiently for events\nexcept KeyboardInterrupt:\n    alert_led.off()\n    print("\n👋 Sensor deactivated.")`,
       codeWalkthrough: [
-        { section: 'Functions', explanation: '`def motion_detected(channel):` defines a reusable block of code. It will only execute when called.' },
-        { section: 'Event Detection', explanation: '`GPIO.add_event_detect(...)` tells the Pi to monitor the PIR pin in the background. `GPIO.RISING` means it looks for the voltage going from LOW to HIGH.' },
-        { section: 'Callbacks', explanation: '`callback=motion_detected` tells the event detector: "When you see the voltage rise, run this specific function immediately."' }
+        { section: 'MotionSensor', explanation: '`MotionSensor(23)` creates a PIR sensor object. It handles all the edge detection and debouncing internally.' },
+        { section: 'Event Hooks', explanation: '`.when_motion` and `.when_no_motion` are properties that accept callback functions. When motion state changes, your function runs automatically.' },
+        { section: 'Warm-up Period', explanation: 'PIR sensors take 10-60 seconds to calibrate to ambient infrared levels. Always add a warm-up delay before trusting readings.' },
+        { section: 'No Polling', explanation: 'Unlike `while True: check_sensor()`, events fire only when state changes. This uses zero CPU while waiting.' }
       ],
       conceptDeepDive: {
         hardware: 'The PIR sensor has its own internal logic chip. It does the hard work of analyzing infrared light. It just gives the Pi a simple "Yes" (3.3V) or "No" (0V).',
@@ -233,9 +237,9 @@ export const curriculum: Project[] = [
         connection: 'The hardware sensor acts as a trigger. The software registers a listener for that trigger, creating an efficient, responsive system.'
       },
       experimentMode: {
-        tweak: 'Adjust the orange potentiometers (dials) on the PIR sensor to change its sensitivity and delay time.',
-        logic: 'Make the code print "Motion Ended" when the sensor goes back to LOW (Hint: look up `GPIO.FALLING` or `GPIO.BOTH`).',
-        creative: 'Add the buzzer from Level 4. Make an intruder alarm that flashes the LED and sounds the buzzer when motion is detected.'
+        tweak: 'Adjust the PIR potentiometers to change sensitivity. Use `.motion_detected` property to check current state.',
+        logic: 'Add `when_no_motion` callback that prints "Clear" and turns off the LED after motion ends.',
+        creative: 'Add the buzzer from Level 4 and make an intruder alarm: `buzzer.play(Tone("A5"))` when motion detected!'
       },
       troubleshooting: [
         { issue: 'Sensor triggers constantly with no movement', solution: 'The sensor might be too sensitive, or it needs a minute to "warm up" and calibrate to the room.' },
@@ -298,12 +302,12 @@ export const curriculum: Project[] = [
     level: 7,
     levelName: 'Mini Capstone Projects',
     title: 'Multi-module alarm system',
-    skillsLearned: ['State Machines', 'Integration', 'System Design'],
+    skillsLearned: ['Enum state machines', 'Threading Event', 'Multi-component integration'],
     badgeEarned: 'Mini Systems Architect',
     content: {
       overview: {
         description: 'The Capstone! We will combine the PIR sensor, LED, Buzzer, and Button to create a complete, state-based security alarm system.',
-        concepts: ['State Machines', 'System Integration', 'Complex Logic'],
+        concepts: ['State Machines (Enum)', 'Threading & Events', 'System Integration'],
         difficulty: 5,
         estimatedTime: '45 mins'
       },
@@ -319,11 +323,12 @@ export const curriculum: Project[] = [
         ],
         explanation: 'We are building a complete system. The PIR acts as the trigger, the LED and Buzzer act as the alarm outputs, and the Button acts as the disarm switch.'
       },
-      code: `import RPi.GPIO as GPIO\nimport time\n\n# Pins\nLED_PIN = 17\nBUZZER_PIN = 18\nBUTTON_PIN = 22\nPIR_PIN = 23\n\n# Setup\nGPIO.setmode(GPIO.BCM)\nGPIO.setwarnings(False)\nGPIO.setup(LED_PIN, GPIO.OUT)\nGPIO.setup(BUZZER_PIN, GPIO.OUT)\nGPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)\nGPIO.setup(PIR_PIN, GPIO.IN)\n\nbuzzer = GPIO.PWM(BUZZER_PIN, 880)\n\n# System State\nalarm_active = False\n\ndef trigger_alarm(channel):\n    global alarm_active\n    if not alarm_active:\n        print("ALARM TRIGGERED!")\n        alarm_active = True\n\nGPIO.add_event_detect(PIR_PIN, GPIO.RISING, callback=trigger_alarm)\n\ntry:\n    print("System Armed. Waiting for motion...")\n    while True:\n        if alarm_active:\n            # Sound alarm and flash LED\n            GPIO.output(LED_PIN, GPIO.HIGH)\n            buzzer.start(50)\n            time.sleep(0.2)\n            \n            GPIO.output(LED_PIN, GPIO.LOW)\n            buzzer.stop()\n            time.sleep(0.2)\n            \n            # Check for disarm button\n            if GPIO.input(BUTTON_PIN) == GPIO.HIGH:\n                print("System Disarmed!")\n                alarm_active = False\n                time.sleep(2) # Prevent immediate re-trigger\n                print("System Re-armed.")\n        else:\n            time.sleep(0.1)\n\nexcept KeyboardInterrupt:\n    pass\n\nfinally:\n    buzzer.stop()\n    GPIO.cleanup()`,
+      code: `#!/usr/bin/env python3\n"""\nLevel 7: Multi-Module Alarm System - State machine with gpiozero\n\n🔒 SECURITY HARDENING:\n- Use a state machine pattern to prevent race conditions\n- Add entry delay to prevent triggering while disarming\n- Consider storing arm/disarm logs to a secure file\n- Run as a systemd service for auto-restart on failure\n\n📚 EDUCATIONAL MOMENT:\nThis uses a "state machine" pattern - the system's behavior depends on\nits current state (ARMED, ALARM, DISARMED), not just raw sensor input.\n"""\n\nfrom gpiozero import LED, Button, TonalBuzzer, MotionSensor\nfrom gpiozero.tones import Tone\nfrom enum import Enum\nfrom signal import pause\nfrom time import sleep\nfrom threading import Event\n\n# ============================================\n# STATE MACHINE DEFINITION\n# ============================================\n\nclass AlarmState(Enum):\n    DISARMED = "DISARMED"\n    ARMED = "ARMED"\n    TRIGGERED = "TRIGGERED"\n\n# ============================================\n# HARDWARE ABSTRACTION\n# ============================================\n\nalert_led = LED(17)\nalarm_buzzer = TonalBuzzer(18)\narm_button = Button(22, pull_up=False, bounce_time=0.1)\nmotion_sensor = MotionSensor(23)\n\n# ============================================\n# SYSTEM STATE\n# ============================================\n\ncurrent_state = AlarmState.DISARMED\nalarm_stop_event = Event()\n\n# ============================================\n# EVENT HANDLERS\n# ============================================\n\ndef trigger_alarm():\n    """Called when motion detected while armed."""\n    global current_state\n    if current_state == AlarmState.ARMED:\n        current_state = AlarmState.TRIGGERED\n        print("🚨 ALARM TRIGGERED!")\n        alarm_stop_event.clear()\n        \n        # Sound alarm pattern until stopped\n        while current_state == AlarmState.TRIGGERED:\n            alert_led.on()\n            alarm_buzzer.play(Tone("A5"))\n            sleep(0.15)\n            alert_led.off()\n            alarm_buzzer.play(Tone("E5"))\n            sleep(0.15)\n            \n            if alarm_stop_event.is_set():\n                break\n        \n        alarm_buzzer.stop()\n        alert_led.off()\n\ndef toggle_arm_state():\n    """Called when arm/disarm button is pressed."""\n    global current_state\n    \n    if current_state == AlarmState.TRIGGERED:\n        # Disarm the alarm\n        current_state = AlarmState.DISARMED\n        alarm_stop_event.set()\n        print("✅ Alarm DISARMED")\n        alert_led.blink(on_time=0.1, off_time=0.1, n=3)\n        sleep(2)  # Cooldown before re-arming\n        \n    elif current_state == AlarmState.DISARMED:\n        # Arm the system with countdown\n        print("🔒 Arming in 5 seconds...")\n        for i in range(5, 0, -1):\n            print(f"   {i}...")\n            alert_led.blink(on_time=0.1, off_time=0.4, n=1)\n            sleep(1)\n        current_state = AlarmState.ARMED\n        alert_led.on()\n        print("🛡️ System ARMED")\n        sleep(0.5)\n        alert_led.off()\n        \n    elif current_state == AlarmState.ARMED:\n        # Disarm without triggering\n        current_state = AlarmState.DISARMED\n        print("🔓 System DISARMED")\n        alert_led.blink(on_time=0.1, off_time=0.1, n=2)\n\n# ============================================\n# REGISTER EVENT CALLBACKS\n# ============================================\n\nmotion_sensor.when_motion = trigger_alarm\narm_button.when_pressed = toggle_arm_state\n\n# ============================================\n# MAIN PROGRAM\n# ============================================\n\nprint("🏠 Alarm System Initialized")\nprint("   Press button to ARM/DISARM")\nprint("   Press Ctrl+C to exit\n")\nprint(f"Status: {current_state.value}")\n\ntry:\n    pause()\nexcept KeyboardInterrupt:\n    alarm_buzzer.stop()\n    alert_led.off()\n    print("\n👋 System shutdown.")`,
       codeWalkthrough: [
-        { section: 'Global Variables', explanation: '`global alarm_active` allows the callback function to modify the `alarm_active` variable that lives outside the function.' },
-        { section: 'State Machine', explanation: 'The `alarm_active` boolean acts as a "state". The main loop behaves completely differently depending on whether this state is True or False.' },
-        { section: 'Integration', explanation: 'We combine event detection (PIR) with polling (checking the Button inside the alarm loop) to create a responsive system.' }
+        { section: 'Enum State Machine', explanation: '`AlarmState(Enum)` defines named states. Using Enums prevents typos like `"ARMD"` and makes code self-documenting.' },
+        { section: 'Threading Event', explanation: '`Event()` from threading safely signals between the alarm loop and the disarm callback. This prevents race conditions.' },
+        { section: 'State Transitions', explanation: 'The `toggle_arm_state()` function checks `current_state` before acting. The same button press does different things depending on state.' },
+        { section: 'Arm Countdown', explanation: 'The 5-second countdown gives you time to leave the room. Real alarm systems work the same way!' }
       ],
       conceptDeepDive: {
         hardware: "Multiple components share the Pi's power and ground rails. The Pi coordinates them, acting as the central nervous system.",
@@ -331,9 +336,9 @@ export const curriculum: Project[] = [
         connection: 'This project bridges the gap between simple scripts and real-world products. A commercial home alarm works on these exact same principles.'
       },
       experimentMode: {
-        tweak: 'Change the buzzer frequency and sleep timings to make the alarm sound more urgent.',
-        logic: 'Add a 5-second delay between when motion is detected and when the alarm actually sounds, giving the user time to press the disarm button.',
-        creative: 'Add the LCD from Level 6. Make it display "SYSTEM ARMED", "ALARM!", and "DISARMED" based on the current state.'
+        tweak: 'Change the buzzer tones in `trigger_alarm()` to "C6" and "G5" for a different sound.',
+        logic: 'Add an "entry delay" - when motion is detected, give 5 seconds to press disarm before the alarm sounds.',
+        creative: 'Add an I2C LCD from Level 6 to display the current `AlarmState.value` in real-time!'
       },
       troubleshooting: [
         { issue: "Alarm won't turn off", solution: 'Ensure you are holding the button down during the 0.2 second window when the code checks it, or use an event detect for the button too.' },
