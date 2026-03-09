@@ -6,6 +6,7 @@ import ProjectView from './components/ProjectView';
 import ProgressTracker from './components/ProgressTracker';
 import LabNotebookModal from './components/LabNotebookModal';
 import LabNotebookView from './components/LabNotebookView';
+import DictionaryView from './components/DictionaryView';
 
 const INITIAL_PROGRESS: UserProgress = {
   projectStatuses: curriculum.reduce((acc, p) => ({ ...acc, [p.id]: 'Not Started' }), {}),
@@ -14,7 +15,7 @@ const INITIAL_PROGRESS: UserProgress = {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'curriculum' | 'progress' | 'notebook'>('curriculum');
+  const [activeTab, setActiveTab] = useState<'curriculum' | 'progress' | 'notebook' | 'dictionary'>('curriculum');
   const [activeProjectId, setActiveProjectId] = useState<string>(curriculum[0].id);
   const [progress, setProgress] = useState<UserProgress>(() => {
     const saved = localStorage.getItem('rpi-lab-progress');
@@ -135,6 +136,9 @@ export default function App() {
           )}
           {activeTab === 'notebook' && (
             <LabNotebookView entries={progress.labNotebook} />
+          )}
+          {activeTab === 'dictionary' && (
+            <DictionaryView />
           )}
         </div>
       </main>

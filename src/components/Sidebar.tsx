@@ -1,11 +1,11 @@
 import React from 'react';
-import { BookOpen, CheckCircle, Circle, PlayCircle, Award, LayoutDashboard, NotebookPen, Lock, X } from 'lucide-react';
+import { BookOpen, CheckCircle, Circle, PlayCircle, Award, LayoutDashboard, NotebookPen, Lock, X, BookMarked } from 'lucide-react';
 import { curriculum } from '../data/curriculum';
 import { UserProgress } from '../types';
 
 interface SidebarProps {
-  activeTab: 'curriculum' | 'progress' | 'notebook';
-  setActiveTab: (tab: 'curriculum' | 'progress' | 'notebook') => void;
+  activeTab: 'curriculum' | 'progress' | 'notebook' | 'dictionary';
+  setActiveTab: (tab: 'curriculum' | 'progress' | 'notebook' | 'dictionary') => void;
   progress: UserProgress;
   activeProjectId: string;
   onSelectProject: (id: string) => void;
@@ -15,7 +15,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, setActiveTab, progress, activeProjectId, onSelectProject, isProjectLocked, isMobileMenuOpen, onCloseMobileMenu }: SidebarProps) {
-  const handleTabChange = (tab: 'curriculum' | 'progress' | 'notebook') => {
+  const handleTabChange = (tab: 'curriculum' | 'progress' | 'notebook' | 'dictionary') => {
     setActiveTab(tab);
     onCloseMobileMenu(); // Close menu when tab changes on mobile
   };
@@ -67,6 +67,13 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
           >
             <NotebookPen size={18} />
             <span className="font-medium">Lab Notebook</span>
+          </button>
+          <button 
+            onClick={() => handleTabChange('dictionary')}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'dictionary' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
+          >
+            <BookMarked size={18} />
+            <span className="font-medium">Dictionary</span>
           </button>
         </div>
 

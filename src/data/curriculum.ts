@@ -2,7 +2,7 @@ import { Project } from '../types';
 
 export const curriculum: Project[] = [
   {
-    id: 'p1',
+    id: 'p1-intro',
     level: 1,
     levelName: 'Digital Output Basics',
     title: 'Hello, LED',
@@ -15,44 +15,200 @@ export const curriculum: Project[] = [
         difficulty: 1,
         estimatedTime: '15 mins'
       },
-      hardwareSetup: {
-        warnings: [
-          'Always use a resistor (e.g., 220Ω or 330Ω) with an LED to prevent it from burning out.',
-          'Default to 3.3V logic. Never connect an LED directly to 5V or 3.3V without a resistor.'
-        ],
-        steps: [
-          'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the blue negative (-) rail on your breadboard.',
-          'Connect the shorter leg (cathode) of the LED to the same negative rail.',
-          'Connect the longer leg (anode) of the LED to a row in the middle of the breadboard.',
-          "Connect one end of a 220Ω resistor to the same row as the LED's long leg.",
-          'Connect the other end of the resistor to a different row.',
-          'Connect a jumper wire from Raspberry Pi Physical Pin 11 (GPIO 17) to the row with the other end of the resistor.'
-        ],
-        explanation: 'Electricity flows from the GPIO pin (when turned HIGH, providing 3.3V), through the resistor (which limits the current), through the LED (lighting it up), and back to the Ground (GND) pin, completing the circuit.'
-      },
-      code: `#!/usr/bin/env python3\n"""\nLevel 1: Hello, LED - Blink an LED using gpiozero\n\n🔒 SECURITY HARDENING:\n- Always use a 220Ω-330Ω current-limiting resistor with LEDs\n- Disable unused interfaces: sudo raspi-config -> Interface Options\n  (disable SPI, I2C, Serial if not needed to reduce attack surface)\n- Keep your Pi's OS updated: sudo apt update && sudo apt upgrade\n\n📚 EDUCATIONAL MOMENT:\ngpiozero uses "source/values" properties for declarative hardware control,\nmeaning you describe WHAT should happen, not HOW to do it step-by-step.\n"""\n\nfrom gpiozero import LED\nfrom signal import pause\n\n# ============================================\n# HARDWARE ABSTRACTION\n# gpiozero automatically handles pin setup!\n# ============================================\n\n# Create an LED object on GPIO 17 (BCM numbering by default)\nstatus_led = LED(17)\n\n# ============================================\n# HIGH-LEVEL LOGIC\n# The blink() method handles the timing loop internally\n# ============================================\n\nprint("🟢 LED blinking... Press Ctrl+C to exit.")\n\n# Blink the LED: 1 second on, 1 second off\n# No manual loops needed - gpiozero handles this in a background thread\nstatus_led.blink(on_time=1, off_time=1)\n\n# Keep the program running until interrupted\n# pause() is more efficient than while True: sleep()\ntry:\n    pause()\nexcept KeyboardInterrupt:\n    print("\n🔴 Exiting... LED turned off.")\n    status_led.off()\n\n# Note: gpiozero automatically cleans up GPIO pins on exit!`,
-      codeWalkthrough: [
-        { section: 'Imports', explanation: '`from gpiozero import LED` gives us a high-level LED class. `from signal import pause` lets us wait efficiently without a busy loop.' },
-        { section: 'Hardware Abstraction', explanation: '`LED(17)` creates an LED object on GPIO 17. gpiozero automatically handles `setmode`, `setup`, and uses BCM numbering by default.' },
-        { section: 'The blink() Method', explanation: '`status_led.blink(on_time=1, off_time=1)` runs in a background thread. No `while True` loop needed!' },
-        { section: 'pause()', explanation: '`pause()` keeps the script running without consuming CPU. It waits for a signal (like Ctrl+C) efficiently.' },
-        { section: 'Automatic Cleanup', explanation: 'gpiozero automatically resets GPIO pins when your script exits. No manual `GPIO.cleanup()` required!' }
+      pages: [
+        {
+          id: 'p1-overview',
+          title: 'Project Overview',
+          content: {
+            overview: {
+              description: 'We are building the "Hello World" of electronics: making an LED blink! This is your first step into controlling physical hardware with code.',
+              concepts: ['Digital Output', 'gpiozero LED class', 'Background threads'],
+              difficulty: 1,
+              estimatedTime: '15 mins'
+            },
+            hardwareSetup: {
+              warnings: [],
+              steps: [],
+              explanation: ''
+            },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p1-hardware',
+          title: 'Hardware Setup',
+          content: {
+            overview: {
+              description: '',
+              concepts: [],
+              difficulty: 1,
+              estimatedTime: ''
+            },
+            hardwareSetup: {
+              warnings: [
+                'Always use a resistor (e.g., 220Ω or 330Ω) with an LED to prevent it from burning out.',
+                'Default to 3.3V logic. Never connect an LED directly to 5V or 3.3V without a resistor.'
+              ],
+              steps: [
+                'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the blue negative (-) rail on your breadboard.',
+                'Connect the shorter leg (cathode) of the LED to the same negative rail.',
+                'Connect the longer leg (anode) of the LED to a row in the middle of the breadboard.',
+                "Connect one end of a 220Ω resistor to the same row as the LED's long leg.",
+                'Connect the other end of the resistor to a different row.',
+                'Connect a jumper wire from Raspberry Pi Physical Pin 11 (GPIO 17) to the row with the other end of the resistor.'
+              ],
+              explanation: 'Electricity flows from the GPIO pin (when turned HIGH, providing 3.3V), through the resistor (which limits the current), through the LED (lighting it up), and back to the Ground (GND) pin, completing the circuit.'
+            },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p1-code',
+          title: 'The Code',
+          content: {
+            overview: {
+              description: '',
+              concepts: [],
+              difficulty: 1,
+              estimatedTime: ''
+            },
+            hardwareSetup: {
+              warnings: [],
+              steps: [],
+              explanation: ''
+            },
+            code: `#!/usr/bin/env python3\n"""\nLevel 1: Hello, LED - Blink an LED using gpiozero\n\n🔒 SECURITY HARDENING:\n- Always use a 220Ω-330Ω current-limiting resistor with LEDs\n- Disable unused interfaces: sudo raspi-config -> Interface Options\n  (disable SPI, I2C, Serial if not needed to reduce attack surface)\n- Keep your Pi's OS updated: sudo apt update && sudo apt upgrade\n\n📚 EDUCATIONAL MOMENT:\ngpiozero uses "source/values" properties for declarative hardware control,\nmeaning you describe WHAT should happen, not HOW to do it step-by-step.\n"""\n\nfrom gpiozero import LED\nfrom signal import pause\n\n# ============================================\n# HARDWARE ABSTRACTION\n# gpiozero automatically handles pin setup!\n# ============================================\n\n# Create an LED object on GPIO 17 (BCM numbering by default)\nstatus_led = LED(17)\n\n# ============================================\n# HIGH-LEVEL LOGIC\n# The blink() method handles the timing loop internally\n# ============================================\n\nprint("🟢 LED blinking... Press Ctrl+C to exit.")\n\n# Blink the LED: 1 second on, 1 second off\n# No manual loops needed - gpiozero handles this in a background thread\nstatus_led.blink(on_time=1, off_time=1)\n\n# Keep the program running until interrupted\n# pause() is more efficient than while True: sleep()\ntry:\n    pause()\nexcept KeyboardInterrupt:\n    print("\n🔴 Exiting... LED turned off.")\n    status_led.off()\n\n# Note: gpiozero automatically cleans up GPIO pins on exit!`,
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p1-walkthrough',
+          title: 'Code Walkthrough',
+          content: {
+            overview: {
+              description: '',
+              concepts: [],
+              difficulty: 1,
+              estimatedTime: ''
+            },
+            hardwareSetup: {
+              warnings: [],
+              steps: [],
+              explanation: ''
+            },
+            code: '',
+            codeWalkthrough: [
+              { section: 'Imports', explanation: '`from gpiozero import LED` gives us a high-level LED class. `from signal import pause` lets us wait efficiently without a busy loop.' },
+              { section: 'Hardware Abstraction', explanation: '`LED(17)` creates an LED object on GPIO 17. gpiozero automatically handles `setmode`, `setup`, and uses BCM numbering by default.' },
+              { section: 'The blink() Method', explanation: '`status_led.blink(on_time=1, off_time=1)` runs in a background thread. No `while True` loop needed!' },
+              { section: 'pause()', explanation: '`pause()` keeps the script running without consuming CPU. It waits for a signal (like Ctrl+C) efficiently.' },
+              { section: 'Automatic Cleanup', explanation: 'gpiozero automatically resets GPIO pins when your script exits. No manual `GPIO.cleanup()` required!' }
+            ],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p1-deepdive',
+          title: 'Concept Deep Dive',
+          content: {
+            overview: {
+              description: '',
+              concepts: [],
+              difficulty: 1,
+              estimatedTime: ''
+            },
+            hardwareSetup: {
+              warnings: [],
+              steps: [],
+              explanation: ''
+            },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: {
+              hardware: "The Raspberry Pi acts as a switchable power source. When a pin is HIGH, it pushes electrons out. The resistor acts like a narrow pipe, slowing down the electrons so they don't overwhelm and pop the LED.",
+              software: 'The Python script is the brain. It sequentially executes commands, telling the "switch" (GPIO pin) when to open and close, with precise timing.',
+              connection: 'Software commands translate into physical voltage changes. 1s and 0s in code become 3.3V and 0V in reality.'
+            },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p1-experiment',
+          title: 'Experiment Mode',
+          content: {
+            overview: {
+              description: '',
+              concepts: [],
+              difficulty: 1,
+              estimatedTime: ''
+            },
+            hardwareSetup: {
+              warnings: [],
+              steps: [],
+              explanation: ''
+            },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: {
+              tweak: 'Change `on_time=1` to `on_time=0.1`. What happens to the blinking speed?',
+              logic: 'Change the blink pattern to stay ON for 2 seconds but OFF for only 0.5 seconds.',
+              creative: 'Can you make the LED blink a heartbeat pattern? Try `blink(on_time=0.1, off_time=0.1, n=2)` then `sleep(0.6)` in a loop!'
+            },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p1-troubleshooting',
+          title: 'Troubleshooting',
+          content: {
+            overview: {
+              description: '',
+              concepts: [],
+              difficulty: 1,
+              estimatedTime: ''
+            },
+            hardwareSetup: {
+              warnings: [],
+              steps: [],
+              explanation: ''
+            },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: [
+              { issue: "LED doesn't light up", solution: 'Check LED polarity. Long leg goes to resistor/GPIO, short leg to GND.' },
+              { issue: 'Error: "No access to /dev/mem"', solution: 'You might need to run your script with `sudo python3 script.py` depending on your OS version.' },
+              { issue: 'LED is very dim', solution: 'Check your resistor value. If you used a 10kΩ resistor instead of 220Ω, too little current is flowing.' }
+            ]
+          }
+        }
       ],
-      conceptDeepDive: {
-        hardware: "The Raspberry Pi acts as a switchable power source. When a pin is HIGH, it pushes electrons out. The resistor acts like a narrow pipe, slowing down the electrons so they don't overwhelm and pop the LED.",
-        software: 'The Python script is the brain. It sequentially executes commands, telling the "switch" (GPIO pin) when to open and close, with precise timing.',
-        connection: 'Software commands translate into physical voltage changes. 1s and 0s in code become 3.3V and 0V in reality.'
+      hardwareSetup: {
+        warnings: [],
+        steps: [],
+        explanation: ''
       },
-      experimentMode: {
-        tweak: 'Change `on_time=1` to `on_time=0.1`. What happens to the blinking speed?',
-        logic: 'Change the blink pattern to stay ON for 2 seconds but OFF for only 0.5 seconds.',
-        creative: 'Can you make the LED blink a heartbeat pattern? Try `blink(on_time=0.1, off_time=0.1, n=2)` then `sleep(0.6)` in a loop!'
-      },
-      troubleshooting: [
-        { issue: "LED doesn't light up", solution: 'Check LED polarity. Long leg goes to resistor/GPIO, short leg to GND.' },
-        { issue: 'Error: "No access to /dev/mem"', solution: 'You might need to run your script with `sudo python3 script.py` depending on your OS version.' },
-        { issue: 'LED is very dim', solution: 'Check your resistor value. If you used a 10kΩ resistor instead of 220Ω, too little current is flowing.' }
-      ]
+      code: '',
+      codeWalkthrough: [],
+      conceptDeepDive: { hardware: '', software: '', connection: '' },
+      experimentMode: { tweak: '', logic: '', creative: '' },
+      troubleshooting: []
     }
   },
   {
