@@ -1,11 +1,11 @@
 import React from 'react';
-import { BookOpen, CheckCircle, Circle, PlayCircle, Award, LayoutDashboard, NotebookPen, Lock, X, BookMarked } from 'lucide-react';
+import { BookOpen, CheckCircle, Circle, PlayCircle, Award, LayoutDashboard, NotebookPen, Lock, X, BookMarked, Home, Cpu } from 'lucide-react';
 import { curriculum } from '../data/curriculum';
 import { UserProgress } from '../types';
 
 interface SidebarProps {
-  activeTab: 'curriculum' | 'progress' | 'notebook' | 'dictionary';
-  setActiveTab: (tab: 'curriculum' | 'progress' | 'notebook' | 'dictionary') => void;
+  activeTab: 'home' | 'curriculum' | 'progress' | 'notebook' | 'dictionary' | 'pinout';
+  setActiveTab: (tab: 'home' | 'curriculum' | 'progress' | 'notebook' | 'dictionary' | 'pinout') => void;
   progress: UserProgress;
   activeProjectId: string;
   onSelectProject: (id: string) => void;
@@ -15,7 +15,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, setActiveTab, progress, activeProjectId, onSelectProject, isProjectLocked, isMobileMenuOpen, onCloseMobileMenu }: SidebarProps) {
-  const handleTabChange = (tab: 'curriculum' | 'progress' | 'notebook' | 'dictionary') => {
+  const handleTabChange = (tab: 'home' | 'curriculum' | 'progress' | 'notebook' | 'dictionary' | 'pinout') => {
     setActiveTab(tab);
     onCloseMobileMenu(); // Close menu when tab changes on mobile
   };
@@ -54,6 +54,13 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
 
       <div className="flex-1 overflow-y-auto py-4">
         <div className="px-4 mb-6 space-y-1">
+          <button
+            onClick={() => handleTabChange('home')}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'home' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
+          >
+            <Home size={18} />
+            <span className="font-medium">Home</span>
+          </button>
           <button 
             onClick={() => handleTabChange('progress')}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'progress' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
@@ -74,6 +81,13 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
           >
             <BookMarked size={18} />
             <span className="font-medium">Dictionary</span>
+          </button>
+          <button
+            onClick={() => handleTabChange('pinout')}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'pinout' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
+          >
+            <Cpu size={18} />
+            <span className="font-medium">GPIO Pinout</span>
           </button>
         </div>
 

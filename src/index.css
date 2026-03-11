@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+.progress-fill {
+  width: var(--fill-width, 0%);
+}

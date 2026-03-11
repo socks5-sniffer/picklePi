@@ -7,6 +7,8 @@ import ProgressTracker from './components/ProgressTracker';
 import LabNotebookModal from './components/LabNotebookModal';
 import LabNotebookView from './components/LabNotebookView';
 import DictionaryView from './components/DictionaryView';
+import LandingView from './components/LandingView';
+import PinoutView from './components/PinoutView';
 
 const INITIAL_PROGRESS: UserProgress = {
   projectStatuses: curriculum.reduce((acc, p) => ({ ...acc, [p.id]: 'Not Started' }), {}),
@@ -15,7 +17,7 @@ const INITIAL_PROGRESS: UserProgress = {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'curriculum' | 'progress' | 'notebook' | 'dictionary'>('curriculum');
+  const [activeTab, setActiveTab] = useState<'home' | 'curriculum' | 'progress' | 'notebook' | 'dictionary' | 'pinout'>('home');
   const [activeProjectId, setActiveProjectId] = useState<string>(curriculum[0].id);
   const [progress, setProgress] = useState<UserProgress>(() => {
     const saved = localStorage.getItem('rpi-lab-progress');
@@ -123,6 +125,15 @@ export default function App() {
         </button>
 
         <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+          {activeTab === 'home' && (
+            <LandingView
+              progress={progress}
+              onSelectProject={(id) => {
+                handleStartProject(id);
+                setActiveTab('curriculum');
+              }}
+            />
+          )}
           {activeTab === 'curriculum' && (
             <ProjectView 
               project={activeProject} 
@@ -139,6 +150,9 @@ export default function App() {
           )}
           {activeTab === 'dictionary' && (
             <DictionaryView />
+          )}
+          {activeTab === 'pinout' && (
+            <PinoutView />
           )}
         </div>
       </main>
