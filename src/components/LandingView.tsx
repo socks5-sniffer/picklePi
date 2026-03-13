@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { curriculum } from '../data/curriculum';
 import { UserProgress, ProjectStatus } from '../types';
 import { Clock, Star, ChevronRight, Zap, CheckCircle2 } from 'lucide-react';
@@ -44,7 +44,10 @@ export default function LandingView({ progress, onSelectProject }: LandingViewPr
     return Math.max(ns, 0);
   })();
 
+  const [showAll, setShowAll] = useState(false);
+
   const featured = curriculum.slice(currentIdx, currentIdx + 3);
+  const displayed = showAll ? curriculum : featured;
 
   const completedCount = curriculum.filter(p => progress.projectStatuses[p.id] === 'Completed').length;
   const totalCount = curriculum.length;
@@ -75,13 +78,21 @@ export default function LandingView({ progress, onSelectProject }: LandingViewPr
 
       {/* Project Cards */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-5">
-          What's Next
-        </h2>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest">
+            {showAll ? 'All Levels' : "What's Next"}
+          </h2>
+          <button
+            onClick={() => setShowAll(v => !v)}
+            className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 px-3 py-1 rounded-full transition-all duration-150"
+          >
+            {showAll ? 'Show Less' : `Show All (${curriculum.length})`}
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {featured.map((project, i) => {
+          {displayed.map((project, i) => {
             const status = progress.projectStatuses[project.id];
-            const isCurrent = i === 0;
+            const isCurrent = showAll ? i === currentIdx : i === 0;
             const overview = project.content?.overview;
 
             return (
