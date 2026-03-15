@@ -1,0 +1,321 @@
+================================================================================
+                        PicklePi Database Schema
+================================================================================
+A relational database schema for the PicklePi Raspberry Pi learning platform.
+
+================================================================================
+TABLES
+================================================================================
+
+--------------------------------------------------------------------------------
+1. users
+--------------------------------------------------------------------------------
+Stores user account information.
+
+| Column      | Type         | Constraints                    |
+|-------------|--------------|--------------------------------|
+| id          | UUID         | PRIMARY KEY                    |
+| username    | VARCHAR(50)  | NOT NULL, UNIQUE               |
+| email       | VARCHAR(255) | NOT NULL, UNIQUE               |
+| created_at  | TIMESTAMP    | NOT NULL, DEFAULT NOW()        |
+| updated_at  | TIMESTAMP    | NOT NULL, DEFAULT NOW()        |
+
+--------------------------------------------------------------------------------
+2. projects
+--------------------------------------------------------------------------------
+Stores curriculum projects (lessons).
+
+| Column          | Type         | Constraints                    |
+|-----------------|--------------|--------------------------------|
+| id              | VARCHAR(50)  | PRIMARY KEY                    |
+| level           | INT          | NOT NULL                       |
+| level_name      | VARCHAR(100) | NOT NULL                       |
+| title           | VARCHAR(200) | NOT NULL                       |
+| badge_earned    | VARCHAR(100) | NOT NULL                       |
+| created_at      | TIMESTAMP    | NOT NULL, DEFAULT NOW()        |
+
+--------------------------------------------------------------------------------
+3. project_skills
+--------------------------------------------------------------------------------
+Skills learned in each project (many-to-many via junction table pattern).
+
+| Column      | Type         | Constraints                              |
+|-------------|--------------|------------------------------------------|
+| id          | SERIAL       | PRIMARY KEY                              |
+| project_id  | VARCHAR(50)  | NOT NULL, FK -> projects(id)             |
+| skill       | VARCHAR(200) | NOT NULL                                 |
+
+INDEX: (project_id)
+UNIQUE: (project_id, skill)
+
+--------------------------------------------------------------------------------
+4. project_content
+--------------------------------------------------------------------------------
+Main content for each project (1:1 with projects).
+
+| Column                    | Type    | Constraints                    |
+|---------------------------|---------|--------------------------------|
+| id                        | SERIAL  | PRIMARY KEY                    |
+| project_id                | VARCHAR(50) | NOT NULL, UNIQUE, FK -> projects(id) |
+| overview_description      | TEXT    |                                |
+| overview_difficulty       | INT     |                                |
+| overview_estimated_time   | VARCHAR(50) |                            |
+| hardware_explanation      | TEXT    |                                |
+| code                      | TEXT    |                                |
+| deep_dive_hardware        | TEXT    |                                |
+| deep_dive_software        | TEXT    |                                |
+| deep_dive_connection      | TEXT    |                                |
+| experiment_tweak          | TEXT    |                                |
+| experiment_logic          | TEXT    |                                |
+| experiment_creative       | TEXT    |                                |
+
+--------------------------------------------------------------------------------
+5. project_overview_concepts
+--------------------------------------------------------------------------------
+Concepts covered in project overview (1:many).
+
+| Column      | Type         | Constraints                              |
+|-------------|--------------|------------------------------------------|
+| id          | SERIAL       | PRIMARY KEY                              |
+| project_id  | VARCHAR(50)  | NOT NULL, FK -> projects(id)             |
+| concept     | VARCHAR(200) | NOT NULL                                 |
+
+INDEX: (project_id)
+
+--------------------------------------------------------------------------------
+6. project_hardware_warnings
+--------------------------------------------------------------------------------
+Hardware setup warnings for each project.
+
+| Column      | Type         | Constraints                              |
+|-------------|--------------|------------------------------------------|
+| id          | SERIAL       | PRIMARY KEY                              |
+| project_id  | VARCHAR(50)  | NOT NULL, FK -> projects(id)             |
+| warning     | TEXT         | NOT NULL                                 |
+| sort_order  | INT          | NOT NULL, DEFAULT 0                      |
+
+INDEX: (project_id)
+
+--------------------------------------------------------------------------------
+7. project_hardware_steps
+--------------------------------------------------------------------------------
+Hardware setup steps for each project.
+
+| Column      | Type         | Constraints                              |
+|-------------|--------------|------------------------------------------|
+| id          | SERIAL       | PRIMARY KEY                              |
+| project_id  | VARCHAR(50)  | NOT NULL, FK -> projects(id)             |
+| step        | TEXT         | NOT NULL                                 |
+| sort_order  | INT          | NOT NULL, DEFAULT 0                      |
+
+INDEX: (project_id)
+
+--------------------------------------------------------------------------------
+8. project_code_walkthrough
+--------------------------------------------------------------------------------
+Code walkthrough sections for each project.
+
+| Column      | Type         | Constraints                              |
+|-------------|--------------|------------------------------------------|
+| id          | SERIAL       | PRIMARY KEY                              |
+| project_id  | VARCHAR(50)  | NOT NULL, FK -> projects(id)             |
+| section     | VARCHAR(200) | NOT NULL                                 |
+| explanation | TEXT         | NOT NULL                                 |
+| sort_order  | INT          | NOT NULL, DEFAULT 0                      |
+
+INDEX: (project_id)
+
+--------------------------------------------------------------------------------
+9. project_troubleshooting
+--------------------------------------------------------------------------------
+Troubleshooting tips for each project.
+
+| Column      | Type         | Constraints                              |
+|-------------|--------------|------------------------------------------|
+| id          | SERIAL       | PRIMARY KEY                              |
+| project_id  | VARCHAR(50)  | NOT NULL, FK -> projects(id)             |
+| issue       | TEXT         | NOT NULL                                 |
+| solution    | TEXT         | NOT NULL                                 |
+| sort_order  | INT          | NOT NULL, DEFAULT 0                      |
+
+INDEX: (project_id)
+
+--------------------------------------------------------------------------------
+10. project_pages
+--------------------------------------------------------------------------------
+Sub-pages within a project (multi-page navigation).
+
+| Column      | Type         | Constraints                              |
+|-------------|--------------|------------------------------------------|
+| id          | VARCHAR(50)  | PRIMARY KEY                              |
+| project_id  | VARCHAR(50)  | NOT NULL, FK -> projects(id)             |
+| title       | VARCHAR(200) | NOT NULL                                 |
+| sort_order  | INT          | NOT NULL, DEFAULT 0                      |
+
+INDEX: (project_id)
+
+Note: Page content follows the same structure as project_content.
+Each page can have its own content stored in page_content table (similar structure).
+
+--------------------------------------------------------------------------------
+11. page_content
+--------------------------------------------------------------------------------
+Content for each project page (1:1 with project_pages).
+
+| Column                    | Type        | Constraints                        |
+|---------------------------|-------------|-----------------------------------|
+| id                        | SERIAL      | PRIMARY KEY                       |
+| page_id                   | VARCHAR(50) | NOT NULL, UNIQUE, FK -> project_pages(id) |
+| overview_description      | TEXT        |                                   |
+| overview_difficulty       | INT         |                                   |
+| overview_estimated_time   | VARCHAR(50) |                                   |
+| hardware_explanation      | TEXT        |                                   |
+| code                      | TEXT        |                                   |
+| deep_dive_hardware        | TEXT        |                                   |
+| deep_dive_software        | TEXT        |                                   |
+| deep_dive_connection      | TEXT        |                                   |
+| experiment_tweak          | TEXT        |                                   |
+| experiment_logic          | TEXT        |                                   |
+| experiment_creative       | TEXT        |                                   |
+
+--------------------------------------------------------------------------------
+12. dictionary_entries
+--------------------------------------------------------------------------------
+Glossary of terms.
+
+| Column      | Type         | Constraints                              |
+|-------------|--------------|------------------------------------------|
+| id          | SERIAL       | PRIMARY KEY                              |
+| term        | VARCHAR(100) | NOT NULL, UNIQUE                         |
+| category    | VARCHAR(50)  | NOT NULL                                 |
+| definition  | TEXT         | NOT NULL                                 |
+| example     | TEXT         |                                          |
+
+CHECK: category IN ('Python', 'Raspberry Pi', 'Electronics')
+INDEX: (category)
+INDEX: (term)
+
+--------------------------------------------------------------------------------
+13. user_project_status
+--------------------------------------------------------------------------------
+Tracks user progress on each project.
+
+| Column      | Type         | Constraints                              |
+|-------------|--------------|------------------------------------------|
+| id          | SERIAL       | PRIMARY KEY                              |
+| user_id     | UUID         | NOT NULL, FK -> users(id)                |
+| project_id  | VARCHAR(50)  | NOT NULL, FK -> projects(id)             |
+| status      | VARCHAR(20)  | NOT NULL, DEFAULT 'Not Started'          |
+| started_at  | TIMESTAMP    |                                          |
+| completed_at| TIMESTAMP    |                                          |
+| updated_at  | TIMESTAMP    | NOT NULL, DEFAULT NOW()                  |
+
+UNIQUE: (user_id, project_id)
+CHECK: status IN ('Not Started', 'In Progress', 'Completed')
+INDEX: (user_id)
+INDEX: (project_id)
+
+--------------------------------------------------------------------------------
+14. user_badges
+--------------------------------------------------------------------------------
+Badges earned by users.
+
+| Column      | Type         | Constraints                              |
+|-------------|--------------|------------------------------------------|
+| id          | SERIAL       | PRIMARY KEY                              |
+| user_id     | UUID         | NOT NULL, FK -> users(id)                |
+| badge_name  | VARCHAR(100) | NOT NULL                                 |
+| earned_at   | TIMESTAMP    | NOT NULL, DEFAULT NOW()                  |
+
+UNIQUE: (user_id, badge_name)
+INDEX: (user_id)
+
+--------------------------------------------------------------------------------
+15. lab_notebook_entries
+--------------------------------------------------------------------------------
+User's lab notebook journal entries.
+
+| Column            | Type         | Constraints                          |
+|-------------------|--------------|--------------------------------------|
+| id                | UUID         | PRIMARY KEY                          |
+| user_id           | UUID         | NOT NULL, FK -> users(id)            |
+| project_id        | VARCHAR(50)  | NOT NULL, FK -> projects(id)         |
+| what_worked       | TEXT         | NOT NULL                             |
+| what_didnt        | TEXT         | NOT NULL                             |
+| what_changed      | TEXT         | NOT NULL                             |
+| one_thing_learned | TEXT         | NOT NULL                             |
+| created_at        | TIMESTAMP    | NOT NULL, DEFAULT NOW()              |
+
+INDEX: (user_id)
+INDEX: (project_id)
+INDEX: (user_id, created_at DESC)
+
+================================================================================
+ENTITY RELATIONSHIP DIAGRAM (ASCII)
+================================================================================
+
+    +--------+          +-------------------+
+    | users  |----------| user_project_status |
+    +--------+          +-------------------+
+        |                       |
+        |               +-------+-------+
+        |               |               |
+        v               v               v
+    +------------+  +----------+  +-----------+
+    | user_badges|  | projects |  |lab_notebook|
+    +------------+  +----------+  | _entries   |
+                        |         +-----------+
+        +---------------+---------------+
+        |       |       |       |       |
+        v       v       v       v       v
+    +-------+ +-------+ +-------+ +-------+ +-------+
+    |project| |project| |project| |project| |project|
+    |_skills| |_content| |_pages| |_hardware| |_code |
+    +-------+ +-------+ +-------+ |_steps/  | |_walk |
+                    |       |     |warnings | |through|
+                    v       |     +-------+ +-------+
+            +------------+  |
+            |page_content|  |
+            +------------+  v
+                        +------------------+
+                        |project_trouble   |
+                        |shooting          |
+                        +------------------+
+
+    +-------------------+
+    | dictionary_entries|
+    +-------------------+
+
+================================================================================
+INDEXES SUMMARY
+================================================================================
+
+- users(email)
+- users(username)
+- project_skills(project_id)
+- project_overview_concepts(project_id)
+- project_hardware_warnings(project_id)
+- project_hardware_steps(project_id)
+- project_code_walkthrough(project_id)
+- project_troubleshooting(project_id)
+- project_pages(project_id)
+- dictionary_entries(category)
+- dictionary_entries(term)
+- user_project_status(user_id)
+- user_project_status(project_id)
+- user_badges(user_id)
+- lab_notebook_entries(user_id)
+- lab_notebook_entries(project_id)
+- lab_notebook_entries(user_id, created_at DESC)
+
+================================================================================
+NOTES
+================================================================================
+
+1. The schema is designed for PostgreSQL but can be adapted for other RDBMS.
+2. UUID types may need extensions (e.g., uuid-ossp in PostgreSQL).
+3. SERIAL is PostgreSQL auto-increment; use AUTO_INCREMENT for MySQL.
+4. Timestamps use server default NOW() for audit trails.
+5. The current app uses localStorage; this schema supports a backend migration.
+6. Consider adding soft deletes (deleted_at) for user data if required.
+7. For full-text search on dictionary terms, add GIN indexes on term/definition.

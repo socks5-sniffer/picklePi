@@ -5,13 +5,13 @@ export const curriculum: Project[] = [
     id: 'p1-intro',
     level: 1,
     levelName: 'Digital Output Basics',
-    title: 'Hello, LED',
-    skillsLearned: ['gpiozero LED', 'blink() method', 'signal.pause()'],
+    title: 'Hello, Double Color LED',
+    skillsLearned: ['gpiozero LED', 'blink() method', 'signal.pause()', 'Multiple GPIO control'],
     badgeEarned: 'GPIO Initiate',
     content: {
       overview: {
-        description: 'We are building the "Hello World" of electronics: making an LED blink! This is your first step into controlling physical hardware with code.',
-        concepts: ['Digital Output', 'gpiozero LED class', 'Background threads'],
+        description: 'We are building the "Hello World" of electronics using a Double Color LED (Red/Green) from your Inland kit! This LED has two colors in one package - perfect for status indicators.',
+        concepts: ['Digital Output', 'gpiozero LED class', 'Background threads', 'Common Cathode LEDs'],
         difficulty: 1,
         estimatedTime: '15 mins'
       },
@@ -21,8 +21,8 @@ export const curriculum: Project[] = [
           title: 'Project Overview',
           content: {
             overview: {
-              description: 'We are building the "Hello World" of electronics: making an LED blink! This is your first step into controlling physical hardware with code.',
-              concepts: ['Digital Output', 'gpiozero LED class', 'Background threads'],
+              description: 'We are building the "Hello World" of electronics using a Double Color LED (Red/Green) from your Inland kit! This LED has two colors in one package - perfect for status indicators.',
+              concepts: ['Digital Output', 'gpiozero LED class', 'Background threads', 'Common Cathode LEDs'],
               difficulty: 1,
               estimatedTime: '15 mins'
             },
@@ -50,18 +50,21 @@ export const curriculum: Project[] = [
             },
             hardwareSetup: {
               warnings: [
-                'Always use a resistor (e.g., 220Ω or 330Ω) with an LED to prevent it from burning out.',
-                'Default to 3.3V logic. Never connect an LED directly to 5V or 3.3V without a resistor.'
+                'Always use resistors (220Ω or 330Ω) with LEDs to prevent burnout.',
+                'The Double Color LED has 3 pins: Red, Ground (center, longest), and Green.',
+                'Default to 3.3V logic. Never connect directly to 5V or 3.3V without a resistor.'
               ],
               steps: [
-                'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the blue negative (-) rail on your breadboard.',
-                'Connect the shorter leg (cathode) of the LED to the same negative rail.',
-                'Connect the longer leg (anode) of the LED to a row in the middle of the breadboard.',
-                "Connect one end of a 220Ω resistor to the same row as the LED's long leg.",
-                'Connect the other end of the resistor to a different row.',
-                'Connect a jumper wire from Raspberry Pi Physical Pin 11 (GPIO 17) to the row with the other end of the resistor.'
+                'Identify the 3 pins on your Double Color LED: the center longest pin is Ground (GND).',
+                'Place the Double Color LED in your breadboard.',
+                'Connect the center pin (GND/cathode) to the blue negative (-) rail on your breadboard.',
+                'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the blue negative rail.',
+                'Connect one end of a 220Ω resistor to the RED pin of the LED.',
+                'Connect the other end of that resistor to a row, then connect that row to Physical Pin 11 (GPIO 17).',
+                'Connect another 220Ω resistor to the GREEN pin of the LED.',
+                'Connect the other end to a row, then connect that row to Physical Pin 13 (GPIO 27).'
               ],
-              explanation: 'Electricity flows from the GPIO pin (when turned HIGH, providing 3.3V), through the resistor (which limits the current), through the LED (lighting it up), and back to the Ground (GND) pin, completing the circuit.'
+              explanation: 'The Double Color LED contains two LEDs (red and green) sharing a common ground. By controlling GPIO 17 and GPIO 27 independently, you can show red, green, or both (which makes yellow/orange)!'
             },
             code: '',
             codeWalkthrough: [],
@@ -85,7 +88,71 @@ export const curriculum: Project[] = [
               steps: [],
               explanation: ''
             },
-            code: `#!/usr/bin/env python3\n"""\nLevel 1: Hello, LED - Blink an LED using gpiozero\n\n🔒 SECURITY HARDENING:\n- Always use a 220Ω-330Ω current-limiting resistor with LEDs\n- Disable unused interfaces: sudo raspi-config -> Interface Options\n  (disable SPI, I2C, Serial if not needed to reduce attack surface)\n- Keep your Pi's OS updated: sudo apt update && sudo apt upgrade\n\n📚 EDUCATIONAL MOMENT:\ngpiozero uses "source/values" properties for declarative hardware control,\nmeaning you describe WHAT should happen, not HOW to do it step-by-step.\n"""\n\nfrom gpiozero import LED\nfrom signal import pause\n\n# ============================================\n# HARDWARE ABSTRACTION\n# gpiozero automatically handles pin setup!\n# ============================================\n\n# Create an LED object on GPIO 17 (BCM numbering by default)\nstatus_led = LED(17)\n\n# ============================================\n# HIGH-LEVEL LOGIC\n# The blink() method handles the timing loop internally\n# ============================================\n\nprint("🟢 LED blinking... Press Ctrl+C to exit.")\n\n# Blink the LED: 1 second on, 1 second off\n# No manual loops needed - gpiozero handles this in a background thread\nstatus_led.blink(on_time=1, off_time=1)\n\n# Keep the program running until interrupted\n# pause() is more efficient than while True: sleep()\ntry:\n    pause()\nexcept KeyboardInterrupt:\n    print("\n🔴 Exiting... LED turned off.")\n    status_led.off()\n\n# Note: gpiozero automatically cleans up GPIO pins on exit!`,
+            code: `#!/usr/bin/env python3
+"""
+Level 1: Hello, Double Color LED - Blink Red/Green using gpiozero
+
+🔒 SECURITY HARDENING:
+- Always use 220Ω-330Ω current-limiting resistors with LEDs
+- Disable unused interfaces: sudo raspi-config -> Interface Options
+- Keep your Pi's OS updated: sudo apt update && sudo apt upgrade
+
+📚 EDUCATIONAL MOMENT:
+The Double Color LED from your Inland 37-in-1 kit has TWO LEDs inside!
+Red and Green share a common cathode (ground). Light both = yellow/orange!
+"""
+
+from gpiozero import LED
+from signal import pause
+from time import sleep
+
+# ============================================
+# HARDWARE ABSTRACTION
+# Two separate LED objects for red and green
+# ============================================
+
+red_led = LED(17)    # Red pin on GPIO 17
+green_led = LED(27)  # Green pin on GPIO 27
+
+# ============================================
+# HIGH-LEVEL LOGIC
+# Cycle through colors: Red -> Green -> Yellow -> Off
+# ============================================
+
+print("🚦 Double Color LED Demo - Press Ctrl+C to exit.")
+
+try:
+    while True:
+        # Red only
+        print("🔴 Red")
+        red_led.on()
+        green_led.off()
+        sleep(1)
+        
+        # Green only
+        print("🟢 Green")
+        red_led.off()
+        green_led.on()
+        sleep(1)
+        
+        # Both on = Yellow/Orange!
+        print("🟡 Yellow (Red + Green)")
+        red_led.on()
+        green_led.on()
+        sleep(1)
+        
+        # Both off
+        print("⚫ Off")
+        red_led.off()
+        green_led.off()
+        sleep(1)
+
+except KeyboardInterrupt:
+    print("\\n👋 Exiting... LEDs turned off.")
+    red_led.off()
+    green_led.off()
+
+# Note: gpiozero automatically cleans up GPIO pins on exit!`,
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -109,11 +176,11 @@ export const curriculum: Project[] = [
             },
             code: '',
             codeWalkthrough: [
-              { section: 'Imports', explanation: '`from gpiozero import LED` gives us a high-level LED class. `from signal import pause` lets us wait efficiently without a busy loop.' },
-              { section: 'Hardware Abstraction', explanation: '`LED(17)` creates an LED object on GPIO 17. gpiozero automatically handles `setmode`, `setup`, and uses BCM numbering by default.' },
-              { section: 'The blink() Method', explanation: '`status_led.blink(on_time=1, off_time=1)` runs in a background thread. No `while True` loop needed!' },
-              { section: 'pause()', explanation: '`pause()` keeps the script running without consuming CPU. It waits for a signal (like Ctrl+C) efficiently.' },
-              { section: 'Automatic Cleanup', explanation: 'gpiozero automatically resets GPIO pins when your script exits. No manual `GPIO.cleanup()` required!' }
+              { section: 'Imports', explanation: '`from gpiozero import LED` gives us the LED class. We also import `sleep` from time for delays between colors.' },
+              { section: 'Two LED Objects', explanation: '`LED(17)` and `LED(27)` create separate control for each color. The Double Color LED is really two LEDs in one package!' },
+              { section: 'Color Mixing', explanation: 'Red ON + Green ON = Yellow/Orange! This is additive color mixing. Try different brightness levels (PWM) for more colors.' },
+              { section: 'The Loop', explanation: 'A simple `while True` loop cycles through all color combinations. Each color displays for 1 second.' },
+              { section: 'Cleanup', explanation: 'The `except KeyboardInterrupt` catches Ctrl+C and turns off both LEDs before exiting cleanly.' }
             ],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -138,9 +205,9 @@ export const curriculum: Project[] = [
             code: '',
             codeWalkthrough: [],
             conceptDeepDive: {
-              hardware: "The Raspberry Pi acts as a switchable power source. When a pin is HIGH, it pushes electrons out. The resistor acts like a narrow pipe, slowing down the electrons so they don't overwhelm and pop the LED.",
-              software: 'The Python script is the brain. It sequentially executes commands, telling the "switch" (GPIO pin) when to open and close, with precise timing.',
-              connection: 'Software commands translate into physical voltage changes. 1s and 0s in code become 3.3V and 0V in reality.'
+              hardware: "The Double Color LED contains two separate LED dies (red and green) in one package, sharing a common cathode (ground). Each color has its own anode that you control independently.",
+              software: 'Two separate LED objects let us control each color. By turning them on/off in combinations, we create different visual states - perfect for status indicators!',
+              connection: 'Each GPIO pin controls one color. HIGH (3.3V) = color on, LOW (0V) = color off. Both HIGH = both colors mix to create yellow/orange.'
             },
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: []
@@ -165,9 +232,9 @@ export const curriculum: Project[] = [
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: {
-              tweak: 'Change `on_time=1` to `on_time=0.1`. What happens to the blinking speed?',
-              logic: 'Change the blink pattern to stay ON for 2 seconds but OFF for only 0.5 seconds.',
-              creative: 'Can you make the LED blink a heartbeat pattern? Try `blink(on_time=0.1, off_time=0.1, n=2)` then `sleep(0.6)` in a loop!'
+              tweak: 'Change `sleep(1)` to `sleep(0.2)` for a faster light show. Try different timing for each color!',
+              logic: 'Make a traffic light sequence: Green (3s) -> Yellow (1s) -> Red (3s) -> repeat',
+              creative: 'Create an SOS pattern in red: 3 short blinks, 3 long blinks, 3 short blinks!'
             },
             troubleshooting: []
           }
@@ -192,9 +259,10 @@ export const curriculum: Project[] = [
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: [
-              { issue: "LED doesn't light up", solution: 'Check LED polarity. Long leg goes to resistor/GPIO, short leg to GND.' },
-              { issue: 'Error: "No access to /dev/mem"', solution: 'You might need to run your script with `sudo python3 script.py` depending on your OS version.' },
-              { issue: 'LED is very dim', solution: 'Check your resistor value. If you used a 10kΩ resistor instead of 220Ω, too little current is flowing.' }
+              { issue: "Only one color works", solution: 'Check that both resistors are connected properly. Each color needs its own resistor to GPIO.' },
+              { issue: "LED doesn't light up at all", solution: 'The center pin (longest) must go to GND. Check polarity and resistor connections.' },
+              { issue: 'Colors are very dim', solution: 'Check your resistor values. 10kΩ is too high - use 220Ω or 330Ω.' },
+              { issue: 'Yellow looks more orange', solution: 'This is normal! Red and green LEDs have different brightness levels. In Level 3, we will use PWM to balance them.' }
             ]
           }
         }
