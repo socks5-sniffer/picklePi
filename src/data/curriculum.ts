@@ -50,19 +50,17 @@ export const curriculum: Project[] = [
             },
             hardwareSetup: {
               warnings: [
-                'Always use resistors (220Ω or 330Ω) with LEDs to prevent burnout.',
+                'The Double Color LED module has built-in resistors - no external resistors needed!',
                 'The Double Color LED has 3 pins: Red, Ground (center, longest), and Green.',
-                'Default to 3.3V logic. Never connect directly to 5V or 3.3V without a resistor.'
+                'Default to 3.3V logic. Never connect the module directly to 5V.'
               ],
               steps: [
-                'Identify the 3 pins on your Double Color LED: the center longest pin is Ground (GND).',
-                'Place the Double Color LED in your breadboard.',
+                'Identify the 3 pins on your Double Color LED module: the center longest pin is Ground (GND).',
+                'Place the Double Color LED module in your breadboard.',
                 'Connect the center pin (GND/cathode) to the blue negative (-) rail on your breadboard.',
                 'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the blue negative rail.',
-                'Connect one end of a 220Ω resistor to the RED pin of the LED.',
-                'Connect the other end of that resistor to a row, then connect that row to Physical Pin 11 (GPIO 17).',
-                'Connect another 220Ω resistor to the GREEN pin of the LED.',
-                'Connect the other end to a row, then connect that row to Physical Pin 13 (GPIO 27).'
+                'Connect the RED pin of the LED module directly to Physical Pin 11 (GPIO 17).',
+                'Connect the GREEN pin of the LED module directly to Physical Pin 13 (GPIO 27).'
               ],
               explanation: 'The Double Color LED contains two LEDs (red and green) sharing a common ground. By controlling GPIO 17 and GPIO 27 independently, you can show red, green, or both (which makes yellow/orange)!'
             },
@@ -93,7 +91,7 @@ export const curriculum: Project[] = [
 Level 1: Hello, Double Color LED - Blink Red/Green using gpiozero
 
 🔒 SECURITY HARDENING:
-- Always use 220Ω-330Ω current-limiting resistors with LEDs
+- The Double Color LED module has built-in resistors (no external resistor needed)
 - Disable unused interfaces: sudo raspi-config -> Interface Options
 - Keep your Pi's OS updated: sudo apt update && sudo apt upgrade
 
@@ -259,9 +257,9 @@ except KeyboardInterrupt:
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: [
-              { issue: "Only one color works", solution: 'Check that both resistors are connected properly. Each color needs its own resistor to GPIO.' },
-              { issue: "LED doesn't light up at all", solution: 'The center pin (longest) must go to GND. Check polarity and resistor connections.' },
-              { issue: 'Colors are very dim', solution: 'Check your resistor values. 10kΩ is too high - use 220Ω or 330Ω.' },
+              { issue: "Only one color works", solution: 'Check that both color pins are connected to the correct GPIO pins (GPIO 17 for Red, GPIO 27 for Green).' },
+              { issue: "LED doesn't light up at all", solution: 'The center pin (longest) must go to GND. Double-check polarity and GPIO connections.' },
+              { issue: 'Colors are very dim', solution: 'Ensure you are using 3.3V GPIO pins. The module has built-in resistors sized for 3.3V operation.' },
               { issue: 'Yellow looks more orange', solution: 'This is normal! Red and green LEDs have different brightness levels. In Level 3, we will use PWM to balance them.' }
             ]
           }
@@ -299,7 +297,7 @@ except KeyboardInterrupt:
           "We will use the Raspberry Pi's internal pull-down resistor, so no external resistor is needed for the button."
         ],
         steps: [
-          'Keep the LED setup from Level 1 (LED on GPIO 17, with resistor to GND).',
+          'Keep the LED setup from Level 1 (Double Color LED with GND to ground rail, Red to GPIO 17).'
           'Place a push button across the middle ravine of your breadboard.',
           'Connect one leg of the button to Raspberry Pi Physical Pin 1 (3.3V).',
           'Connect the diagonally opposite leg of the button to Raspberry Pi Physical Pin 15 (GPIO 22).'
@@ -348,7 +346,7 @@ except KeyboardInterrupt:
           'No new hardware needed! We will use the exact same LED setup from Level 1.'
         ],
         steps: [
-          'Ensure your LED is connected to GPIO 17 with a resistor, just like in Level 1.'
+          'Ensure your Double Color LED module is connected just like in Level 1 (Red pin to GPIO 17, center to GND).'
         ],
         explanation: 'We are changing how we control the pin in software. Instead of a steady 3.3V, we will turn the pin on and off very fast to simulate a lower voltage.'
       },
@@ -540,7 +538,7 @@ except KeyboardInterrupt:
           'Double-check all wiring before powering on. You have many components connected now.'
         ],
         steps: [
-          'LED on GPIO 17 (with resistor).',
+          'Double Color LED module: Red pin to GPIO 17, center pin to GND.',
           'Button on GPIO 22 (to 3.3V).',
           'Passive Buzzer on GPIO 18.',
           'PIR Sensor on GPIO 23 (VCC to 5V).'
