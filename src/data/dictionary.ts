@@ -1206,4 +1206,16 @@ export const dictionary: DictionaryEntry[] = [
     definition: 'A voltage that carries information. Can be digital (HIGH/LOW) or analog (continuously varying).',
     example: 'A DHT22 temperature sensor sends a digital signal with encoded data'
   },
+  {
+    term: 'Sinusoidal',
+    category: 'Electronics',
+    definition: 'A smooth, wave-like pattern that follows the shape of a sine function. Sinusoidal waves are the most basic form of oscillation, characterized by their smooth, continuous rise and fall. Used to describe AC power, audio signals, and many natural phenomena.',
+    example: 'A pure musical tone is a sinusoidal wave; mains electricity is a 50Hz or 60Hz sinusoidal AC voltage'
+  },
+  {
+    term: 'Pythonic',
+    category: 'Python',
+    definition: 'Code that follows Python\'s design philosophy and idioms — clean, readable, and elegant. Pythonic code uses built-in features like list comprehensions, context managers, and duck typing rather than porting patterns from other languages.',
+    example: 'Using "for item in items:" is Pythonic; using "for i in range(len(items)):" is not'
+  },
 ];

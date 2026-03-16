@@ -5,13 +5,13 @@ export const curriculum: Project[] = [
     id: 'p1-intro',
     level: 1,
     levelName: 'Digital Output Basics',
-    title: 'Hello, Double Color LED',
-    skillsLearned: ['gpiozero LED', 'blink() method', 'signal.pause()', 'Multiple GPIO control'],
+    title: 'Hello, RGB LED',
+    skillsLearned: ['gpiozero LED', 'Color mixing', 'signal.pause()', 'Multiple GPIO control'],
     badgeEarned: 'GPIO Initiate',
     content: {
       overview: {
-        description: 'We are building the "Hello World" of electronics using a Double Color LED (Red/Green) from your Inland kit! This LED has two colors in one package - perfect for status indicators.',
-        concepts: ['Digital Output', 'gpiozero LED class', 'Background threads', 'Common Cathode LEDs'],
+        description: 'We are building the "Hello World" of electronics using an RGB LED from your Inland kit! This LED has three colors in one package - Red, Green, and Blue - which can be mixed to create any color.',
+        concepts: ['Digital Output', 'gpiozero LED class', 'Additive Color Mixing', 'Common Cathode LEDs'],
         difficulty: 1,
         estimatedTime: '15 mins'
       },
@@ -21,8 +21,8 @@ export const curriculum: Project[] = [
           title: 'Project Overview',
           content: {
             overview: {
-              description: 'We are building the "Hello World" of electronics using a Double Color LED (Red/Green) from your Inland kit! This LED has two colors in one package - perfect for status indicators.',
-              concepts: ['Digital Output', 'gpiozero LED class', 'Background threads', 'Common Cathode LEDs'],
+              description: 'We are building the "Hello World" of electronics using an RGB LED from your Inland kit! This LED has three colors in one package - Red, Green, and Blue - which can be mixed to create any color.',
+              concepts: ['Digital Output', 'gpiozero LED class', 'Additive Color Mixing', 'Common Cathode LEDs'],
               difficulty: 1,
               estimatedTime: '15 mins'
             },
@@ -50,19 +50,20 @@ export const curriculum: Project[] = [
             },
             hardwareSetup: {
               warnings: [
-                'The Double Color LED module has built-in resistors - no external resistors needed!',
-                'The Double Color LED has 3 pins: Red, Ground (center, longest), and Green.',
+                'The RGB LED module has built-in resistors - no external resistors needed!',
+                'The RGB LED has 4 pins: Red, Ground (-, longest leg), Green, and Blue.',
                 'Default to 3.3V logic. Never connect the module directly to 5V.'
               ],
               steps: [
-                'Identify the 3 pins on your Double Color LED module: the center longest pin is Ground (GND).',
-                'Place the Double Color LED module in your breadboard.',
-                'Connect the center pin (GND/cathode) to the blue negative (-) rail on your breadboard.',
+                'Identify the 4 pins on your RGB LED module: the longest pin is Ground (GND/cathode, marked with -).',
+                'Place the RGB LED module in your breadboard.',
+                'Connect the GND pin (longest leg, marked -) to the blue negative (-) rail on your breadboard.',
                 'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the blue negative rail.',
-                'Connect the RED pin of the LED module directly to Physical Pin 11 (GPIO 17).',
-                'Connect the GREEN pin of the LED module directly to Physical Pin 13 (GPIO 27).'
+                'Connect the R (Red) pin of the LED module to Physical Pin 11 (GPIO 17).',
+                'Connect the G (Green) pin of the LED module to Physical Pin 13 (GPIO 27).',
+                'Connect the B (Blue) pin of the LED module to Physical Pin 29 (GPIO 5).'
               ],
-              explanation: 'The Double Color LED contains two LEDs (red and green) sharing a common ground. By controlling GPIO 17 and GPIO 27 independently, you can show red, green, or both (which makes yellow/orange)!'
+              explanation: 'The RGB LED contains three LEDs (red, green, and blue) sharing a common ground (cathode). By controlling GPIO 17, 27, and 5 independently, you can mix colors - Red + Green = Yellow, Red + Blue = Magenta, Green + Blue = Cyan, All three = White!'
             },
             code: '',
             codeWalkthrough: [],
@@ -88,16 +89,17 @@ export const curriculum: Project[] = [
             },
             code: `#!/usr/bin/env python3
 """
-Level 1: Hello, Double Color LED - Blink Red/Green using gpiozero
+Level 1: Hello, RGB LED - Color mixing with gpiozero
 
 🔒 SECURITY HARDENING:
-- The Double Color LED module has built-in resistors (no external resistor needed)
+- The RGB LED module has built-in resistors (no external resistor needed)
 - Disable unused interfaces: sudo raspi-config -> Interface Options
 - Keep your Pi's OS updated: sudo apt update && sudo apt upgrade
 
 📚 EDUCATIONAL MOMENT:
-The Double Color LED from your Inland 37-in-1 kit has TWO LEDs inside!
-Red and Green share a common cathode (ground). Light both = yellow/orange!
+The RGB LED from your Inland 37-in-1 kit has THREE LEDs inside!
+Red, Green, and Blue share a common cathode (ground).
+Mix them to create any color: R+G=Yellow, R+B=Magenta, G+B=Cyan, R+G+B=White!
 """
 
 from gpiozero import LED
@@ -106,49 +108,67 @@ from time import sleep
 
 # ============================================
 # HARDWARE ABSTRACTION
-# Two separate LED objects for red and green
+# Three separate LED objects for R, G, B
 # ============================================
 
 red_led = LED(17)    # Red pin on GPIO 17
 green_led = LED(27)  # Green pin on GPIO 27
+blue_led = LED(5)    # Blue pin on GPIO 5
+
+# Helper function to set all colors at once
+def set_color(r, g, b):
+    red_led.value = r
+    green_led.value = g
+    blue_led.value = b
 
 # ============================================
 # HIGH-LEVEL LOGIC
-# Cycle through colors: Red -> Green -> Yellow -> Off
+# Cycle through primary and secondary colors
 # ============================================
 
-print("🚦 Double Color LED Demo - Press Ctrl+C to exit.")
+print("🌈 RGB LED Color Demo - Press Ctrl+C to exit.")
 
 try:
     while True:
-        # Red only
+        # Primary colors
         print("🔴 Red")
-        red_led.on()
-        green_led.off()
+        set_color(1, 0, 0)
         sleep(1)
         
-        # Green only
         print("🟢 Green")
-        red_led.off()
-        green_led.on()
+        set_color(0, 1, 0)
         sleep(1)
         
-        # Both on = Yellow/Orange!
+        print("🔵 Blue")
+        set_color(0, 0, 1)
+        sleep(1)
+        
+        # Secondary colors (mixing two)
         print("🟡 Yellow (Red + Green)")
-        red_led.on()
-        green_led.on()
+        set_color(1, 1, 0)
         sleep(1)
         
-        # Both off
+        print("🟣 Magenta (Red + Blue)")
+        set_color(1, 0, 1)
+        sleep(1)
+        
+        print("🩵 Cyan (Green + Blue)")
+        set_color(0, 1, 1)
+        sleep(1)
+        
+        # All three = White!
+        print("⚪ White (Red + Green + Blue)")
+        set_color(1, 1, 1)
+        sleep(1)
+        
+        # Off
         print("⚫ Off")
-        red_led.off()
-        green_led.off()
+        set_color(0, 0, 0)
         sleep(1)
 
 except KeyboardInterrupt:
     print("\\n👋 Exiting... LEDs turned off.")
-    red_led.off()
-    green_led.off()
+    set_color(0, 0, 0)
 
 # Note: gpiozero automatically cleans up GPIO pins on exit!`,
             codeWalkthrough: [],
@@ -175,10 +195,11 @@ except KeyboardInterrupt:
             code: '',
             codeWalkthrough: [
               { section: 'Imports', explanation: '`from gpiozero import LED` gives us the LED class. We also import `sleep` from time for delays between colors.' },
-              { section: 'Two LED Objects', explanation: '`LED(17)` and `LED(27)` create separate control for each color. The Double Color LED is really two LEDs in one package!' },
-              { section: 'Color Mixing', explanation: 'Red ON + Green ON = Yellow/Orange! This is additive color mixing. Try different brightness levels (PWM) for more colors.' },
-              { section: 'The Loop', explanation: 'A simple `while True` loop cycles through all color combinations. Each color displays for 1 second.' },
-              { section: 'Cleanup', explanation: 'The `except KeyboardInterrupt` catches Ctrl+C and turns off both LEDs before exiting cleanly.' }
+              { section: 'Three LED Objects', explanation: '`LED(17)`, `LED(27)`, and `LED(18)` create separate control for each color. The RGB LED is really three LEDs in one package!' },
+              { section: 'set_color() Helper', explanation: 'This function makes it easy to set all three colors at once. Pass 1 for on, 0 for off for each color channel.' },
+              { section: 'Additive Color Mixing', explanation: 'Unlike paint, light colors ADD together. Red + Green = Yellow, Red + Blue = Magenta, Green + Blue = Cyan, All three = White!' },
+              { section: 'The Loop', explanation: 'A `while True` loop cycles through all 7 color combinations plus off. Each color displays for 1 second.' },
+              { section: 'Cleanup', explanation: 'The `except KeyboardInterrupt` catches Ctrl+C and turns off all LEDs before exiting cleanly.' }
             ],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -203,9 +224,9 @@ except KeyboardInterrupt:
             code: '',
             codeWalkthrough: [],
             conceptDeepDive: {
-              hardware: "The Double Color LED contains two separate LED dies (red and green) in one package, sharing a common cathode (ground). Each color has its own anode that you control independently.",
-              software: 'Two separate LED objects let us control each color. By turning them on/off in combinations, we create different visual states - perfect for status indicators!',
-              connection: 'Each GPIO pin controls one color. HIGH (3.3V) = color on, LOW (0V) = color off. Both HIGH = both colors mix to create yellow/orange.'
+              hardware: "The RGB LED contains three separate LED dies (red, green, and blue) in one package, sharing a common cathode (ground). Each color has its own anode that you control independently via GPIO pins.",
+              software: 'Three separate LED objects let us control each color. By turning them on/off in combinations, we can create 7 different colors plus off - the building blocks for any color with PWM!',
+              connection: 'Each GPIO pin controls one color. HIGH (3.3V) = color on, LOW (0V) = color off. Combinations create secondary colors through additive mixing.'
             },
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: []
@@ -230,9 +251,9 @@ except KeyboardInterrupt:
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: {
-              tweak: 'Change `sleep(1)` to `sleep(0.2)` for a faster light show. Try different timing for each color!',
-              logic: 'Make a traffic light sequence: Green (3s) -> Yellow (1s) -> Red (3s) -> repeat',
-              creative: 'Create an SOS pattern in red: 3 short blinks, 3 long blinks, 3 short blinks!'
+              tweak: 'Change `sleep(1)` to `sleep(0.3)` for a faster color cycle. Try different timing for each color!',
+              logic: 'Make a police light pattern: alternate between red and blue every 0.2 seconds!',
+              creative: 'Create a rainbow sequence that smoothly transitions through all colors. Hint: you will need PWM from Level 3!'
             },
             troubleshooting: []
           }
@@ -257,10 +278,11 @@ except KeyboardInterrupt:
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: [
-              { issue: "Only one color works", solution: 'Check that both color pins are connected to the correct GPIO pins (GPIO 17 for Red, GPIO 27 for Green).' },
-              { issue: "LED doesn't light up at all", solution: 'The center pin (longest) must go to GND. Double-check polarity and GPIO connections.' },
+              { issue: "Only one or two colors work", solution: 'Check that all three color pins are connected to the correct GPIO pins (R=GPIO 17, G=GPIO 27, B=GPIO 5).' },
+              { issue: "LED doesn't light up at all", solution: 'The longest pin (marked -) must go to GND. Double-check polarity and GPIO connections.' },
               { issue: 'Colors are very dim', solution: 'Ensure you are using 3.3V GPIO pins. The module has built-in resistors sized for 3.3V operation.' },
-              { issue: 'Yellow looks more orange', solution: 'This is normal! Red and green LEDs have different brightness levels. In Level 3, we will use PWM to balance them.' }
+              { issue: 'White looks pinkish or off-color', solution: 'This is normal! The three LEDs have different brightness levels. In Level 3, we will use PWM to balance them.' },
+              { issue: 'Blue seems much brighter', solution: 'Blue LEDs are often brighter than red/green. PWM in Level 3 will let you adjust individual brightness.' }
             ]
           }
         }
@@ -321,7 +343,7 @@ except KeyboardInterrupt:
                 'The module has a built-in pull-up resistor - when pressed, signal goes LOW.'
               ],
               steps: [
-                'Keep the LED setup from Level 1 (Double Color LED with GND to ground rail, Red to GPIO 17).',
+                'Keep the LED setup from Level 1 (RGB LED with GND to ground rail, Red to GPIO 17).',
                 'Connect the button module GND pin to the ground rail (same as LED ground).',
                 'Connect the button module VCC pin to Raspberry Pi Physical Pin 1 (3.3V).',
                 'Connect the button module S (Signal) pin to Raspberry Pi Physical Pin 15 (GPIO 22).'
@@ -511,7 +533,7 @@ except KeyboardInterrupt:
                 'No new hardware needed! We will use the exact same LED setup from Level 1.'
               ],
               steps: [
-                'Ensure your Double Color LED module is connected just like in Level 1 (Red pin to GPIO 17, center to GND).'
+                'Ensure your RGB LED module is connected just like in Level 1 (Red pin to GPIO 17, longest pin to GND).'
               ],
               explanation: 'We are changing how we control the pin in software. Instead of a steady 3.3V, we will turn the pin on and off very fast to simulate a lower voltage.'
             },
@@ -1289,7 +1311,7 @@ finally:
                 'Double-check all wiring before powering on. You have many components connected now.'
               ],
               steps: [
-                'Double Color LED module: Red pin to GPIO 17, center pin to GND.',
+                'RGB LED module: Red pin to GPIO 17, longest pin (-) to GND.',
                 'Button on GPIO 22 (to 3.3V).',
                 'Passive Buzzer on GPIO 18.',
                 'PIR Sensor on GPIO 23 (VCC to 5V).'
