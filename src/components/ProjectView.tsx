@@ -80,7 +80,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           <span className="w-1 h-1 rounded-full bg-emerald-600"></span>
           <span>{project.levelName}</span>
         </div>
-        <h1 className="text-4xl font-bold text-slate-100 tracking-tight">{project.title}</h1>
+        <h1 className="text-2xl sm:text-4xl font-bold text-slate-100 tracking-tight">{project.title}</h1>
         
         {/* Page indicator for multi-page projects */}
         {hasPages && (
@@ -107,7 +107,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
 
       {/* Overview */}
       {currentContent.overview.description && (
-        <section className="bg-slate-800/50 rounded-2xl p-8 shadow-sm border border-slate-700">
+        <section className="bg-slate-800/50 rounded-2xl p-4 sm:p-8 shadow-sm border border-slate-700">
           <h2 className="text-xl font-bold text-slate-100 mb-4 flex items-center gap-2">
             <BookOpen size={20} className="text-indigo-400" />
             Project Overview
@@ -154,8 +154,8 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             </div>
           )}
 
-          <div className="bg-slate-800/50 rounded-2xl p-8 shadow-sm border border-slate-700">
-            <ol className="space-y-4 list-decimal list-inside text-slate-300 marker:text-slate-500 marker:font-bold">
+          <div className="bg-slate-800/50 rounded-2xl p-4 sm:p-8 shadow-sm border border-slate-700">
+            <ol className="space-y-4 list-decimal list-inside text-slate-300 marker:text-slate-500 marker:font-bold text-sm sm:text-base">
               {currentContent.hardwareSetup.steps.map((step, i) => (
                 <li key={i} className="pl-2 leading-relaxed">{step}</li>
               ))}
@@ -190,7 +190,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
                 {copied ? 'Copied!' : 'Copy'}
               </button>
             </div>
-            <pre className="bg-[#1a1f2e] text-[#e2e8f0] p-6 rounded-2xl text-sm font-mono leading-relaxed shadow-inner border border-slate-700 overflow-hidden">
+            <pre className="bg-[#1a1f2e] text-[#e2e8f0] p-4 sm:p-6 rounded-2xl text-xs sm:text-sm font-mono leading-relaxed shadow-inner border border-slate-700 overflow-x-auto">
               <code className="whitespace-pre-wrap break-words">{currentContent.code}</code>
             </pre>
           </div>
@@ -204,16 +204,16 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             <Code2 size={24} className="text-blue-500" />
             Code Walkthrough
           </h2>
-          <div className="bg-slate-800/50 rounded-2xl p-8 shadow-sm border border-slate-700 space-y-6">
+          <div className="bg-slate-800/50 rounded-2xl p-4 sm:p-8 shadow-sm border border-slate-700 space-y-6">
             <div className="space-y-6">
               {currentContent.codeWalkthrough.map((item, i) => (
-                <div key={i} className="flex gap-4">
-                  <div className="w-1/3 shrink-0">
-                    <span className="font-mono text-sm font-semibold text-blue-300 bg-blue-900/50 px-2 py-1 rounded border border-blue-700">
+                <div key={i} className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                  <div className="sm:w-1/3 shrink-0">
+                    <span className="font-mono text-xs sm:text-sm font-semibold text-blue-300 bg-blue-900/50 px-2 py-1 rounded border border-blue-700 inline-block">
                       {item.section}
                     </span>
                   </div>
-                  <div className="w-2/3 text-slate-300 text-sm leading-relaxed">
+                  <div className="sm:w-2/3 text-slate-300 text-sm leading-relaxed">
                     {item.explanation}
                   </div>
                 </div>
@@ -225,12 +225,12 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
 
       {/* Concept Deep Dive */}
       {(currentContent.conceptDeepDive.hardware || currentContent.conceptDeepDive.software || currentContent.conceptDeepDive.connection) && (
-        <section className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl p-8 text-white shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+        <section className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl p-4 sm:p-8 text-white shadow-lg">
+          <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2">
             <Lightbulb size={24} className="text-amber-400" />
             Concept Deep Dive
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
             {currentContent.conceptDeepDive.hardware && (
               <div className="space-y-3">
                 <h3 className="text-indigo-300 font-semibold uppercase tracking-wider text-sm">Hardware</h3>
@@ -260,21 +260,21 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             <FlaskConical size={24} className="text-emerald-400" />
             Experiment Mode
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             {currentContent.experimentMode.tweak && (
-              <div className="bg-slate-800/50 p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-emerald-400">
+              <div className="bg-slate-800/50 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-emerald-400">
                 <h3 className="font-bold text-slate-100 mb-2">Small Tweak</h3>
                 <p className="text-sm text-slate-400">{currentContent.experimentMode.tweak}</p>
               </div>
             )}
             {currentContent.experimentMode.logic && (
-              <div className="bg-slate-800/50 p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-blue-400">
+              <div className="bg-slate-800/50 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-blue-400">
                 <h3 className="font-bold text-slate-100 mb-2">Logic Change</h3>
                 <p className="text-sm text-slate-400">{currentContent.experimentMode.logic}</p>
               </div>
             )}
             {currentContent.experimentMode.creative && (
-              <div className="bg-slate-800/50 p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-purple-400">
+              <div className="bg-slate-800/50 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-purple-400">
                 <h3 className="font-bold text-slate-100 mb-2">Creative Challenge</h3>
                 <p className="text-sm text-slate-400">{currentContent.experimentMode.creative}</p>
               </div>
@@ -285,7 +285,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
 
       {/* Troubleshooting */}
       {currentContent.troubleshooting.length > 0 && (
-        <section className="bg-slate-800/30 rounded-2xl p-8 border border-slate-700">
+        <section className="bg-slate-800/30 rounded-2xl p-4 sm:p-8 border border-slate-700">
           <h2 className="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
             <AlertTriangle size={20} className="text-rose-400" />
             Troubleshooting
@@ -307,26 +307,27 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
 
       {/* Page Navigation for multi-page projects */}
       {hasPages && content.pages && content.pages.length > 1 && (
-        <div className="flex items-center justify-between gap-4 pt-8 border-t border-slate-700">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-slate-700">
           <button
             onClick={handlePreviousPage}
             disabled={currentPageIndex === 0}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
               currentPageIndex === 0
                 ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
                 : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
             }`}
           >
-            <ChevronLeft size={20} />
-            Previous
+            <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Previous</span>
+            <span className="sm:hidden">Prev</span>
           </button>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 order-first sm:order-none">
             {content.pages.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentPageIndex(index)}
-                className={`w-3 h-3 rounded-full transition-colors ${
+                className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
                   index === currentPageIndex ? 'bg-emerald-400' : 'bg-slate-600 hover:bg-slate-500'
                 }`}
                 title={`Go to page ${index + 1}: ${content.pages![index].title}`}
@@ -334,29 +335,29 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {currentPageIndex !== content.pages.length - 1 && (
               <button
                 onClick={handleGetHelp}
-                className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium bg-slate-800/50 text-blue-400 hover:bg-slate-700/50 transition-colors border border-slate-700"
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium bg-slate-800/50 text-blue-400 hover:bg-slate-700/50 transition-colors border border-slate-700 text-sm"
                 title="Get help or troubleshooting"
               >
-                <HelpCircle size={18} />
-                <span className="text-sm">Help</span>
+                <HelpCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="hidden sm:inline text-sm">Help</span>
               </button>
             )}
 
             <button
               onClick={handleNextPage}
               disabled={currentPageIndex === content.pages.length - 1}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${
+              className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
                 currentPageIndex === content.pages.length - 1
                   ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
                   : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
               }`}
             >
               Next
-              <ChevronRight size={20} />
+              <ChevronRight size={18} className="sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
