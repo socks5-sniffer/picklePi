@@ -196,6 +196,7 @@ picklePi/
 ├── package.json                  # Dependencies and npm scripts
 ├── tsconfig.json                 # TypeScript compiler configuration
 ├── vite.config.ts                # Vite config (plugins, aliases, HTTPS, HMR)
+├── db-schema.txt                 # Relational database schema for backend migration
 ├── CONTRIBUTING.md               # Contributor guide
 ├── SECURITY_AUDIT.md             # Security audit notes
 └── LICENSE                       # MIT License
@@ -213,15 +214,20 @@ picklePi/
 | **Tailwind CSS** | 4.1 | Utility-first styling via `@tailwindcss/vite` plugin |
 | **Motion** | 12.x | Declarative animations for UI transitions |
 | **Lucide React** | 0.546 | Consistent SVG icon library |
+| **Express** | 4.x | HTTP API server for backend persistence layer |
+| **better-sqlite3** | 12.x | Embedded SQLite database driver |
+| **dotenv** | 17.x | Environment variable loading for server config |
+| **tsx** | 4.x | TypeScript execution for Node.js server scripts |
 | **Google Gemini AI** | `@google/genai` | Optional AI assistance for learners |
 | **mkcert** | via `vite-plugin-mkcert` | Auto-generates trusted local HTTPS certificates |
-| **localStorage** | Browser native | Persists all user progress client-side |
+| **localStorage** | Browser native | Client-side progress persistence (current default) |
 
 ### Architecture Decisions
 
-- **No backend required.** All state lives in the browser via `localStorage`. There is no database or server to run.
+- **Client-first, backend-ready.** By default all state lives in the browser via `localStorage` — no server is required to run the app. A full relational database schema (`db-schema.txt`) and backend dependencies (`express`, `better-sqlite3`) are included for teams that want server-side user accounts and persistent progress.
 - **Single-page application.** Navigation is tab-based state (`activeTab`) in `App.tsx` — no router library needed.
 - **Static data.** The entire curriculum is defined as a typed TypeScript array in `src/data/curriculum.ts`, making it easy to read, edit, and extend.
+- **Database schema.** `db-schema.txt` defines a normalized relational schema (PostgreSQL-compatible, adaptable to SQLite) covering users, project progress, badges, lab notebook entries, and the dictionary. It is designed to be a drop-in replacement for the `localStorage` data model.
 - **Progressive level locking** is implemented but disabled by default (all levels unlocked). Re-enable it via the `isProjectLocked` function in `App.tsx`.
 
 ---
