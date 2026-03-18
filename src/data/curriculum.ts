@@ -1540,5 +1540,765 @@ except KeyboardInterrupt:
       experimentMode: { tweak: '', logic: '', creative: '' },
       troubleshooting: []
     }
+  },
+  {
+    id: 'p8',
+    level: 8,
+    levelName: 'Analog Input & ADC',
+    title: 'Twist to Control',
+    skillsLearned: ['MCP3008 SPI ADC', 'source/values binding', 'Voltage division', 'SPI Protocol'],
+    badgeEarned: 'Analog Alchemist',
+    content: {
+      overview: {
+        description: 'The Raspberry Pi has NO built-in analog inputs. We will use an MCP3008 ADC chip over SPI to read a rotation sensor (potentiometer) and use it to control LED brightness — bridging the analog and digital worlds.',
+        concepts: ['Analog-to-Digital Conversion', 'SPI Protocol', 'MCP3008 class', 'source/values pipeline'],
+        difficulty: 4,
+        estimatedTime: '30 mins'
+      },
+      pages: [
+        {
+          id: 'p8-overview',
+          title: 'Project Overview',
+          content: {
+            overview: {
+              description: 'The Raspberry Pi has NO built-in analog inputs. We will use an MCP3008 ADC chip over SPI to read a rotation sensor (potentiometer) and use it to control LED brightness — bridging the analog and digital worlds.',
+              concepts: ['Analog-to-Digital Conversion', 'SPI Protocol', 'MCP3008 class', 'source/values pipeline'],
+              difficulty: 4,
+              estimatedTime: '30 mins'
+            },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p8-hardware',
+          title: 'Hardware Setup',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: {
+              warnings: [
+                'You MUST enable SPI on your Raspberry Pi first: sudo raspi-config → Interface Options → SPI.',
+                'Keep all MCP3008 signals at 3.3V. Do not feed 5V into any MCP3008 pin.'
+              ],
+              steps: [
+                'Place the MCP3008 chip in the center of your breadboard straddling the gap.',
+                'MCP3008 VDD (pin 16) → 3.3V rail. MCP3008 AGND (pin 14) and DGND (pin 9) → GND rail.',
+                'MCP3008 VREF (pin 15) → 3.3V rail (same as VDD).',
+                'MCP3008 CLK (pin 13) → Raspberry Pi Physical Pin 23 (GPIO 11 / SCLK).',
+                'MCP3008 DOUT/MISO (pin 12) → Raspberry Pi Physical Pin 21 (GPIO 9 / MISO).',
+                'MCP3008 DIN/MOSI (pin 11) → Raspberry Pi Physical Pin 19 (GPIO 10 / MOSI).',
+                'MCP3008 CS/SHDN (pin 10) → Raspberry Pi Physical Pin 24 (GPIO 8 / CE0).',
+                'Rotation sensor: connect one outer leg to GND, the other outer leg to 3.3V, and the middle wiper pin to MCP3008 CH0 (pin 1).',
+                'Keep your RGB LED connected exactly as in Level 1 (Red to GPIO 17, GND to ground rail).'
+              ],
+              explanation: 'The rotation sensor is a potentiometer — a variable voltage divider. Turning the knob sweeps the wiper between 0V and 3.3V. The MCP3008 reads this voltage over SPI and sends a digital number (0.0–1.0) to the Pi, which we pipe directly into the PWMLED brightness.'
+            },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p8-code',
+          title: 'The Code',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: `#!/usr/bin/env python3
+"""
+Level 8: Twist to Control - Rotation sensor → LED brightness via MCP3008 ADC
+
+🔒 SECURITY HARDENING:
+- Enable SPI only when needed: sudo raspi-config -> Interface Options -> SPI
+- The MCP3008 operates at 3.3V max; never exceed VDD on any input channel
+- Input values from an ADC are untrusted hardware data - always clamp before use
+
+📚 EDUCATIONAL MOMENT:
+The Raspberry Pi has NO analog input pins!
+The MCP3008 is an 8-channel ADC that converts voltages (0V-3.3V) into
+digital numbers and sends them to the Pi over SPI.
+gpiozero normalises the result to 0.0-1.0 for you automatically.
+"""
+
+from gpiozero import MCP3008, PWMLED
+from signal import pause
+
+# ============================================
+# HARDWARE ABSTRACTION
+# MCP3008 reads the rotation sensor voltage (0V-3.3V)
+# and converts it to a float (0.0-1.0) over SPI
+# ============================================
+
+knob = MCP3008(channel=0)      # Rotation sensor wiper on CH0 (MCP3008 pin 1)
+brightness_led = PWMLED(17)    # PWM red LED from Level 3
+
+# ============================================
+# HIGH-LEVEL LOGIC
+# source/values pipeline: no loop, no polling!
+# ============================================
+
+print("🎛️  Turn the knob to control LED brightness!")
+print("   Full left  = OFF   (0.0V → 0.0)")
+print("   Full right = FULL  (3.3V → 1.0)")
+print("   Press Ctrl+C to exit.\\n")
+
+# ONE LINE of gpiozero magic:
+# knob.values is a generator streaming 0.0-1.0 readings
+# brightness_led.source consumes them in a background thread
+brightness_led.source = knob.values
+
+try:
+    pause()
+except KeyboardInterrupt:
+    brightness_led.off()
+    print("\\n👋 Exiting...")`,
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p8-walkthrough',
+          title: 'Code Walkthrough',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [
+              { section: 'Why We Need an ADC', explanation: 'GPIO pins can only read digital HIGH (3.3V) or LOW (0V). The MCP3008 samples an analog voltage and returns a precise number from 0.0 to 1.0 — this is Analog-to-Digital Conversion.' },
+              { section: 'MCP3008(channel=0)', explanation: 'Creates a reader on CH0 of the chip. The MCP3008 has 8 channels (CH0–CH7), so you could read up to 8 different sensors simultaneously.' },
+              { section: 'source/values Pipeline', explanation: '`brightness_led.source = knob.values` wires the two devices together in one line. gpiozero reads the knob in a background thread and instantly applies each value to the LED brightness.' },
+              { section: 'No Loop Required', explanation: 'Unlike a `while True` polling loop, the source/values pipeline is non-blocking and CPU-efficient. The main thread just calls `pause()` and waits.' },
+              { section: 'SPI Under the Hood', explanation: 'Every time gpiozero samples `knob.values`, it sends a command over SPI (4 wires: MOSI, MISO, SCLK, CS) and receives back a 10-bit number (0–1023) that gets normalised to 0.0–1.0.' }
+            ],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p8-deepdive',
+          title: 'Concept Deep Dive',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: {
+              hardware: 'The potentiometer is a voltage divider. Its three legs form a resistive track (outer two) with a sliding wiper (middle). Turning the knob moves the wiper, outputting a proportional voltage between 0V and 3.3V. The MCP3008 samples this with a 10-bit resolution (1024 steps).',
+              software: 'gpiozero\'s source/values API creates a reactive data pipeline. `knob.values` is a Python generator that yields an endless stream of readings. `brightness_led.source` consumes that stream in a background daemon thread, updating PWM duty cycle on every sample.',
+              connection: 'SPI is synchronous master/slave communication. The Pi (master) toggles the SCLK clock line. On each tick, one bit travels from Pi→MCP3008 on MOSI (the command) and one bit returns on MISO (the result). After 24 clock ticks, the full 10-bit conversion is complete.'
+            },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p8-experiment',
+          title: 'Experiment Mode',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: {
+              tweak: 'Replace `brightness_led.source = knob.values` with a `while True` loop that prints `print(f"Raw knob: {knob.value:.4f}")` to watch the live ADC values stream past.',
+              logic: 'Read a second potentiometer on CH1 and use it to control a different LED color. Use `MCP3008(channel=1)` for the second channel.',
+              creative: 'Map the knob position to a color hue by driving all three RGB LED channels: full left = pure red, center = pure green, full right = pure blue!'
+            },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p8-troubleshooting',
+          title: 'Troubleshooting',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: [
+              { issue: 'ImportError: No module named spidev', solution: 'Run `pip3 install spidev` in the terminal. gpiozero\'s MCP3008 class requires the spidev backend.' },
+              { issue: 'knob.value is always 0.0 or 1.0, never in between', solution: 'The potentiometer outer pins may be swapped. Try reversing which outer leg connects to 3.3V and which to GND.' },
+              { issue: 'LED never changes brightness', solution: 'First verify SPI is enabled in raspi-config. Then double-check all four SPI wires: MOSI→GPIO10, MISO→GPIO9, SCLK→GPIO11, CS→GPIO8.' },
+              { issue: 'Values are noisy or jumping', solution: 'Add a small 100nF capacitor between the MCP3008 VREF pin and GND to filter power supply noise. Make sure all GND connections share a common rail.' }
+            ]
+          }
+        }
+      ],
+      hardwareSetup: { warnings: [], steps: [], explanation: '' },
+      code: '',
+      codeWalkthrough: [],
+      conceptDeepDive: { hardware: '', software: '', connection: '' },
+      experimentMode: { tweak: '', logic: '', creative: '' },
+      troubleshooting: []
+    }
+  },
+  {
+    id: 'p9',
+    level: 9,
+    levelName: 'Distance Sensing',
+    title: 'Sonar Proximity Alert',
+    skillsLearned: ['DistanceSensor class', 'Time-of-flight math', 'Threshold logic', 'Live terminal output'],
+    badgeEarned: 'Sonar Scout',
+    content: {
+      overview: {
+        description: 'We will use an HC-SR04 ultrasonic sensor to measure distance, then combine it with the RGB LED from Level 1 to create a color-coded proximity alert — green for safe, yellow for close, red for danger.',
+        concepts: ['DistanceSensor class', 'Time-of-flight', 'Voltage dividers (5V→3.3V)', 'Threshold-based logic'],
+        difficulty: 4,
+        estimatedTime: '35 mins'
+      },
+      pages: [
+        {
+          id: 'p9-overview',
+          title: 'Project Overview',
+          content: {
+            overview: {
+              description: 'We will use an HC-SR04 ultrasonic sensor to measure distance, then combine it with the RGB LED from Level 1 to create a color-coded proximity alert — green for safe, yellow for close, red for danger.',
+              concepts: ['DistanceSensor class', 'Time-of-flight', 'Voltage dividers (5V→3.3V)', 'Threshold-based logic'],
+              difficulty: 4,
+              estimatedTime: '35 mins'
+            },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p9-hardware',
+          title: 'Hardware Setup',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: {
+              warnings: [
+                'CRITICAL: The HC-SR04 ECHO pin outputs 5V, but Raspberry Pi GPIO pins only tolerate 3.3V. You MUST use a voltage divider on the ECHO wire or you risk permanently damaging your Pi.',
+                'The TRIG pin is safe to connect directly — it only receives a 3.3V input signal from the Pi.',
+                'VCC on the HC-SR04 requires 5V power to operate correctly.'
+              ],
+              steps: [
+                'Connect HC-SR04 VCC to Raspberry Pi Physical Pin 2 (5V).',
+                'Connect HC-SR04 GND to the ground rail on the breadboard.',
+                'Connect HC-SR04 TRIG directly to Raspberry Pi Physical Pin 18 (GPIO 24).',
+                'Build the ECHO voltage divider: HC-SR04 ECHO → 1kΩ resistor → junction node → 2kΩ resistor → GND rail.',
+                'Connect the junction node (between the two resistors) to Raspberry Pi Physical Pin 22 (GPIO 25).',
+                'Keep the RGB LED module connected as in Level 1: Red pin → GPIO 17, Green → GPIO 27, Blue → GPIO 5, GND → ground rail.'
+              ],
+              explanation: 'The voltage divider reduces the 5V ECHO signal to a safe 3.3V before it reaches the Pi. Using Ohm\'s law: 5V × (2kΩ ÷ (1kΩ + 2kΩ)) = 3.33V — just safe enough. The sensor fires a 40kHz ultrasonic burst from TRIG and measures how long ECHO stays HIGH to calculate distance.'
+            },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p9-code',
+          title: 'The Code',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: `#!/usr/bin/env python3
+"""
+Level 9: Sonar Proximity Alert - HC-SR04 distance sensing with RGB feedback
+
+🔒 SECURITY HARDENING:
+- ECHO outputs 5V — ALWAYS use a voltage divider (1kΩ + 2kΩ) on the ECHO wire!
+- Validate readings: HC-SR04 range is 2cm–400cm; reject values outside this window
+- Cap polling rate to ~10Hz; faster polling can cause sonar interference
+
+📚 EDUCATIONAL MOMENT:
+The HC-SR04 fires an ultrasonic burst (40,000Hz — above human hearing range)
+and measures the time until the echo returns.
+Distance = (Speed of Sound × Echo Time) ÷ 2
+gpiozero's DistanceSensor calculates all of this for you internally!
+"""
+
+from gpiozero import DistanceSensor, LED
+from time import sleep
+
+# ============================================
+# HARDWARE ABSTRACTION
+# DistanceSensor handles the TRIG pulse and ECHO timing
+# ============================================
+
+sonar = DistanceSensor(echo=25, trigger=24, max_distance=3)
+
+# Reuse the RGB LED from Level 1
+red_led   = LED(17)
+green_led = LED(27)
+blue_led  = LED(5)
+
+# ============================================
+# HELPER: Set RGB color
+# ============================================
+
+def set_color(r, g, b):
+    red_led.value   = r
+    green_led.value = g
+    blue_led.value  = b
+
+# ============================================
+# HIGH-LEVEL LOGIC
+# Threshold-based color coding
+# ============================================
+
+print("📡 Sonar Proximity Alert — Move your hand towards the sensor!")
+print("   🟢 Far     (> 50 cm)")
+print("   🟡 Close   (20 cm – 50 cm)")
+print("   🔴 Danger  (< 20 cm)")
+print("   Press Ctrl+C to exit.\\n")
+
+try:
+    while True:
+        distance_m  = sonar.distance          # Returns metres (0.0 = 0cm, 1.0 = max_distance)
+        distance_cm = distance_m * 100        # Convert to centimetres
+
+        # Overwrite the same terminal line for a live readout
+        print(f"  Distance: {distance_cm:6.1f} cm", end="\\r")
+
+        # Colour decisions based on proximity thresholds
+        if distance_cm > 50:
+            set_color(0, 1, 0)    # 🟢 Green — safe
+        elif distance_cm > 20:
+            set_color(1, 1, 0)    # 🟡 Yellow — getting close
+        else:
+            set_color(1, 0, 0)    # 🔴 Red — very close!
+
+        sleep(0.1)                # 10 readings per second (safe polling rate)
+
+except KeyboardInterrupt:
+    set_color(0, 0, 0)
+    print("\\n\\n👋 Sonar offline.")`,
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p9-walkthrough',
+          title: 'Code Walkthrough',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [
+              { section: 'DistanceSensor(echo, trigger)', explanation: '`DistanceSensor(echo=25, trigger=24)` tells gpiozero which GPIO pins control the sensor. gpiozero automatically fires the 10µs TRIG pulse and times the ECHO response — no manual timing code needed.' },
+              { section: 'max_distance=3', explanation: 'This sets the scale for `.distance`. With `max_distance=3`, a reading of 1.0 = 3 metres. We multiply by 100 to get centimetres for human-readable output.' },
+              { section: 'The Physics', explanation: 'Sound travels at ~343 m/s. If the echo returns after 5.8ms, the sound covered 2 metres total (out and back), so the object is 1 metre away. DistanceSensor does this calculation automatically.' },
+              { section: 'Threshold Logic', explanation: 'Three `if/elif/else` blocks decide the LED color based on distance. This is the simplest form of a rule-based system — the same pattern used in industrial proximity switches.' },
+              { section: 'end="\\r" Trick', explanation: '`print(..., end="\\r")` moves the cursor back to the start of the line without printing a new one. This creates a live, updating readout without scrolling the terminal.' }
+            ],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p9-deepdive',
+          title: 'Concept Deep Dive',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: {
+              hardware: 'The HC-SR04 contains a 40kHz ultrasonic transmitter, a receiver, and a timing chip. The TRIG pulse starts a burst of 8 ultrasonic pulses. The ECHO pin goes HIGH immediately and stays HIGH until a reflection is received. The Pi measures this HIGH duration to calculate distance. Soft surfaces (cushions, fabric) absorb sound and give shorter or no readings.',
+              software: 'gpiozero uses hardware GPIO interrupts — not polling — to time the ECHO pulse. This gives microsecond accuracy without wasting CPU time. The `.distance` property runs the full calculation (echo_time × 343/2) every time it is accessed.',
+              connection: 'Voltage dividers are critical protection. Ohm\'s law: V_out = V_in × R2/(R1+R2). With R1=1kΩ and R2=2kΩ: V_out = 5V × 2/(1+2) = 3.33V. This is just inside the safe 3.3V GPIO threshold. Skipping this divider can permanently damage your Pi!'
+            },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p9-experiment',
+          title: 'Experiment Mode',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: {
+              tweak: 'Adjust the 50cm and 20cm thresholds to match your project space. Try placing the sensor in a doorway and changing the thresholds based on typical hallway widths.',
+              logic: 'Add a buzzer (from Level 4) that beeps faster the closer an object gets — like a car parking sensor! Use `sleep(distance_cm / 500)` as the delay between beeps.',
+              creative: 'Combine with the LCD from Level 6 to show the numerical distance on the screen while the LED displays the color zone. A real-life "digital ruler"!'
+            },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p9-troubleshooting',
+          title: 'Troubleshooting',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: [
+              { issue: 'distance always reads 0 or max_distance', solution: 'Check that TRIG is on GPIO 24 and ECHO is on GPIO 25. Verify the voltage divider is wired correctly — measure the junction with a multimeter (should read ~2.5–3.3V when ECHO fires).' },
+              { issue: 'Readings are very erratic or jump wildly', solution: 'Mount the sensor securely — even slight wobble causes noise. Avoid pointing it at angled or soft surfaces. Add `max_distance=3` to discard out-of-range noise.' },
+              { issue: 'RuntimeError about GPIO already in use', solution: 'A previous script did not clean up. Run `sudo killall python3` and try again, or reboot the Pi. gpiozero cleans up automatically on normal exit.' },
+              { issue: 'Pi reboots or freezes when sensor is connected', solution: 'You almost certainly connected ECHO directly to GPIO without the voltage divider. This forces 5V into the 3.3V GPIO. Disconnect power, build the voltage divider, then reconnect.' }
+            ]
+          }
+        }
+      ],
+      hardwareSetup: { warnings: [], steps: [], explanation: '' },
+      code: '',
+      codeWalkthrough: [],
+      conceptDeepDive: { hardware: '', software: '', connection: '' },
+      experimentMode: { tweak: '', logic: '', creative: '' },
+      troubleshooting: []
+    }
+  },
+  {
+    id: 'p10',
+    level: 10,
+    levelName: 'Full System Capstone',
+    title: 'The Smart Guardian',
+    skillsLearned: ['DS18B20 1-Wire sensor', 'OutputDevice for relay', '1-Wire filesystem reads', 'Fail-safe design', 'System orchestration'],
+    badgeEarned: 'Systems Architect',
+    content: {
+      overview: {
+        description: 'The ultimate capstone! We will wire a DS18B20 digital thermometer and a relay module, then combine them with the LCD, LED, and buzzer from previous levels to build a Smart Guardian — a temperature monitor that activates a real relay-controlled device when things get too hot.',
+        concepts: ['DS18B20 1-Wire protocol', 'Relay as OutputDevice', 'Filesystem-based sensor reads', 'Hysteresis & fail-safe design', 'Full system integration'],
+        difficulty: 5,
+        estimatedTime: '50 mins'
+      },
+      pages: [
+        {
+          id: 'p10-overview',
+          title: 'Project Overview',
+          content: {
+            overview: {
+              description: 'The ultimate capstone! We will wire a DS18B20 digital thermometer and a relay module, then combine them with the LCD, LED, and buzzer from previous levels to build a Smart Guardian — a temperature monitor that activates a real relay-controlled device when things get too hot.',
+              concepts: ['DS18B20 1-Wire protocol', 'Relay as OutputDevice', 'Filesystem-based sensor reads', 'Hysteresis & fail-safe design', 'Full system integration'],
+              difficulty: 5,
+              estimatedTime: '50 mins'
+            },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p10-hardware',
+          title: 'Hardware Setup',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: {
+              warnings: [
+                'RELAY SAFETY: The relay switches MAINS VOLTAGE (120V/240V AC). NEVER touch the relay screw terminals while anything is plugged into the controlled outlet. When in doubt, only connect low-voltage DC loads (5V fans, LED strips) during testing.',
+                'You MUST enable 1-Wire on your Pi before the DS18B20 will be detected: sudo raspi-config → Interface Options → 1-Wire.',
+                'The DS18B20 REQUIRES a 4.7kΩ pull-up resistor between its DATA pin and 3.3V. Without it, readings will fail or return garbage.'
+              ],
+              steps: [
+                'DS18B20 sensor: flat face forward — left leg is GND, middle leg is DATA, right leg is VCC.',
+                'Connect DS18B20 VCC (right leg) → 3.3V rail.',
+                'Connect DS18B20 GND (left leg) → GND rail.',
+                'Connect DS18B20 DATA (middle leg) → Raspberry Pi Physical Pin 7 (GPIO 4).',
+                'Connect a 4.7kΩ resistor between the DS18B20 DATA wire and the 3.3V rail (this is the required 1-Wire pull-up).',
+                'Relay module: Connect VCC → Raspberry Pi Physical Pin 4 (5V), GND → GND rail, IN → Raspberry Pi Physical Pin 37 (GPIO 26).',
+                'Retain the LCD connection from Level 6: SDA → Physical Pin 3, SCL → Physical Pin 5, VCC → 5V, GND → GND.',
+                'Retain the RGB LED from Level 1: Red → GPIO 17, Green → GPIO 27, Blue → GPIO 5, GND → GND.',
+                'Retain the passive buzzer from Level 4: positive leg → GPIO 18, negative → GND.'
+              ],
+              explanation: 'The DS18B20 uses the 1-Wire protocol — a single data line carries both power signaling and data. Linux automatically detects it and creates a virtual text file you read like any other file. The relay coil is energized by GPIO 26 (5V logic from the module) and mechanically snaps a heavy-duty contact closed, switching whatever load you connect to the NO (Normally Open) screw terminal.'
+            },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p10-code',
+          title: 'The Code',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: `#!/usr/bin/env python3
+"""
+Level 10: The Smart Guardian — Temperature monitor with relay control
+
+🔒 SECURITY HARDENING:
+- Relay controls MAINS VOLTAGE. Use Normally-Open (NO) contacts for fail-safe operation.
+  If the Pi loses power, the relay opens and the load turns OFF automatically.
+- Validate ALL temperature reads: DS18B20 range is -55°C to +125°C. Reject anything outside.
+- The CRC check in the sensor file (the 'YES' line) MUST pass before trusting any reading.
+- Log all relay state changes with timestamps for traceability.
+
+📚 EDUCATIONAL MOMENT:
+The DS18B20 stores temperature as a 16-bit integer in its internal ROM.
+Linux's 1-Wire driver (w1_therm) reads it and writes the result to a
+virtual text file in /sys/bus/w1/devices/ — we just open and read it!
+This is hardware abstraction at the operating-system level.
+"""
+
+import glob
+import time
+from datetime import datetime
+from gpiozero import LED, TonalBuzzer, OutputDevice
+from gpiozero.tones import Tone
+from RPLCD.i2c import CharLCD
+
+# ============================================
+# HARDWARE ABSTRACTION
+# ============================================
+
+# Relay uses OutputDevice (not LED — semantically correct)
+# active_high=True: GPIO HIGH turns relay ON
+# initial_value=False: relay starts OFF (fail-safe)
+relay = OutputDevice(26, active_high=True, initial_value=False)
+
+red_led      = LED(17)
+green_led    = LED(27)
+alarm_buzzer = TonalBuzzer(18)
+lcd          = CharLCD(i2c_expander='PCF8574', address=0x27, port=1, cols=16, rows=2)
+
+# ============================================
+# CONFIGURATION
+# ============================================
+
+TEMP_ON_THRESHOLD_C  = 30.0   # °C — relay activates ABOVE this
+TEMP_OFF_THRESHOLD_C = 27.0   # °C — relay deactivates BELOW this (hysteresis gap)
+W1_DEVICES_PATH      = '/sys/bus/w1/devices/'
+
+# ============================================
+# 1-WIRE SENSOR FUNCTIONS
+# ============================================
+
+def find_sensor():
+    """Locate the DS18B20 device file created by the Linux 1-Wire driver."""
+    devices = glob.glob(W1_DEVICES_PATH + '28-*/w1_slave')
+    if not devices:
+        raise RuntimeError(
+            "DS18B20 not found! Check:\\n"
+            "  1. Enable 1-Wire: sudo raspi-config -> Interface Options -> 1-Wire\\n"
+            "  2. Confirm 4.7kΩ pull-up resistor between DATA and 3.3V\\n"
+            "  3. Confirm DATA pin is on GPIO 4 (Physical Pin 7)"
+        )
+    return devices[0]
+
+def read_temperature(device_file):
+    """
+    Read and validate temperature from the sensor file.
+    Returns float (°C) or None if the reading is invalid.
+    """
+    try:
+        with open(device_file, 'r') as f:
+            lines = f.readlines()
+
+        # Line 1 must end with 'YES' — this is the CRC validity check
+        if not lines[0].strip().endswith('YES'):
+            return None  # Corrupt read — discard
+
+        # Parse temperature from 't=XXXXX' in line 2
+        raw_temp_str = lines[1].split('t=')[1].strip()
+        temp_c = int(raw_temp_str) / 1000.0
+
+        # Validate physical range of DS18B20 (-55°C to +125°C)
+        if -55.0 <= temp_c <= 125.0:
+            return temp_c
+
+    except (IOError, IndexError, ValueError):
+        pass
+
+    return None  # Catch-all for any file/parse errors
+
+# ============================================
+# HELPERS
+# ============================================
+
+def set_color(r, g, b):
+    red_led.value   = r
+    green_led.value = g
+
+def log_event(message):
+    """Append a timestamped log entry to guardian.log."""
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    with open('guardian.log', 'a') as f:
+        f.write(f"[{timestamp}] {message}\\n")
+
+def update_lcd(line1, line2):
+    lcd.clear()
+    lcd.write_string(line1[:16])
+    lcd.cursor_pos = (1, 0)
+    lcd.write_string(line2[:16])
+
+# ============================================
+# MAIN GUARDIAN LOOP
+# ============================================
+
+print("🌡️  Smart Guardian Starting...")
+device = find_sensor()
+print(f"   Sensor found: {device}")
+print(f"   Relay ON  above: {TEMP_ON_THRESHOLD_C}°C")
+print(f"   Relay OFF below: {TEMP_OFF_THRESHOLD_C}°C")
+print(f"   Press Ctrl+C to exit.\\n")
+
+relay_active = False  # Track relay state for hysteresis logic
+
+try:
+    while True:
+        temp_c = read_temperature(device)
+
+        if temp_c is None:
+            print("⚠️  Invalid reading — retrying...", end="\\r")
+            time.sleep(1)
+            continue
+
+        temp_f = (temp_c * 9 / 5) + 32  # Fahrenheit for display
+        print(f"  🌡️  {temp_c:.1f}°C / {temp_f:.1f}°F  Relay: {'ON ' if relay_active else 'OFF'}", end="\\r")
+
+        # --- HYSTERESIS LOGIC ---
+        # Turn ON only above the high threshold
+        if not relay_active and temp_c > TEMP_ON_THRESHOLD_C:
+            relay.on()
+            relay_active = True
+            green_led.off()
+            red_led.on()
+            alarm_buzzer.play(Tone("A5"))
+            time.sleep(0.3)
+            alarm_buzzer.stop()
+            update_lcd(f"TEMP: {temp_c:.1f}C", "! RELAY ON  !")
+            log_event(f"RELAY ON  — temp={temp_c:.2f}C")
+            print(f"\\n🔴 RELAY ON  — {temp_c:.1f}°C exceeds threshold!")
+
+        # Turn OFF only below the low threshold (prevents rapid cycling)
+        elif relay_active and temp_c < TEMP_OFF_THRESHOLD_C:
+            relay.off()
+            relay_active = False
+            red_led.off()
+            green_led.on()
+            update_lcd(f"TEMP: {temp_c:.1f}C", f"OK  <{TEMP_ON_THRESHOLD_C:.0f}C")
+            log_event(f"RELAY OFF — temp={temp_c:.2f}C")
+            print(f"\\n🟢 RELAY OFF — {temp_c:.1f}°C back to normal.")
+
+        else:
+            # Steady state — refresh display without relay change
+            status = "HOT! ON " if relay_active else f"OK <{TEMP_ON_THRESHOLD_C:.0f}C"
+            update_lcd(f"TEMP: {temp_c:.1f}C", status)
+
+        time.sleep(1)   # DS18B20 needs ~750ms per conversion
+
+except KeyboardInterrupt:
+    relay.off()        # ALWAYS turn relay off on exit
+    red_led.off()
+    green_led.off()
+    alarm_buzzer.stop()
+    update_lcd("Guardian", "Offline")
+    time.sleep(1)
+    lcd.clear()
+    print("\\n\\n👋 Guardian shut down safely. Relay is OFF.")`,
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p10-walkthrough',
+          title: 'Code Walkthrough',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [
+              { section: 'OutputDevice for the Relay', explanation: '`OutputDevice(26, active_high=True, initial_value=False)` is the right class for a relay — it is an output device but semantically not an LED. `initial_value=False` ensures the relay starts OFF even before the code runs any logic.' },
+              { section: 'find_sensor() — 1-Wire Discovery', explanation: 'Linux\'s 1-Wire driver automatically creates a file like `/sys/bus/w1/devices/28-xxxx/w1_slave` when it detects a DS18B20. We use `glob.glob()` with the `28-*` wildcard to find it — no hardcoded device IDs needed.' },
+              { section: 'CRC Validity Check', explanation: 'Each DS18B20 reading includes a CRC (error check). Linux\'s driver writes "YES" on the first line if it passed, "NO" if not. We ALWAYS check for "YES" before trusting the temperature data.' },
+              { section: 'Hysteresis Logic', explanation: 'Without hysteresis, a relay near the threshold would switch on and off dozens of times per minute, wearing out the contacts. Our two-threshold design (ON at 30°C, OFF at 27°C) creates a 3°C "dead zone" that prevents rapid cycling — the same technique used in real thermostats.' },
+              { section: 'log_event() — Audit Trail', explanation: 'Every relay state change is logged to `guardian.log` with a timestamp. This is a minimal but real security practice: if something went wrong at 3am, you can check what the temperature was.' },
+              { section: 'Fail-Safe Shutdown', explanation: 'The `except KeyboardInterrupt` block calls `relay.off()` unconditionally. Leaving a relay ON after code exits is a fire hazard. Always shut hardware down explicitly.' }
+            ],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p10-deepdive',
+          title: 'Concept Deep Dive',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: {
+              hardware: 'The DS18B20 stores temperature as a 16-bit two\'s complement integer inside its scratchpad memory. Each bit represents 1/16 of a degree Celsius. An internal ADC converts the thermistor reading, then the 1-Wire bus clock shifts the bits out one at a time on a single wire. The 4.7kΩ pull-up resistor provides the resting voltage that powers the bus. The relay is an electromechanical amplifier: a small 5V coil current (GPIO-safe) creates a magnetic field that flips a mechanical lever, connecting or disconnecting mains-voltage terminals that can handle 10A+.',
+              software: 'The Linux `w1_therm` kernel module handles all 1-Wire timing (microsecond-precision reset pulses, presence pulses, and bit reads) entirely in the kernel. Python just opens a text file. This is the power of OS-level hardware abstraction — complex hardware protocols become trivial file reads. The hysteresis pattern (`relay_active` boolean + two thresholds) is a classic control systems technique found in industrial PLCs and consumer thermostats.',
+              connection: 'Hardware connects to OS: the 1-Wire kernel driver creates `/sys/bus/w1/`. OS connects to Python: we `open()` a file. Python connects to hardware: `relay.on()` sets GPIO 26 HIGH, energizing the relay coil. The relay connects to load: NO contacts close, completing the external circuit. This is a full stack from sensor physics to physical switching — every layer is visible in this project.'
+            },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p10-experiment',
+          title: 'Experiment Mode',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: {
+              tweak: 'Set `TEMP_ON_THRESHOLD_C` to your current room temperature plus 2°C. Then gently pinch the DS18B20 sensor between your fingers to warm it up and trigger the relay!',
+              logic: 'Increase the hysteresis gap from 3°C to 5°C (e.g., ON at 32°C, OFF at 27°C) and observe how it affects relay cycling frequency. Smaller gaps = more switching = more wear.',
+              creative: 'Add the button from Level 2 as a manual override: press it to force the relay ON or OFF regardless of temperature. Log "MANUAL OVERRIDE" events separately in the log file.'
+            },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p10-troubleshooting',
+          title: 'Troubleshooting',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: [
+              { issue: 'RuntimeError: DS18B20 not found', solution: 'Enable 1-Wire via `sudo raspi-config` → Interface Options → 1-Wire, then reboot. Confirm the 4.7kΩ pull-up resistor is between DS18B20 DATA and 3.3V, and DATA is on GPIO 4 (Physical Pin 7).' },
+              { issue: 'Temperature always reads exactly 85.0°C', solution: '85°C is the DS18B20\'s power-on default value. It means the sensor is electrically detected but the conversion is failing. Check the pull-up resistor and try a lower resistance (4.7kΩ is standard, but 3.3kΩ can help on noisy breadboards).' },
+              { issue: 'Relay clicking rapidly (chattering)', solution: 'Your two thresholds are too close together or equal. Ensure TEMP_OFF_THRESHOLD_C is at least 2–3°C lower than TEMP_ON_THRESHOLD_C to create a proper hysteresis gap.' },
+              { issue: 'Relay clicks but connected device does nothing', solution: 'Confirm you are using the NO (Normally Open) screw terminal, not NC. With the relay coil unenergized, NO is open (off). Also check your load device and cable are fully connected.' },
+              { issue: 'LCD shows garbled text after relay activates', solution: 'The relay coil switching can cause voltage spikes on the 5V rail. Add a 100µF capacitor between the relay VCC and GND pins to filter the spike, and ensure all grounds share a solid common connection.' }
+            ]
+          }
+        }
+      ],
+      hardwareSetup: { warnings: [], steps: [], explanation: '' },
+      code: '',
+      codeWalkthrough: [],
+      conceptDeepDive: { hardware: '', software: '', connection: '' },
+      experimentMode: { tweak: '', logic: '', creative: '' },
+      troubleshooting: []
+    }
   }
 ];
