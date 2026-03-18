@@ -55,6 +55,7 @@ export default function LabNotebookModal({ project, onSave, onClose }: LabNotebo
               <textarea 
                 name="whatWorked"
                 required
+                maxLength={2000}
                 value={formData.whatWorked}
                 onChange={handleChange}
                 className="w-full p-3 rounded-xl border border-slate-600 bg-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none transition-all resize-none h-24 text-slate-200 text-sm placeholder-slate-500"
@@ -66,6 +67,7 @@ export default function LabNotebookModal({ project, onSave, onClose }: LabNotebo
               <textarea 
                 name="whatDidnt"
                 required
+                maxLength={2000}
                 value={formData.whatDidnt}
                 onChange={handleChange}
                 className="w-full p-3 rounded-xl border border-slate-600 bg-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none transition-all resize-none h-24 text-slate-200 text-sm placeholder-slate-500"
@@ -77,6 +79,7 @@ export default function LabNotebookModal({ project, onSave, onClose }: LabNotebo
               <textarea 
                 name="whatChanged"
                 required
+                maxLength={2000}
                 value={formData.whatChanged}
                 onChange={handleChange}
                 className="w-full p-3 rounded-xl border border-slate-600 bg-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none transition-all resize-none h-24 text-slate-200 text-sm placeholder-slate-500"
@@ -88,6 +91,7 @@ export default function LabNotebookModal({ project, onSave, onClose }: LabNotebo
               <textarea 
                 name="oneThingLearned"
                 required
+                maxLength={2000}
                 value={formData.oneThingLearned}
                 onChange={handleChange}
                 className="w-full p-3 rounded-xl border border-slate-600 bg-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none transition-all resize-none h-24 text-slate-200 text-sm placeholder-slate-500"

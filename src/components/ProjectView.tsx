@@ -38,10 +38,14 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
   const currentPage = hasPages ? content.pages[currentPageIndex] : null;
   const currentContent = currentPage ? currentPage.content : content;
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(currentContent.code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(currentContent.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access denied — do not show false confirmation
+    }
   };
 
   const handleNextPage = () => {

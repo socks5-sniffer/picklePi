@@ -20,8 +20,12 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'curriculum' | 'progress' | 'notebook' | 'dictionary' | 'pinout'>('home');
   const [activeProjectId, setActiveProjectId] = useState<string>(curriculum[0].id);
   const [progress, setProgress] = useState<UserProgress>(() => {
-    const saved = localStorage.getItem('rpi-lab-progress');
-    return saved ? JSON.parse(saved) : INITIAL_PROGRESS;
+    try {
+      const saved = localStorage.getItem('rpi-lab-progress');
+      return saved ? JSON.parse(saved) : INITIAL_PROGRESS;
+    } catch {
+      return INITIAL_PROGRESS;
+    }
   });
   const [isLabModalOpen, setIsLabModalOpen] = useState(false);
   const [projectToComplete, setProjectToComplete] = useState<Project | null>(null);
