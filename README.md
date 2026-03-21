@@ -9,7 +9,6 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-6.2-purple.svg)](https://vitejs.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-cyan.svg)](https://tailwindcss.com)
-[![Gemini AI](https://img.shields.io/badge/Gemini-AI-orange.svg)](https://ai.google.dev)
 
 **Learn electronics and Python programming through hands-on Raspberry Pi projects — one circuit at a time.**
 
@@ -49,7 +48,6 @@ Progress is tracked locally in your browser. Completing a project earns a badge 
 | 📓 **Lab Notebook** | Structured reflection journal for every completed project |
 | 📌 **GPIO Pinout Reference** | Interactive Raspberry Pi GPIO pin map built into the app |
 | 📖 **Electronics Dictionary** | Searchable glossary of Python, Raspberry Pi, and Electronics terms |
-| 🤖 **AI Integration** | Google Gemini AI support baked in for assisted learning |
 | 📱 **Mobile Responsive** | Collapsible sidebar works on phones and tablets |
 | 🔒 **Progress Persistence** | All progress saved to `localStorage` — survives page refreshes |
 | 🎨 **Modern Dark UI** | Clean dark-themed interface with smooth animations via Motion |
@@ -124,18 +122,7 @@ Each project is split into structured **pages** within the app:
    npm install
    ```
 
-3. **(Optional) Set up your Gemini API key**
-
-   If you want to enable AI-assisted features, create a `.env` file in the project root:
-
-   ```bash
-   # .env
-   GEMINI_API_KEY=your_api_key_here
-   ```
-
-   Get a free Gemini API key at [https://aistudio.google.com](https://aistudio.google.com). The app works fully without this key — AI features are simply inactive.
-
-4. **Start the development server**
+3. **Start the development server**
 
    ```bash
    npm run dev
@@ -143,7 +130,7 @@ Each project is split into structured **pages** within the app:
 
    The server starts on `https://localhost:3000` (HTTPS is enabled automatically via `mkcert`). On first run, `mkcert` will generate a local certificate; your browser may ask you to trust it.
 
-5. **Open in browser**
+4. **Open in browser**
 
    Navigate to `https://localhost:3000`
 
@@ -218,7 +205,6 @@ picklePi/
 | **better-sqlite3** | 12.x | Embedded SQLite database driver |
 | **dotenv** | 17.x | Environment variable loading for server config |
 | **tsx** | 4.x | TypeScript execution for Node.js server scripts |
-| **Google Gemini AI** | `@google/genai` | Optional AI assistance for learners |
 | **mkcert** | via `vite-plugin-mkcert` | Auto-generates trusted local HTTPS certificates |
 | **localStorage** | Browser native | Client-side progress persistence (current default) |
 
@@ -274,10 +260,6 @@ The **Dictionary** tab is a searchable glossary organized into three categories:
 - **Python** — language concepts and gpiozero patterns
 - **Raspberry Pi** — board-specific terms (BCM, GPIO, I2C, etc.)
 - **Electronics** — hardware fundamentals (resistor, duty cycle, PIR, etc.)
-
-### AI Integration
-
-picklePi includes Google Gemini AI support via `@google/genai`. Provide a `GEMINI_API_KEY` in your `.env` to activate AI-assisted features. The key is injected at build time by Vite and never exposed in source control (`.env` is git-ignored).
 
 ---
 
@@ -386,7 +368,6 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide, including bra
 This project follows secure-by-default principles:
 
 - All Python code examples include security hardening notes (using least-privilege GPIO, disabling unused interfaces, etc.)
-- The `GEMINI_API_KEY` is never committed to source control — use `.env` locally
 - No user data is sent to any server; all persistence is `localStorage`-only
 - Dependencies are kept up to date
 
@@ -407,7 +388,6 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 - The [Raspberry Pi Foundation](https://www.raspberrypi.org/) for making physical computing accessible to everyone
 - The [gpiozero](https://gpiozero.readthedocs.io/) team for an outstanding Python GPIO library
 - The open-source community behind React, Vite, TypeScript, and Tailwind CSS
-- Google for the Gemini AI API
 - All contributors who help make this project better
 
 ---
