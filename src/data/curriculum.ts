@@ -1095,13 +1095,13 @@ except KeyboardInterrupt:
     id: 'p6',
     level: 6,
     levelName: 'Multi-Module Systems',
-    title: 'LCD or OLED output',
-    skillsLearned: ['I2C/SPI', 'Libraries', 'String Formatting'],
-    badgeEarned: 'Display Master',
+    title: 'Tilt & Shake Detector',
+    skillsLearned: ['I2C protocol', 'ADXL345 accelerometer', 'Adafruit CircuitPython library', '3-axis data interpretation'],
+    badgeEarned: 'Motion Intelligence',
     content: {
       overview: {
-        description: 'We will connect an I2C LCD display to show text messages. This introduces complex modules that require external libraries and communication protocols.',
-        concepts: ['I2C Protocol', 'External Libraries', 'String Formatting'],
+        description: 'We will wire an ADXL345 3-axis accelerometer over I2C and read live tilt and shake data. This introduces complex modules that require external libraries and a communication protocol — the same skills used in real robotics and IoT projects.',
+        concepts: ['I2C Protocol', 'External Libraries (Adafruit)', 'Accelerometer Axes', 'Shake Detection'],
         difficulty: 4,
         estimatedTime: '35 mins'
       },
@@ -1111,8 +1111,8 @@ except KeyboardInterrupt:
           title: 'Project Overview',
           content: {
             overview: {
-              description: 'We will connect an I2C LCD display to show text messages. This introduces complex modules that require external libraries and communication protocols.',
-              concepts: ['I2C Protocol', 'External Libraries', 'String Formatting'],
+              description: 'We will wire an ADXL345 3-axis accelerometer over I2C and read live tilt and shake data. This introduces complex modules that require external libraries and a communication protocol — the same skills used in real robotics and IoT projects.',
+              concepts: ['I2C Protocol', 'External Libraries (Adafruit)', 'Accelerometer Axes', 'Shake Detection'],
               difficulty: 4,
               estimatedTime: '35 mins'
             },
@@ -1131,16 +1131,19 @@ except KeyboardInterrupt:
             overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
             hardwareSetup: {
               warnings: [
-                'You MUST enable I2C on your Raspberry Pi first using `sudo raspi-config`.',
-                'Most 16x2 I2C LCDs require 5V power to run the backlight.'
+                'You MUST enable I2C on your Raspberry Pi first: `sudo raspi-config` → Interface Options → I2C → Enable.',
+                'The ADXL345 runs on 3.3V — do NOT connect VCC to 5V or you will damage the chip.',
+                'Install the Adafruit library before running the code: `pip3 install adafruit-circuitpython-adxl34x`'
               ],
               steps: [
-                'Connect LCD GND to Raspberry Pi Ground.',
-                'Connect LCD VCC to Raspberry Pi Physical Pin 4 (5V).',
-                'Connect LCD SDA (Data) to Raspberry Pi Physical Pin 3 (GPIO 2 / SDA).',
-                'Connect LCD SCL (Clock) to Raspberry Pi Physical Pin 5 (GPIO 3 / SCL).'
+                'Connect ADXL345 GND → Raspberry Pi GND rail.',
+                'Connect ADXL345 VCC → Raspberry Pi Physical Pin 1 (3.3V) — NOT 5V!',
+                'Connect ADXL345 SDA → Raspberry Pi Physical Pin 3 (GPIO 2 / SDA1).',
+                'Connect ADXL345 SCL → Raspberry Pi Physical Pin 5 (GPIO 3 / SCL1).',
+                'Leave the ADXL345 CS pin unconnected (or tie HIGH to 3.3V) — this selects I2C mode.',
+                'Optionally connect the LED from Level 1: long leg (anode) → GPIO 17 through a 330Ω resistor → GND.'
               ],
-              explanation: "I2C uses just two wires (SDA and SCL) to send complex data. The Pi sends text characters as binary data over these wires to the LCD's backpack chip."
+              explanation: "I2C uses just two wires (SDA for data and SCL for clock) to talk to many different sensors. The Pi is the I2C \"Master\" — it drives the clock and addresses each device by a unique 7-bit number. The ADXL345's default I2C address is 0x53. Inside the chip, a tiny suspended mass shifts position under acceleration; bridge circuits measure that shift and produce a voltage that the chip's internal ADC converts to a digital reading."
             },
             code: '',
             codeWalkthrough: [],
@@ -1155,36 +1158,77 @@ except KeyboardInterrupt:
           content: {
             overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
             hardwareSetup: { warnings: [], steps: [], explanation: '' },
-            code: `# Note: This requires the RPLCD library. Install it via terminal: pip3 install RPLCD smbus2
+            code: `#!/usr/bin/env python3
+"""
+Level 6: Tilt & Shake Detector using the ADXL345 accelerometer over I2C.
 
-from RPLCD.i2c import CharLCD
+Setup:
+  pip3 install adafruit-circuitpython-adxl34x
+  sudo raspi-config -> Interface Options -> I2C -> Enable
+
+Wiring (3.3V only!):
+  VCC -> Physical Pin 1 (3.3V)
+  GND -> GND
+  SDA -> Physical Pin 3 (GPIO 2)
+  SCL -> Physical Pin 5 (GPIO 3)
+"""
+
 import time
+import board
+import busio
+import adafruit_adxl34x
+from gpiozero import LED
 
-# Initialize the LCD. Address is usually 0x27 or 0x3f.
-lcd = CharLCD(i2c_expander='PCF8574', address=0x27, port=1, cols=16, rows=2)
+# ── I2C bus and sensor initialisation ────────────────────────────────────────
+i2c  = busio.I2C(board.SCL, board.SDA)
+accel = adafruit_adxl34x.ADXL345(i2c)           # default address 0x53
+
+# Enable the built-in tap/double-tap and freefall detection engines
+accel.enable_motion_detection(threshold=18)      # shake sensitivity (1–255)
+
+# Optional status LED wired to GPIO 17
+status_led = LED(17)
+
+# ── Tilt interpretation ───────────────────────────────────────────────────────
+def describe_tilt(x, y, z):
+    """Return a human-readable tilt direction from raw g-force values."""
+    if z > 0.8:
+        return "Flat (face up)"
+    if z < -0.8:
+        return "Upside down"
+    if x > 0.5:
+        return "Tilted RIGHT"
+    if x < -0.5:
+        return "Tilted LEFT"
+    if y > 0.5:
+        return "Tilted FORWARD"
+    if y < -0.5:
+        return "Tilted BACKWARD"
+    return "Edge / diagonal"
+
+print("ADXL345 Tilt & Shake Detector — press Ctrl+C to stop")
+print(f"{'X':>8}  {'Y':>8}  {'Z':>8}  {'Tilt'}")
+print("-" * 48)
 
 try:
-    lcd.clear()
-    lcd.write_string('Hello, Pi!')
-    
-    time.sleep(2)
-    
-    # Dynamic text
-    counter = 0
     while True:
-        lcd.cursor_pos = (1, 0) # Move to second row, first column
-        lcd.write_string(f'Count: {counter}')
-        counter += 1
-        time.sleep(1)
+        x, y, z = accel.acceleration          # returns (x, y, z) in m/s²
+        # Convert from m/s² to g  (1 g ≈ 9.81 m/s²)
+        gx, gy, gz = x / 9.81, y / 9.81, z / 9.81
+
+        tilt = describe_tilt(gx, gy, gz)
+
+        # Flash the LED when motion / shake is detected
+        if accel.events["motion"]:
+            status_led.blink(on_time=0.05, off_time=0.05, n=3, background=True)
+            tilt = "*** SHAKE! ***"
+
+        print(f"{gx:>+8.3f}  {gy:>+8.3f}  {gz:>+8.3f}  {tilt}", end="\\r")
+        time.sleep(0.1)
 
 except KeyboardInterrupt:
-    pass
-
-finally:
-    lcd.clear()
-    lcd.write_string('Goodbye!')
-    time.sleep(1)
-    lcd.clear()`,
+    status_led.off()
+    print("\\n\\nSensor stopped.")`,
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -1199,10 +1243,11 @@ finally:
             hardwareSetup: { warnings: [], steps: [], explanation: '' },
             code: '',
             codeWalkthrough: [
-              { section: 'Library Import', explanation: 'We import `CharLCD` from `RPLCD.i2c`. This library handles all the complex I2C binary translation for us.' },
-              { section: 'Initialization', explanation: 'We tell the library what chip the LCD uses (`PCF8574`), its I2C address (`0x27`), and its size (16 columns, 2 rows).' },
-              { section: 'Cursor Positioning', explanation: '`lcd.cursor_pos = (1, 0)` moves the invisible text cursor to row 1 (the bottom row, since it starts at 0) and column 0.' },
-              { section: 'F-Strings', explanation: '`f"Count: {counter}"` is a Python f-string. It automatically inserts the value of the `counter` variable into the text.' }
+              { section: 'busio.I2C — Hardware Abstraction', explanation: '`busio.I2C(board.SCL, board.SDA)` opens the I2C bus using the board\'s named pins. The `board` module maps friendly names like `board.SDA` to the correct GPIO numbers, so the same code works on any Adafruit-supported board.' },
+              { section: 'adafruit_adxl34x.ADXL345(i2c)', explanation: 'Passing the `i2c` bus object to the class constructor tells the library where to send its I2C read/write commands. The library handles the low-level register addressing; we just call `.acceleration`.' },
+              { section: 'accel.acceleration — the data tuple', explanation: '`accel.acceleration` returns a 3-tuple `(x, y, z)` in metres per second squared (m/s²). We divide by 9.81 to convert to g-force. When the board is flat, z ≈ 1 g (Earth\'s gravity pulling straight down).' },
+              { section: 'Motion detection events', explanation: '`accel.enable_motion_detection(threshold=18)` activates the ADXL345\'s internal interrupt engine. Reading `accel.events["motion"]` checks whether the chip flagged a sudden acceleration since the last read — no polling maths needed.' },
+              { section: 'describe_tilt() — axis logic', explanation: 'Each axis reads the component of gravity along that direction. When tilted right, gravity pulls along the X axis, so x approaches ±1 g depending on direction. Checking thresholds on each axis lets us classify the dominant tilt.' }
             ],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -1218,9 +1263,9 @@ finally:
             code: '',
             codeWalkthrough: [],
             conceptDeepDive: {
-              hardware: 'The I2C backpack on the LCD takes serial data from the Pi and converts it into parallel signals to drive the individual pixels of the screen.',
-              software: 'Libraries abstract away complexity. Instead of writing hundreds of lines of binary timing code, we just call `lcd.write_string()`.',
-              connection: 'The Pi acts as the I2C "Master", generating a clock signal on SCL and sending data on SDA. The LCD acts as a "Slave", listening for its address.'
+              hardware: 'Inside the ADXL345 is a MEMS (Micro-Electro-Mechanical System) structure — a tiny silicon cantilever beam with a proof mass on the end. When the chip accelerates, the proof mass deflects, changing the capacitance between comb-like fingers etched into the silicon. An internal bridge circuit converts that capacitance change into a voltage, and a 13-bit ADC quantises it. All of this happens in a chip smaller than a fingernail.',
+              software: 'The Adafruit CircuitPython library uses the standard Linux I2C kernel interface (`/dev/i2c-1`). Each call to `.acceleration` sends an I2C START condition, addresses the chip at 0x53, requests 6 bytes from register 0x32 (DATAX0 through DATAZ1), and reads them back — all hidden behind one Python property.',
+              connection: 'I2C is a multi-master, multi-slave bus. The Pi generates clock pulses on SCL; on each rising edge, the ADXL345 samples SDA. Addresses are 7 bits, so up to 128 devices can share the same two wires. This is why I2C is used throughout Level 10 as well — it is the lingua franca of sensor modules.'
             },
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: []
@@ -1236,9 +1281,9 @@ finally:
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: {
-              tweak: 'Change the starting cursor position to `(0, 5)` to center the text on the top row.',
-              logic: 'Make a countdown timer instead of a count-up timer.',
-              creative: 'Combine this with the button from Level 2. Make the LCD display how many times the button has been pressed.'
+              tweak: 'Change `threshold=18` to `threshold=5` to make the shake detector hair-trigger, or `threshold=60` to require a really hard knock.',
+              logic: 'Add a shake counter: increment a variable each time `accel.events["motion"]` is True and print the total shake count alongside the tilt reading.',
+              creative: 'Combine with the button from Level 2: holding the button "arms" a tamper detector — if a shake is detected while armed, turn on the LED and print an alert. Press again to disarm.'
             },
             troubleshooting: []
           }
@@ -1254,8 +1299,10 @@ finally:
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: [
-              { issue: 'LCD lights up but shows no text', solution: 'Adjust the contrast potentiometer (the blue box with a screw) on the back of the LCD using a small screwdriver.' },
-              { issue: 'Error: "[Errno 121] Remote I/O error"', solution: 'The Pi cannot find the LCD. Check your wiring, ensure I2C is enabled, and verify the address (try 0x3f instead of 0x27).' }
+              { issue: 'ValueError: No I2C device at address 0x53', solution: 'Check that I2C is enabled (`sudo raspi-config` → Interface Options → I2C). Verify SDA is on Physical Pin 3 and SCL on Physical Pin 5. Run `sudo i2cdetect -y 1` — you should see 0x53 in the grid.' },
+              { issue: 'ModuleNotFoundError: No module named adafruit_adxl34x', solution: 'Install the library: `pip3 install adafruit-circuitpython-adxl34x`. If you get a permissions error, add `--user` to the command.' },
+              { issue: 'All readings are exactly 0.0, 0.0, 0.0', solution: 'The sensor likely needs the CS pin tied HIGH to select I2C mode. Connect CS to the 3.3V pin. Also confirm VCC is on the 3.3V rail — connecting to 5V can damage or lock up the chip.' },
+              { issue: 'Motion detection never triggers', solution: 'Increase sensitivity by lowering the threshold: `accel.enable_motion_detection(threshold=8)`. The chip must see an acceleration change above the threshold within a short time window.' }
             ]
           }
         }
@@ -1511,7 +1558,7 @@ except KeyboardInterrupt:
             experimentMode: {
               tweak: 'Change the buzzer tones in `trigger_alarm()` to "C6" and "G5" for a different sound.',
               logic: 'Add an "entry delay" - when motion is detected, give 5 seconds to press disarm before the alarm sounds.',
-              creative: 'Add an I2C LCD from Level 6 to display the current `AlarmState.value` in real-time!'
+              creative: 'Wire the Double Color LED to GPIO 16 (Red) and GPIO 20 (Green). Light Red while the alarm is sounding and Green while the system is armed and idle — instant visual state feedback!'
             },
             troubleshooting: []
           }
@@ -1937,7 +1984,7 @@ except KeyboardInterrupt:
             experimentMode: {
               tweak: 'Adjust the 50cm and 20cm thresholds to match your project space. Try placing the sensor in a doorway and changing the thresholds based on typical hallway widths.',
               logic: 'Add a buzzer (from Level 4) that beeps faster the closer an object gets — like a car parking sensor! Use `sleep(distance_cm / 500)` as the delay between beeps.',
-              creative: 'Combine with the LCD from Level 6 to show the numerical distance on the screen while the LED displays the color zone. A real-life "digital ruler"!'
+              creative: 'Print the live distance value to the terminal with a simple ASCII bar chart: `print("[" + "#" * int(distance_cm / 5) + "]" + f" {distance_cm:.0f} cm")` — a real-time distance ruler in your console!'
             },
             troubleshooting: []
           }
@@ -1978,7 +2025,7 @@ except KeyboardInterrupt:
     badgeEarned: 'Systems Architect',
     content: {
       overview: {
-        description: 'The ultimate capstone! We will wire a DS18B20 digital thermometer and a relay module, then combine them with the LCD, LED, and buzzer from previous levels to build a Smart Guardian — a temperature monitor that activates a real relay-controlled device when things get too hot.',
+        description: 'The ultimate capstone! We will wire a DS18B20 digital thermometer and a relay module, then combine them with the Double Color LED, RGB LED, and buzzer from previous levels to build a Smart Guardian — a temperature monitor that activates a real relay-controlled device when things get too hot.',
         concepts: ['DS18B20 1-Wire protocol', 'Relay as OutputDevice', 'Filesystem-based sensor reads', 'Hysteresis & fail-safe design', 'Full system integration'],
         difficulty: 5,
         estimatedTime: '50 mins'
@@ -1989,7 +2036,7 @@ except KeyboardInterrupt:
           title: 'Project Overview',
           content: {
             overview: {
-              description: 'The ultimate capstone! We will wire a DS18B20 digital thermometer and a relay module, then combine them with the LCD, LED, and buzzer from previous levels to build a Smart Guardian — a temperature monitor that activates a real relay-controlled device when things get too hot.',
+              description: 'The ultimate capstone! We will wire a DS18B20 digital thermometer and a relay module, then combine them with the Double Color LED, RGB LED, and buzzer from previous levels to build a Smart Guardian — a temperature monitor that activates a real relay-controlled device when things get too hot.',
               concepts: ['DS18B20 1-Wire protocol', 'Relay as OutputDevice', 'Filesystem-based sensor reads', 'Hysteresis & fail-safe design', 'Full system integration'],
               difficulty: 5,
               estimatedTime: '50 mins'
@@ -2020,7 +2067,7 @@ except KeyboardInterrupt:
                 'Connect DS18B20 DATA (middle leg) → Raspberry Pi Physical Pin 7 (GPIO 4).',
                 'Connect a 4.7kΩ resistor between the DS18B20 DATA wire and the 3.3V rail (this is the required 1-Wire pull-up).',
                 'Relay module: Connect VCC → Raspberry Pi Physical Pin 4 (5V), GND → GND rail, IN → Raspberry Pi Physical Pin 37 (GPIO 26).',
-                'Retain the LCD connection from Level 6: SDA → Physical Pin 3, SCL → Physical Pin 5, VCC → 5V, GND → GND.',
+                'Double Color LED status indicator: Red pin → GPIO 16 through a 330Ω resistor → GND; Green pin → GPIO 20 through a 330Ω resistor → GND. This gives a live red/green signal: Red = relay ON (hot!), Green = relay OFF (normal).',
                 'Retain the RGB LED from Level 1: Red → GPIO 17, Green → GPIO 27, Blue → GPIO 5, GND → GND.',
                 'Retain the passive buzzer from Level 4: positive leg → GPIO 18, negative → GND.'
               ],
@@ -2062,7 +2109,6 @@ import time
 from datetime import datetime
 from gpiozero import LED, TonalBuzzer, OutputDevice
 from gpiozero.tones import Tone
-from RPLCD.i2c import CharLCD
 
 # ============================================
 # HARDWARE ABSTRACTION
@@ -2073,10 +2119,13 @@ from RPLCD.i2c import CharLCD
 # initial_value=False: relay starts OFF (fail-safe)
 relay = OutputDevice(26, active_high=True, initial_value=False)
 
-red_led      = LED(17)
-green_led    = LED(27)
+red_led      = LED(17)       # RGB LED red channel (Level 1)
+green_led    = LED(27)       # RGB LED green channel (Level 1)
 alarm_buzzer = TonalBuzzer(18)
-lcd          = CharLCD(i2c_expander='PCF8574', address=0x27, port=1, cols=16, rows=2)
+
+# Double Color LED: Red = relay ON (hot!), Green = relay OFF (normal)
+status_red   = LED(16)
+status_green = LED(20)
 
 # ============================================
 # CONFIGURATION
@@ -2136,17 +2185,20 @@ def set_color(r, g, b):
     red_led.value   = r
     green_led.value = g
 
+def set_status(relay_on):
+    """Drive the Double Color LED: Red when relay is ON, Green when OFF."""
+    if relay_on:
+        status_red.on()
+        status_green.off()
+    else:
+        status_red.off()
+        status_green.on()
+
 def log_event(message):
     """Append a timestamped log entry to guardian.log."""
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     with open('guardian.log', 'a') as f:
         f.write(f"[{timestamp}] {message}\\n")
-
-def update_lcd(line1, line2):
-    lcd.clear()
-    lcd.write_string(line1[:16])
-    lcd.cursor_pos = (1, 0)
-    lcd.write_string(line2[:16])
 
 # ============================================
 # MAIN GUARDIAN LOOP
@@ -2180,10 +2232,10 @@ try:
             relay_active = True
             green_led.off()
             red_led.on()
+            set_status(True)
             alarm_buzzer.play(Tone("A5"))
             time.sleep(0.3)
             alarm_buzzer.stop()
-            update_lcd(f"TEMP: {temp_c:.1f}C", "! RELAY ON  !")
             log_event(f"RELAY ON  — temp={temp_c:.2f}C")
             print(f"\\n🔴 RELAY ON  — {temp_c:.1f}°C exceeds threshold!")
 
@@ -2193,14 +2245,13 @@ try:
             relay_active = False
             red_led.off()
             green_led.on()
-            update_lcd(f"TEMP: {temp_c:.1f}C", f"OK  <{TEMP_ON_THRESHOLD_C:.0f}C")
+            set_status(False)
             log_event(f"RELAY OFF — temp={temp_c:.2f}C")
             print(f"\\n🟢 RELAY OFF — {temp_c:.1f}°C back to normal.")
 
         else:
-            # Steady state — refresh display without relay change
-            status = "HOT! ON " if relay_active else f"OK <{TEMP_ON_THRESHOLD_C:.0f}C"
-            update_lcd(f"TEMP: {temp_c:.1f}C", status)
+            # Steady state — no relay change needed
+            pass
 
         time.sleep(1)   # DS18B20 needs ~750ms per conversion
 
@@ -2208,10 +2259,9 @@ except KeyboardInterrupt:
     relay.off()        # ALWAYS turn relay off on exit
     red_led.off()
     green_led.off()
+    status_red.off()
+    status_green.off()
     alarm_buzzer.stop()
-    update_lcd("Guardian", "Offline")
-    time.sleep(1)
-    lcd.clear()
     print("\\n\\n👋 Guardian shut down safely. Relay is OFF.")`,
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
@@ -2287,8 +2337,7 @@ except KeyboardInterrupt:
               { issue: 'RuntimeError: DS18B20 not found', solution: 'Enable 1-Wire via `sudo raspi-config` → Interface Options → 1-Wire, then reboot. Confirm the 4.7kΩ pull-up resistor is between DS18B20 DATA and 3.3V, and DATA is on GPIO 4 (Physical Pin 7).' },
               { issue: 'Temperature always reads exactly 85.0°C', solution: '85°C is the DS18B20\'s power-on default value. It means the sensor is electrically detected but the conversion is failing. Check the pull-up resistor and try a lower resistance (4.7kΩ is standard, but 3.3kΩ can help on noisy breadboards).' },
               { issue: 'Relay clicking rapidly (chattering)', solution: 'Your two thresholds are too close together or equal. Ensure TEMP_OFF_THRESHOLD_C is at least 2–3°C lower than TEMP_ON_THRESHOLD_C to create a proper hysteresis gap.' },
-              { issue: 'Relay clicks but connected device does nothing', solution: 'Confirm you are using the NO (Normally Open) screw terminal, not NC. With the relay coil unenergized, NO is open (off). Also check your load device and cable are fully connected.' },
-              { issue: 'LCD shows garbled text after relay activates', solution: 'The relay coil switching can cause voltage spikes on the 5V rail. Add a 100µF capacitor between the relay VCC and GND pins to filter the spike, and ensure all grounds share a solid common connection.' }
+              { issue: 'Relay clicks but connected device does nothing', solution: 'Confirm you are using the NO (Normally Open) screw terminal, not NC. With the relay coil unenergized, NO is open (off). Also check your load device and cable are fully connected.' }
             ]
           }
         }

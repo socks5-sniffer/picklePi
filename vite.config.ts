@@ -1,4 +1,5 @@
 ﻿import tailwindcss from '@tailwindcss/vite';
+﻿import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
@@ -12,6 +13,14 @@ export default defineConfig({
     },
   },
   server: {
+    // Proxy /api requests to your upcoming Express/SQLite backend
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001', // Your future Express server port
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     // HMR is disabled in AI Studio via DISABLE_HMR env var.
     // Do not modify - file watching is disabled to prevent flickering during agent edits.
     hmr: process.env.DISABLE_HMR !== 'true',
@@ -22,4 +31,8 @@ export default defineConfig({
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     },
   },
+  build: {
+    // Prevents source maps from leaking frontend source code to the public
+    sourcemap: false, 
+  }
 });
