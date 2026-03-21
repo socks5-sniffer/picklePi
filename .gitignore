@@ -27,5 +27,7 @@ audit-report.*
 vulnerability-scan.*
 npm-audit-report.json
 eslint-security-report.json
+eslint.config.security.mjs
+.eslintrc.security.json
 # Keep docs directory structure but not necessarily all contents
 !docs/screenshots/.gitkeep

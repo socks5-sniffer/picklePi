@@ -97,46 +97,55 @@ jobs:
       # A01:2021 – Broken Access Control
       # A04:2021 – Insecure Design
       - name: Install ESLint security plugins
-        run: npm install --no-save eslint-plugin-security eslint-plugin-no-unsanitized
+        run: npm install --save-dev eslint eslint-plugin-security eslint-plugin-no-unsanitized @typescript-eslint/parser
 
       - name: Create ESLint security config
         run: |
-          cat > .eslintrc.security.json << 'EOF'
-          {
-            "plugins": ["security", "no-unsanitized"],
-            "extends": ["plugin:security/recommended"],
-            "rules": {
-              "no-eval": "error",
-              "no-implied-eval": "error",
-              "no-new-func": "error",
-              "no-script-url": "error",
-              "security/detect-eval-with-expression": "error",
-              "security/detect-non-literal-regexp": "warn",
-              "security/detect-unsafe-regex": "error",
-              "security/detect-buffer-noassert": "error",
-              "security/detect-child-process": "warn",
-              "security/detect-disable-mustache-escape": "error",
-              "security/detect-no-csrf-before-method-override": "error",
-              "security/detect-non-literal-fs-filename": "warn",
-              "security/detect-non-literal-require": "warn",
-              "security/detect-object-injection": "warn",
-              "security/detect-possible-timing-attacks": "warn",
-              "security/detect-pseudoRandomBytes": "error",
-              "no-unsanitized/method": "error",
-              "no-unsanitized/property": "error"
-            },
-            "parserOptions": {
-              "ecmaVersion": 2022,
-              "sourceType": "module"
+          cat > eslint.config.security.mjs << 'EOF'
+          import security from 'eslint-plugin-security';
+          import noUnsanitized from 'eslint-plugin-no-unsanitized';
+          import tsParser from '@typescript-eslint/parser';
+          
+          export default [
+            {
+              files: ['**/*.{js,jsx,ts,tsx}'],
+              languageOptions: {
+                parser: tsParser,
+                ecmaVersion: 2022,
+                sourceType: 'module'
+              },
+              plugins: {
+                security,
+                'no-unsanitized': noUnsanitized
+              },
+              rules: {
+                'no-eval': 'error',
+                'no-implied-eval': 'error',
+                'no-new-func': 'error',
+                'security/detect-eval-with-expression': 'error',
+                'security/detect-non-literal-regexp': 'warn',
+                'security/detect-unsafe-regex': 'error',
+                'security/detect-buffer-noassert': 'error',
+                'security/detect-child-process': 'warn',
+                'security/detect-disable-mustache-escape': 'error',
+                'security/detect-no-csrf-before-method-override': 'error',
+                'security/detect-non-literal-fs-filename': 'warn',
+                'security/detect-non-literal-require': 'warn',
+                'security/detect-object-injection': 'warn',
+                'security/detect-possible-timing-attacks': 'warn',
+                'security/detect-pseudoRandomBytes': 'error',
+                'no-unsanitized/method': 'error',
+                'no-unsanitized/property': 'error'
+              }
             }
-          }
+          ];
           EOF
 
       - name: Run ESLint security scan
-        run: npx eslint --config .eslintrc.security.json --ext .js,.jsx,.ts,.tsx src/ --format json --output-file eslint-security-report.json || true
+        run: npx eslint --config eslint.config.security.mjs src/ --format json --output-file eslint-security-report.json || true
 
       - name: Display ESLint results
-        run: npx eslint --config .eslintrc.security.json --ext .js,.jsx,.ts,.tsx src/ || true
+        run: npx eslint --config eslint.config.security.mjs src/ || true
 
       - name: Upload ESLint security report
         uses: actions/upload-artifact@v4
