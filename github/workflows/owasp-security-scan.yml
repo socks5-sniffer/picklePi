@@ -1,0 +1,279 @@
+name: "OWASP Top 10 Security Scan"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    # Run weekly on Mondays at 09:00 UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  dependency-security-scan:
+    name: "Dependency Vulnerability Scan"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # A06:2021 – Vulnerable and Outdated Components
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Run npm audit with JSON output
+        run: npm audit --json > npm-audit-report.json
+        continue-on-error: true
+
+      - name: Upload npm audit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-audit-report
+          path: npm-audit-report.json
+          retention-days: 30
+
+  owasp-dependency-check:
+    name: "OWASP Dependency-Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # A06:2021 – Vulnerable and Outdated Components
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: depcheck
+        with:
+          project: 'picklePi'
+          path: '.'
+          format: 'HTML'
+          args: >
+            --enableRetired
+            --enableExperimental
+            --failOnCVSS 7
+
+      - name: Upload Dependency-Check results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-check-report
+          path: ${{ github.workspace }}/reports
+          retention-days: 30
+
+  eslint-security:
+    name: "ESLint Security Analysis"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # A03:2021 – Injection
+      # A01:2021 – Broken Access Control
+      # A04:2021 – Insecure Design
+      - name: Install ESLint security plugins
+        run: npm install --no-save eslint-plugin-security eslint-plugin-no-unsanitized
+
+      - name: Create ESLint security config
+        run: |
+          cat > .eslintrc.security.json << 'EOF'
+          {
+            "plugins": ["security", "no-unsanitized"],
+            "extends": ["plugin:security/recommended"],
+            "rules": {
+              "no-eval": "error",
+              "no-implied-eval": "error",
+              "no-new-func": "error",
+              "no-script-url": "error",
+              "security/detect-eval-with-expression": "error",
+              "security/detect-non-literal-regexp": "warn",
+              "security/detect-unsafe-regex": "error",
+              "security/detect-buffer-noassert": "error",
+              "security/detect-child-process": "warn",
+              "security/detect-disable-mustache-escape": "error",
+              "security/detect-no-csrf-before-method-override": "error",
+              "security/detect-non-literal-fs-filename": "warn",
+              "security/detect-non-literal-require": "warn",
+              "security/detect-object-injection": "warn",
+              "security/detect-possible-timing-attacks": "warn",
+              "security/detect-pseudoRandomBytes": "error",
+              "no-unsanitized/method": "error",
+              "no-unsanitized/property": "error"
+            },
+            "parserOptions": {
+              "ecmaVersion": 2022,
+              "sourceType": "module"
+            }
+          }
+          EOF
+
+      - name: Run ESLint security scan
+        run: npx eslint --config .eslintrc.security.json --ext .js,.jsx,.ts,.tsx src/ --format json --output-file eslint-security-report.json || true
+
+      - name: Display ESLint results
+        run: npx eslint --config .eslintrc.security.json --ext .js,.jsx,.ts,.tsx src/ || true
+
+      - name: Upload ESLint security report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eslint-security-report
+          path: eslint-security-report.json
+          retention-days: 30
+
+  security-headers-check:
+    name: "Security Headers Validation"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # A05:2021 – Security Misconfiguration
+      # A01:2021 – Broken Access Control
+      - name: Verify security headers in vite.config.ts
+        run: |
+          echo "Checking for required security headers in vite.config.ts..."
+          
+          # Check for X-Content-Type-Options
+          if grep -q "X-Content-Type-Options.*nosniff" vite.config.ts; then
+            echo "✓ X-Content-Type-Options: nosniff found"
+          else
+            echo "✗ Missing X-Content-Type-Options: nosniff"
+            exit 1
+          fi
+          
+          # Check for X-Frame-Options
+          if grep -q "X-Frame-Options.*DENY\|X-Frame-Options.*SAMEORIGIN" vite.config.ts; then
+            echo "✓ X-Frame-Options found"
+          else
+            echo "✗ Missing X-Frame-Options"
+            exit 1
+          fi
+          
+          # Check for Referrer-Policy
+          if grep -q "Referrer-Policy" vite.config.ts; then
+            echo "✓ Referrer-Policy found"
+          else
+            echo "✗ Missing Referrer-Policy"
+            exit 1
+          fi
+          
+          # Check for Permissions-Policy
+          if grep -q "Permissions-Policy" vite.config.ts; then
+            echo "✓ Permissions-Policy found"
+          else
+            echo "✗ Missing Permissions-Policy"
+            exit 1
+          fi
+          
+          # Check sourcemap is disabled in production
+          if grep -q "sourcemap.*false" vite.config.ts; then
+            echo "✓ Source maps disabled in production"
+          else
+            echo "⚠ Warning: Source maps might be enabled in production"
+          fi
+          
+          echo "Security headers validation completed successfully!"
+
+  secrets-scan:
+    name: "Secrets Detection"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # A07:2021 – Identification and Authentication Failures
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  typescript-security:
+    name: "TypeScript Type Safety Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # A04:2021 – Insecure Design
+      # Type safety helps prevent many security issues
+      - name: Run TypeScript compiler
+        run: npm run lint
+
+  security-summary:
+    name: "Security Scan Summary"
+    runs-on: ubuntu-latest
+    needs: [dependency-security-scan, owasp-dependency-check, eslint-security, security-headers-check, secrets-scan, typescript-security]
+    if: always()
+    steps:
+      - name: Generate security summary
+        run: |
+          echo "# OWASP Top 10 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Scan Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| OWASP Category | Scan Tool | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------------|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| A01:2021 – Broken Access Control | Security Headers Check | ${{ needs.security-headers-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| A02:2021 – Cryptographic Failures | Gitleaks (Secrets) | ${{ needs.secrets-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| A03:2021 – Injection | ESLint Security | ${{ needs.eslint-security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| A04:2021 – Insecure Design | TypeScript + ESLint | ${{ needs.typescript-security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| A05:2021 – Security Misconfiguration | Headers Validation | ${{ needs.security-headers-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| A06:2021 – Vulnerable Components | npm audit + OWASP DC | ${{ needs.dependency-security-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| A07:2021 – Auth Failures | Gitleaks (Secrets) | ${{ needs.secrets-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| A08:2021 – Software/Data Integrity | Dependency Check | ${{ needs.owasp-dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| A09:2021 – Logging Failures | CodeQL (separate workflow) | N/A |" >> $GITHUB_STEP_SUMMARY
+          echo "| A10:2021 – SSRF | ESLint Security | ${{ needs.eslint-security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Additional Information" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **CodeQL** runs separately via the CodeQL workflow" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dependency scanning** includes npm audit and OWASP Dependency-Check" >> $GITHUB_STEP_SUMMARY
+          echo "- **Secret scanning** uses Gitleaks to detect hardcoded credentials" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security headers** are validated in the Vite configuration" >> $GITHUB_STEP_SUMMARY
