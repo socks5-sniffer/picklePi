@@ -9,6 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-6.2-purple.svg)](https://vitejs.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-cyan.svg)](https://tailwindcss.com)
+[![OWASP Security Scan](https://img.shields.io/badge/OWASP-Security%20Scan-orange.svg)](github/workflows/owasp-security-scan.yml)
 
 **Learn electronics and Python programming through hands-on Raspberry Pi projects — one circuit at a time.**
 
@@ -365,15 +366,24 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide, including bra
 
 ## 🔒 Security
 
-This project follows secure-by-default principles:
+This project follows secure-by-default principles and implements comprehensive OWASP Top 10 security scanning:
 
-- All Python code examples include security hardening notes (using least-privilege GPIO, disabling unused interfaces, etc.)
-- No user data is sent to any server; all persistence is `localStorage`-only
-- Dependencies are kept up to date
+### Security Features
+- ✅ **Automated Security Scans**: Weekly OWASP Top 10 vulnerability scanning
+- ✅ **Dependency Monitoring**: npm audit + OWASP Dependency-Check + Dependabot
+- ✅ **Code Analysis**: CodeQL semantic analysis + ESLint security plugin
+- ✅ **Secret Detection**: Gitleaks scanning for exposed credentials
+- ✅ **Security Headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- ✅ **Type Safety**: TypeScript strict mode for enhanced security
+- ✅ **Privacy-First**: No user data sent to servers; localStorage-only persistence
+- ✅ **Secure Code Examples**: All Python code includes security hardening notes
 
-See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for a full audit of the codebase.
+### Documentation
+- 📋 [SECURITY.md](SECURITY.md) - Security policy and vulnerability reporting
+- 📋 [SECURITY_AUDIT.md](SECURITY_AUDIT.md) - Comprehensive OWASP Top 10 audit report
 
-To report a security vulnerability, please open a GitHub issue marked `[SECURITY]`.
+### Reporting Vulnerabilities
+To report a security vulnerability, please open a GitHub issue tagged `[SECURITY]`. See [SECURITY.md](SECURITY.md) for details.
 
 ---
 

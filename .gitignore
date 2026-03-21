@@ -21,12 +21,13 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 
-# Security audit and scan reports
-SECURITY*.md
-*SECURITY*.md
+# Security audit and scan reports (exclude generated reports, but keep documentation)
 security-report.*
 audit-report.*
 vulnerability-scan.*
-SECURITY_AUDIT.md
+npm-audit-report.json
+eslint-security-report.json
+eslint.config.security.mjs
+.eslintrc.security.json
 # Keep docs directory structure but not necessarily all contents
 !docs/screenshots/.gitkeep
