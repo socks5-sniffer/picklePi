@@ -104,7 +104,7 @@ export default function App() {
   };
 
   return (
-    <div className="pcb-bg flex h-screen bg-[#1e2530] text-slate-100 font-sans">
+    <div className="flex h-screen bg-[#1e2530] text-slate-100 font-sans">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
