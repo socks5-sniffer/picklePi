@@ -44,3 +44,14 @@ jobs:
 
       - name: Build production bundle
         run: npm run build
+
+      - name: Generate SBOM (Software Bill of Materials)
+        # Generates a CycloneDX SBOM in JSON format from your package-lock.json
+        run: npx @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom.json
+
+      - name: Upload SBOM Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-report
+          path: sbom.json
+          retention-days: 30

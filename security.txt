@@ -1,0 +1,5 @@
+Contact: https://github.com/socks5-sniffer/picklePi/issues
+Expires: 2027-03-21T00:00:00.000Z
+Preferred-Languages: en
+Policy: https://github.com/socks5-sniffer/picklePi/blob/main/SECURITY.md
+Acknowledgments: https://github.com/socks5-sniffer/picklePi/blob/main/SECURITY.md#security-hall-of-fame
