@@ -31,3 +31,5 @@ eslint.config.security.mjs
 .eslintrc.security.json
 # Keep docs directory structure but not necessarily all contents
 !docs/screenshots/.gitkeep
+dependabot.yml
+db-schema.txt
