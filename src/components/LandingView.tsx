@@ -89,7 +89,7 @@ export default function LandingView({ progress, onSelectProject }: LandingViewPr
             {showAll ? 'Show Less' : `Show All (${curriculum.length})`}
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-5">
           {displayed.map((project, i) => {
             const status = progress.projectStatuses[project.id];
             const isCurrent = showAll ? i === currentIdx : i === 0;
@@ -99,7 +99,7 @@ export default function LandingView({ progress, onSelectProject }: LandingViewPr
               <div
                 key={project.id}
                 className={`
-                  relative flex flex-col rounded-2xl p-6 transition-all duration-200
+                  relative flex flex-col rounded-2xl p-5 transition-all duration-200
                   hover:scale-[1.015] hover:shadow-xl cursor-pointer select-none
                   ${isCurrent
                     ? 'bg-gradient-to-br from-slate-800 to-slate-800/90 border-2 border-emerald-500/70 shadow-lg shadow-emerald-500/10'
@@ -125,7 +125,7 @@ export default function LandingView({ progress, onSelectProject }: LandingViewPr
                 )}
 
                 {/* Header */}
-                <div className="mb-4 pr-6">
+                <div className="mb-3 pr-6">
                   <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
                     Level {project.level} · {project.levelName}
                   </p>
@@ -139,13 +139,13 @@ export default function LandingView({ progress, onSelectProject }: LandingViewPr
 
                 {/* Description */}
                 {overview?.description && (
-                  <p className="text-sm text-slate-400 leading-relaxed mb-4 flex-1">
+                  <p className="text-sm text-slate-400 leading-relaxed mb-3 flex-1">
                     {overview.description}
                   </p>
                 )}
 
                 {/* Meta row */}
-                <div className="flex items-center gap-3 mb-4 text-xs text-slate-500">
+                <div className="flex items-center gap-3 mb-3 text-xs text-slate-500">
                   {overview?.difficulty != null && (
                     <DifficultyStars level={overview.difficulty} />
                   )}
@@ -164,7 +164,7 @@ export default function LandingView({ progress, onSelectProject }: LandingViewPr
 
                 {/* Skills */}
                 {project.skillsLearned.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-5">
+                  <div className="flex flex-wrap gap-1.5 mb-3.5">
                     {project.skillsLearned.map(skill => (
                       <span
                         key={skill}
@@ -179,7 +179,7 @@ export default function LandingView({ progress, onSelectProject }: LandingViewPr
                 {/* CTA Button */}
                 <button
                   className={`
-                    mt-auto w-full flex items-center justify-center gap-2 py-2.5 rounded-xl
+                    mt-auto w-full flex items-center justify-center gap-2 py-2 rounded-xl
                     text-sm font-semibold transition-all duration-150
                     ${isCurrent
                       ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-md shadow-emerald-500/20'
