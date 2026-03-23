@@ -1218,4 +1218,357 @@ export const dictionary: DictionaryEntry[] = [
     definition: 'Code that follows Python\'s design philosophy and idioms — clean, readable, and elegant. Pythonic code uses built-in features like list comprehensions, context managers, and duck typing rather than porting patterns from other languages.',
     example: 'Using "for item in items:" is Pythonic; using "for i in range(len(items)):" is not'
   },
+
+  // ============================================
+  // BEGINNER FUNDAMENTALS
+  // (Great starting points for young learners!)
+  // ============================================
+
+  {
+    term: 'Electricity',
+    category: 'Beginner',
+    definition: 'The flow of tiny particles called electrons through wires. It powers everything from lights to your Raspberry Pi! Think of it like water flowing through a pipe.',
+    example: 'Plugging in your Raspberry Pi lets electricity flow and turns it on'
+  },
+  {
+    term: 'Code',
+    category: 'Beginner',
+    definition: 'Instructions written in a special language that tells a computer what to do. It is like a recipe that the computer follows step by step.',
+    example: 'led.on() is code that tells the Raspberry Pi to turn on an LED'
+  },
+  {
+    term: 'Program',
+    category: 'Beginner',
+    definition: 'A complete set of code instructions saved in a file that does a specific job. Also called a "script" in Python.',
+    example: 'Your blink_led.py file is a program that makes an LED blink'
+  },
+  {
+    term: 'Bug',
+    category: 'Beginner',
+    definition: 'A mistake in your code that makes it do something wrong or not work at all. Finding and fixing bugs is called "debugging".',
+    example: 'If your LED does not blink, there might be a bug in your code — maybe a typo!'
+  },
+  {
+    term: 'Run',
+    category: 'Beginner',
+    definition: 'To start your program and let the computer follow your instructions. When you run code, you see it come to life!',
+    example: 'Type "python3 blink.py" in the terminal to run your blinking LED program'
+  },
+  {
+    term: 'Wire',
+    category: 'Beginner',
+    definition: 'A thin piece of metal covered in plastic that carries electricity from one place to another. Different colored wires help you keep track of connections.',
+    example: 'Red wires usually connect to power, and black wires connect to ground'
+  },
+  {
+    term: 'Module',
+    category: 'Beginner',
+    definition: 'A small electronic part that is ready to use — like a sensor or LED — often already mounted on a little board with pins you can plug into your breadboard.',
+    example: 'The RGB LED module from your kit has the resistors already built in!'
+  },
+  {
+    term: 'Kit',
+    category: 'Beginner',
+    definition: 'A collection of electronic parts bundled together for learning. Your Inland 37-in-1 Sensor Kit has buttons, LEDs, sensors, and more!',
+    example: 'The Inland kit includes an RGB LED, button, buzzer, and many sensors'
+  },
+  {
+    term: 'Digital',
+    category: 'Beginner',
+    definition: 'Something that can only be ON or OFF, with nothing in between. Like a light switch — it is either up or down, never halfway.',
+    example: 'A digital pin reads HIGH (on) or LOW (off) — that is it!'
+  },
+  {
+    term: 'Analog',
+    category: 'Beginner',
+    definition: 'Something that can have many values in between, not just ON or OFF. Like a dimmer switch that lets you choose any brightness level.',
+    example: 'A potentiometer knob gives an analog signal — any position between 0 and full'
+  },
+  {
+    term: 'Binary',
+    category: 'Beginner',
+    definition: 'A way of counting using only two digits: 0 and 1. Computers think in binary! Each 0 or 1 is called a "bit".',
+    example: 'The number 5 in binary is 101 (one 4, zero 2s, and one 1)'
+  },
+  {
+    term: 'Bit',
+    category: 'Beginner',
+    definition: 'The smallest piece of information a computer can store — just a single 0 or 1. Eight bits together make a "byte".',
+    example: 'A single bit can represent ON (1) or OFF (0)'
+  },
+  {
+    term: 'Byte',
+    category: 'Beginner',
+    definition: 'Eight bits grouped together. A byte can store a number from 0 to 255, or one letter of text.',
+    example: 'The letter "A" is stored as the byte 01000001 in the computer'
+  },
+  {
+    term: 'USB',
+    category: 'Beginner',
+    definition: 'Universal Serial Bus. A common connector for plugging in keyboards, mice, and other devices. Your Raspberry Pi has USB ports!',
+    example: 'Plug your keyboard into one of the USB ports on the Raspberry Pi'
+  },
+  {
+    term: 'Power Supply',
+    category: 'Beginner',
+    definition: 'A device that provides electricity to your Raspberry Pi or other electronics. It usually plugs into the wall and converts the power to a safe level.',
+    example: 'The Raspberry Pi needs a 5V USB power supply to run'
+  },
+  {
+    term: 'Polarity',
+    category: 'Beginner',
+    definition: 'The direction electricity flows — positive (+) to negative (−). Some parts, like LEDs, only work when connected the right way around.',
+    example: 'If your LED does not light up, try flipping it — you may have the polarity backwards'
+  },
+  {
+    term: 'Prototype',
+    category: 'Beginner',
+    definition: 'A first version of your project that you build to test your ideas. Breadboards are perfect for prototyping because you can easily change things!',
+    example: 'Build a prototype on your breadboard before soldering a permanent version'
+  },
+  {
+    term: 'Microcontroller',
+    category: 'Beginner',
+    definition: 'A tiny computer on a single chip. It can run simple programs to control LEDs, read sensors, and more. The Raspberry Pi is more powerful — it is a full computer!',
+    example: 'Arduino boards use a microcontroller; Raspberry Pi uses a full processor'
+  },
+  {
+    term: 'Output',
+    category: 'Beginner',
+    definition: 'Something that your code makes happen in the real world — like turning on an LED or playing a sound on a buzzer.',
+    example: 'An LED is an output device — your code sends signals OUT to control it'
+  },
+  {
+    term: 'Input',
+    category: 'Beginner',
+    definition: 'Information that comes INTO your code from the real world — like a button press or a temperature reading from a sensor.',
+    example: 'A button is an input device — it sends signals IN to your program'
+  },
+  {
+    term: 'Delay',
+    category: 'Beginner',
+    definition: 'A pause in your program where it waits before doing the next thing. Used to control timing, like how long an LED stays on.',
+    example: 'time.sleep(1) creates a 1-second delay before the next line runs'
+  },
+  {
+    term: 'Blink',
+    category: 'Beginner',
+    definition: 'Turning something on and off over and over again. The "Hello World" of electronics is making an LED blink!',
+    example: 'led.blink() makes the LED turn on, wait, turn off, wait, and repeat'
+  },
+  {
+    term: 'Connect',
+    category: 'Beginner',
+    definition: 'To join wires or components together so electricity can flow between them. A complete path is called a circuit.',
+    example: 'Connect the LED\'s long leg to GPIO 17 and the short leg to ground'
+  },
+  {
+    term: 'WiFi',
+    category: 'Beginner',
+    definition: 'Wireless internet connection. Your Raspberry Pi can connect to WiFi so you can download code and control it remotely!',
+    example: 'Connect your Pi to WiFi to install new libraries with pip'
+  },
+
+  // ============================================
+  // USER-REQUESTED TERMS
+  // (SMD RGB LED, I2C, Security, and Level 10)
+  // ============================================
+
+  {
+    term: 'Sourcing',
+    category: 'Electronics',
+    definition: 'When a pin provides power (usually 3.3V) to a component. The current flows OUT of the pin, through the component, and to ground. Also called "sourcing current".',
+    example: 'A common-cathode RGB LED needs sourcing — the GPIO pin provides 3.3V to light each color'
+  },
+  {
+    term: 'Sinking',
+    category: 'Electronics',
+    definition: 'When a pin provides a path to ground (0V) for current to flow INTO it. The component is powered from elsewhere, and the GPIO pin "sinks" the current to complete the circuit.',
+    example: 'A common-anode RGB LED needs sinking — each GPIO pin pulls its color channel to ground to turn it on'
+  },
+  {
+    term: 'Common Anode',
+    category: 'Electronics',
+    definition: 'An RGB LED where all three color channels share one positive (+) leg connected to power. You turn on each color by sinking its individual pin to ground. "Active LOW" — LOW = on, HIGH = off.',
+    example: 'With a common-anode RGB LED, connect the shared anode to 3.3V and set GPIO LOW to light a color'
+  },
+  {
+    term: 'Common Cathode',
+    category: 'Electronics',
+    definition: 'An RGB LED where all three color channels share one negative (−) leg connected to ground. You turn on each color by sourcing voltage to its individual pin. "Active HIGH" — HIGH = on, LOW = off.',
+    example: 'With a common-cathode RGB LED, connect the shared cathode to GND and set GPIO HIGH to light a color'
+  },
+  {
+    term: 'Hysteresis',
+    category: 'Electronics',
+    definition: 'Using different thresholds for turning something ON versus OFF to prevent "chatter" — rapid flickering when a value hovers near one threshold. The gap between thresholds creates stability.',
+    example: 'A thermostat with hysteresis turns the heater ON at 18°C but OFF at 21°C, so it does not flip back and forth constantly'
+  },
+  {
+    term: 'I2C Address',
+    category: 'Raspberry Pi',
+    definition: 'A unique number (like a phone number!) that identifies each device on the I2C bus. The Raspberry Pi uses the address to talk to a specific sensor when multiple devices share the same two wires.',
+    example: 'The ADXL345 accelerometer has I2C address 0x53 — run "i2cdetect -y 1" to see all connected addresses'
+  },
+  {
+    term: 'Least Privilege',
+    category: 'Security',
+    definition: 'A security rule that says a program should only have access to the things it absolutely needs — no more. This limits damage if something goes wrong or is hacked.',
+    example: 'A blink script only needs GPIO 17 — it should not have permission to delete files or access the internet'
+  },
+
+  // ============================================
+  // MORE BEGINNER ELECTRONICS TERMS
+  // ============================================
+
+  {
+    term: 'SMD',
+    category: 'Electronics',
+    definition: 'Surface-Mount Device. Tiny electronic parts soldered flat onto a circuit board instead of pushed through holes. They are smaller but harder to solder by hand.',
+    example: 'The tiny RGB LED on your module is an SMD component'
+  },
+  {
+    term: 'Through-Hole',
+    category: 'Electronics',
+    definition: 'Electronic parts with long wire legs that poke through holes in a circuit board. Easier for beginners to use with breadboards and solder.',
+    example: 'Regular LEDs with two legs are through-hole components'
+  },
+  {
+    term: 'Pinout',
+    category: 'Electronics',
+    definition: 'A diagram or list showing what each pin on a chip or connector does. Very helpful for wiring things correctly!',
+    example: 'Check the pinout of your RGB LED to know which leg is Red, Green, Blue, and Ground'
+  },
+  {
+    term: 'Datasheet',
+    category: 'Electronics',
+    definition: 'An official document from the manufacturer that explains everything about a component — voltage, current, pinout, and how to use it.',
+    example: 'The DS18B20 datasheet tells you it measures from −55°C to +125°C'
+  },
+  {
+    term: 'mA (Milliamp)',
+    category: 'Electronics',
+    definition: 'One-thousandth of an Amp. A small unit of electrical current. Most LEDs use about 10–20 mA.',
+    example: 'A typical LED draws 15 mA — the Raspberry Pi GPIO can safely provide up to 16 mA per pin'
+  },
+  {
+    term: 'VCC',
+    category: 'Electronics',
+    definition: 'The positive power supply pin on a component. Short for "Voltage at Common Collector". Connect this to your power rail (3.3V or 5V).',
+    example: 'Connect the sensor\'s VCC pin to the 3.3V rail on your breadboard'
+  },
+  {
+    term: 'On-Board',
+    category: 'Electronics',
+    definition: 'A component or feature that is already built into a board (like a resistor soldered onto an LED module) so you do not need to add it separately.',
+    example: 'Your RGB LED module has on-board resistors — you do not need extra ones'
+  },
+  {
+    term: 'Header',
+    category: 'Electronics',
+    definition: 'A row of pins or sockets used to connect wires or modules. The Raspberry Pi\'s 40-pin header is where you plug in your GPIO wires.',
+    example: 'Push jumper wires onto the GPIO header pins to connect your circuits'
+  },
+  {
+    term: 'Floating Pin',
+    category: 'Electronics',
+    definition: 'A GPIO pin that is not connected to anything — it "floats" and can randomly read HIGH or LOW due to electrical noise. Use pull-up or pull-down resistors to fix this!',
+    example: 'An unconnected button pin might randomly trigger — adding a pull-up resistor stops the floating'
+  },
+  {
+    term: 'Noise',
+    category: 'Electronics',
+    definition: 'Random, unwanted electrical signals that can interfere with your readings. Caused by motors, radio waves, or long wires acting like antennas.',
+    example: 'Add a capacitor near your sensor to filter out electrical noise'
+  },
+  {
+    term: 'Interrupt',
+    category: 'Raspberry Pi',
+    definition: 'A signal that makes the CPU stop what it is doing and handle an important event immediately (like a button press), then go back to its original task.',
+    example: 'gpiozero uses interrupts so button presses are detected instantly without constantly checking'
+  },
+  {
+    term: 'Polling',
+    category: 'Raspberry Pi',
+    definition: 'Repeatedly checking something over and over in a loop. Works but wastes CPU time. Interrupts and callbacks are usually better!',
+    example: 'while True: if button.is_pressed: ... is polling — it checks constantly'
+  },
+  {
+    term: '1-Wire',
+    category: 'Raspberry Pi',
+    definition: 'A communication protocol that uses just one data wire (plus ground) to talk to sensors. The DS18B20 temperature sensor uses 1-Wire.',
+    example: 'Enable 1-Wire in raspi-config before using a DS18B20 thermometer'
+  },
+  {
+    term: 'Accelerometer',
+    category: 'Electronics',
+    definition: 'A sensor that measures acceleration (speeding up, slowing down) and tilt. It can tell which way is "down" by sensing Earth\'s gravity!',
+    example: 'The ADXL345 accelerometer in Level 6 detects when you tilt or shake the board'
+  },
+  {
+    term: 'g-force',
+    category: 'Electronics',
+    definition: 'A unit of acceleration equal to Earth\'s gravity (9.8 m/s²). Sitting still, you feel 1g pulling you down. Jumping off a diving board feels like 0g!',
+    example: 'The accelerometer reads about 1.0g on the Z-axis when lying flat'
+  },
+  {
+    term: 'Axis',
+    category: 'Electronics',
+    definition: 'A direction in 3D space. X is left/right, Y is forward/backward, Z is up/down. Accelerometers measure all three axes.',
+    example: 'Tilting the sensor left makes the X-axis reading change'
+  },
+  {
+    term: 'State',
+    category: 'Python',
+    definition: 'The current condition or situation of your program at any moment. Tracking state helps your code remember what mode it is in.',
+    example: 'An alarm system might have states: ARMED, DISARMED, or TRIGGERED'
+  },
+  {
+    term: 'State Machine',
+    category: 'Python',
+    definition: 'A way of organizing code where your program can be in one of several "states" and transitions between them based on events. Makes complex logic much clearer!',
+    example: 'A traffic light is a state machine: GREEN → YELLOW → RED → GREEN ...'
+  },
+  {
+    term: 'Threshold',
+    category: 'Python',
+    definition: 'A boundary value that triggers an action when crossed. Like a finish line — once you pass it, something happens!',
+    example: 'if temperature > 30: sets 30°C as the threshold for turning on a fan'
+  },
+  {
+    term: 'Calibration',
+    category: 'Electronics',
+    definition: 'Adjusting a sensor so its readings match reality. Some sensors need time to "warm up" and calibrate to their environment.',
+    example: 'PIR motion sensors need 10–60 seconds to calibrate when first powered on'
+  },
+  {
+    term: 'Fail-Safe',
+    category: 'Security',
+    definition: 'Designing a system so that if something goes wrong (like power loss), it goes to a safe state automatically — not a dangerous one.',
+    example: 'A relay wired as Normally-Open is fail-safe: if the Pi crashes, the relay opens and the heater turns OFF'
+  },
+  {
+    term: 'Normally Open (NO)',
+    category: 'Electronics',
+    definition: 'A relay or switch contact that is disconnected (open) when not activated. Power flows only when you energize the relay. Safer for most applications.',
+    example: 'Wire the heater to the Normally Open terminal so it turns OFF if the relay loses power'
+  },
+  {
+    term: 'Normally Closed (NC)',
+    category: 'Electronics',
+    definition: 'A relay or switch contact that is connected (closed) when not activated. Power flows by default and stops when you energize the relay.',
+    example: 'A Normally Closed circuit would keep a light ON until you press a button to break the connection'
+  },
+  {
+    term: 'CRC',
+    category: 'Electronics',
+    definition: 'Cyclic Redundancy Check. A math trick that detects if data got corrupted during transmission. If the CRC fails, the reading is bad and should be discarded.',
+    example: 'The DS18B20 sensor file shows "YES" only if the CRC check passes'
+  },
+  {
+    term: 'Log',
+    category: 'Python',
+    definition: 'A file or list where your program writes down what happens and when. Useful for debugging and keeping track of events over time.',
+    example: 'The Smart Guardian logs every time the relay turns on or off'
+  },
 ];
