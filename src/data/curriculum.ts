@@ -2349,5 +2349,963 @@ except KeyboardInterrupt:
       experimentMode: { tweak: '', logic: '', creative: '' },
       troubleshooting: []
     }
+  },
+  {
+    id: 'p11',
+    level: 11,
+    levelName: 'Optical Security',
+    title: 'The Laser Tripwire',
+    skillsLearned: ['Laser emitter control', 'Photoresistor analog reads', 'Ambient light calibration', 'Beam-break detection', 'Alarm triggering'],
+    badgeEarned: 'Optical Guardian',
+    content: {
+      overview: {
+        description: 'Build a laser tripwire security system! The laser beam shines across a doorway onto a photoresistor. When someone breaks the beam, the light level drops and the alarm triggers. We will also learn ambient light calibration to prevent false alarms from clouds or flickering lights.',
+        concepts: ['Beam-Break Logic', 'Light-Dependent Resistors', 'Ambient Calibration', 'Security Bypass Attacks'],
+        difficulty: 4,
+        estimatedTime: '40 mins'
+      },
+      pages: [
+        {
+          id: 'p11-overview',
+          title: 'Project Overview',
+          content: {
+            overview: {
+              description: 'Build a laser tripwire security system! The laser beam shines across a doorway onto a photoresistor. When someone breaks the beam, the light level drops and the alarm triggers. We will also learn ambient light calibration to prevent false alarms from clouds or flickering lights.',
+              concepts: ['Beam-Break Logic', 'Light-Dependent Resistors', 'Ambient Calibration', 'Security Bypass Attacks'],
+              difficulty: 4,
+              estimatedTime: '40 mins'
+            },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p11-hardware',
+          title: 'Hardware Setup',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: {
+              warnings: [
+                'LASER SAFETY: Never point the laser at eyes — even brief exposure can cause permanent retinal damage.',
+                'The photoresistor module from your kit has a built-in comparator with a digital output (DO) and an analog output (AO). We will use the analog output.',
+                'Position the laser and photoresistor on opposite sides of a doorway or box opening for a proper "tripwire" effect.'
+              ],
+              steps: [
+                'Laser Sensor Module: Connect VCC → 5V rail, GND → GND rail, S (signal) → GPIO 23.',
+                'Photoresistor Module: Connect VCC → 3.3V rail, GND → GND rail, AO (analog out) → MCP3008 CH0 (we need ADC for analog reads).',
+                'MCP3008 ADC: Wire as in previous ADC projects — VDD & VREF → 3.3V, AGND & DGND → GND, CLK → GPIO 11 (SCLK), DOUT → GPIO 9 (MISO), DIN → GPIO 10 (MOSI), CS → GPIO 8 (CE0).',
+                'Active Buzzer Module: Connect VCC → 5V rail, GND → GND rail, I/O → GPIO 18.',
+                'Position the laser so its beam lands directly on the photoresistor\'s sensor window.',
+                'Secure both modules so the beam alignment stays consistent.'
+              ],
+              explanation: 'The laser emits a focused beam of coherent light. The photoresistor\'s resistance drops dramatically when bright light hits it. By reading the analog voltage through the MCP3008 ADC, we can detect the exact light level. When the beam is blocked, the resistance rises and our reading changes — triggering the alarm.'
+            },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p11-code',
+          title: 'The Code',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: `#!/usr/bin/env python3
+"""
+Level 11: The Laser Tripwire — Optical beam-break security
+
+🔒 SECURITY HARDENING:
+- Calibrate ambient light BEFORE arming to reduce false positives.
+- Use hysteresis (two thresholds) to prevent rapid alarm toggling.
+- Log all breach events with timestamps for review.
+
+📚 EDUCATIONAL MOMENT:
+A photoresistor (LDR) changes resistance based on light intensity.
+Bright light = low resistance = higher voltage reading.
+Blocked beam = high resistance = lower voltage reading.
+We use the MCP3008 ADC to read this analog voltage as a 10-bit value (0-1023).
+"""
+
+import time
+from datetime import datetime
+from gpiozero import LED, OutputDevice, MCP3008
+
+# ============================================
+# HARDWARE ABSTRACTION
+# ============================================
+
+laser = OutputDevice(23)         # Laser module — treat as simple on/off output
+light_sensor = MCP3008(channel=0)  # Photoresistor via ADC channel 0
+buzzer = OutputDevice(18, active_high=True)  # Active buzzer
+
+# ============================================
+# CONFIGURATION
+# ============================================
+
+CALIBRATION_SAMPLES = 20       # Number of samples to average during calibration
+CALIBRATION_DELAY = 0.1        # Delay between calibration samples (seconds)
+BEAM_BREAK_THRESHOLD = 0.30    # If reading drops below 30% of calibrated value, beam is broken
+HYSTERESIS_MARGIN = 0.10       # 10% margin before resetting alarm
+
+# ============================================
+# CALIBRATION
+# ============================================
+
+def calibrate_ambient_light():
+    """
+    Learn the 'normal' light level with the laser beam hitting the sensor.
+    Returns the average reading as a baseline.
+    """
+    print("🔦 Calibrating ambient light level...")
+    print("   Ensure the laser beam is hitting the photoresistor.")
+    
+    laser.on()
+    time.sleep(0.5)  # Let laser stabilize
+    
+    total = 0
+    for i in range(CALIBRATION_SAMPLES):
+        reading = light_sensor.value  # 0.0 to 1.0
+        total += reading
+        print(f"   Sample {i+1}/{CALIBRATION_SAMPLES}: {reading:.3f}", end="\\r")
+        time.sleep(CALIBRATION_DELAY)
+    
+    baseline = total / CALIBRATION_SAMPLES
+    print(f"\\n✅ Calibration complete. Baseline: {baseline:.3f}")
+    return baseline
+
+# ============================================
+# ALARM FUNCTIONS
+# ============================================
+
+def trigger_alarm():
+    """Sound the alarm buzzer."""
+    buzzer.on()
+
+def silence_alarm():
+    """Turn off the alarm buzzer."""
+    buzzer.off()
+
+def log_breach(light_level, baseline):
+    """Log a breach event with timestamp."""
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    with open('tripwire.log', 'a') as f:
+        f.write(f"[{timestamp}] BREACH DETECTED — Light: {light_level:.3f}, Baseline: {baseline:.3f}\\n")
+
+# ============================================
+# MAIN TRIPWIRE LOOP
+# ============================================
+
+print("🔴 Laser Tripwire Security System")
+print("=" * 40)
+
+baseline = calibrate_ambient_light()
+breach_threshold = baseline * BEAM_BREAK_THRESHOLD
+reset_threshold = baseline * (BEAM_BREAK_THRESHOLD + HYSTERESIS_MARGIN)
+
+print(f"   Breach triggers below: {breach_threshold:.3f}")
+print(f"   Alarm resets above:    {reset_threshold:.3f}")
+print("\\n🛡️  SYSTEM ARMED — Press Ctrl+C to disarm.\\n")
+
+alarm_active = False
+
+try:
+    while True:
+        light_level = light_sensor.value
+        
+        if not alarm_active and light_level < breach_threshold:
+            # BEAM BROKEN!
+            alarm_active = True
+            trigger_alarm()
+            log_breach(light_level, baseline)
+            print(f"🚨 BREACH! Light dropped to {light_level:.3f} — ALARM ACTIVE")
+        
+        elif alarm_active and light_level > reset_threshold:
+            # Beam restored
+            alarm_active = False
+            silence_alarm()
+            print(f"✅ Beam restored ({light_level:.3f}) — Alarm reset")
+        
+        else:
+            status = "🔴 ALARM" if alarm_active else "🟢 Armed"
+            print(f"   {status} | Light: {light_level:.3f}", end="\\r")
+        
+        time.sleep(0.05)  # 50ms polling = responsive detection
+
+except KeyboardInterrupt:
+    laser.off()
+    silence_alarm()
+    print("\\n\\n🔓 System disarmed. Laser off.")`,
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p11-walkthrough',
+          title: 'Code Walkthrough',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [
+              { section: 'calibrate_ambient_light()', explanation: 'Before arming, we take multiple readings with the laser on and average them. This "learns" what normal looks like — bright laser hitting the sensor. If the room gets darker (cloud passes by), the baseline would be different. Calibrating on startup prevents false alarms.' },
+              { section: 'MCP3008 for Analog Reads', explanation: 'The Raspberry Pi has no built-in ADC. The MCP3008 chip converts the photoresistor\'s analog voltage to a digital value (0-1023, normalized to 0.0-1.0 by gpiozero). Without this, we could only detect "dark" vs "bright" — not the subtle changes that distinguish a blocked beam from a shadow.' },
+              { section: 'BEAM_BREAK_THRESHOLD', explanation: 'If the light level drops below 30% of the calibrated baseline, we consider the beam broken. This percentage accounts for the dramatic difference between "laser hitting sensor" and "laser blocked by a person\'s body."' },
+              { section: 'Hysteresis (HYSTERESIS_MARGIN)', explanation: 'The alarm triggers at 30% but doesn\'t reset until 40%. This 10% gap prevents the alarm from rapidly toggling on/off if someone\'s arm is partially in the beam or the light is flickering at the boundary.' },
+              { section: '50ms Polling Loop', explanation: 'A person walking through a doorway crosses the beam in about 100-300ms. Polling every 50ms ensures we never miss a breach — we\'ll catch at least 2-6 samples of the broken beam.' }
+            ],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p11-deepdive',
+          title: 'Concept Deep Dive',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: {
+              hardware: 'The laser module emits coherent monochromatic light at 650nm (red). Unlike an LED that spreads light in a cone, a laser produces a tight parallel beam that stays focused over distance. The photoresistor (LDR) is made of cadmium sulfide — photons hitting the material knock electrons loose, reducing resistance. More light = more free electrons = lower resistance. Combined with a fixed resistor in a voltage divider, this creates a variable voltage that the ADC can read.',
+              software: 'Calibration is a form of machine learning at its simplest: the system "learns" what normal looks like before making decisions. The threshold-based detection is a binary classifier — readings below threshold = "intruder," above = "normal." Hysteresis is a common pattern in control systems to prevent oscillation at decision boundaries.',
+              connection: 'Physical security meets software logic: the laser creates a physical "fence" of light, the photoresistor detects its presence, the ADC digitizes the analog signal, Python runs the classification logic, and the buzzer creates an audible alert. Each layer transforms the signal — photons → resistance → voltage → digital value → boolean decision → sound waves.'
+            },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p11-experiment',
+          title: 'Experiment Mode',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: {
+              tweak: 'Adjust BEAM_BREAK_THRESHOLD from 0.30 to 0.50 and see how it affects sensitivity. A higher threshold triggers on smaller light changes (more sensitive but more false alarms).',
+              logic: 'Add a "grace period" — if the beam is broken for less than 100ms, ignore it (might be a bug flying through). Only trigger alarm if the beam stays broken for 3+ consecutive readings.',
+              creative: 'Discuss bypass attacks with your child: what if a thief brought their own laser and pointed it at the sensor while walking through? How could you detect this? (Hint: pulse your laser on/off in a secret pattern and only accept readings that match the pattern.)'
+            },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p11-troubleshooting',
+          title: 'Troubleshooting',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: [
+              { issue: 'Light sensor always reads 0.0 or 1.0', solution: 'Check MCP3008 wiring — especially VREF (must be 3.3V), CLK, DOUT, DIN, and CS pins. Ensure the photoresistor module AO pin is connected to CH0.' },
+              { issue: 'Alarm triggers immediately after calibration', solution: 'The laser may have moved or the beam isn\'t hitting the sensor dead-center. Re-align and recalibrate. Also check that the threshold isn\'t set too high.' },
+              { issue: 'Alarm doesn\'t trigger when beam is clearly blocked', solution: 'Lower BEAM_BREAK_THRESHOLD (e.g., 0.20 instead of 0.30). Print the live readings to see what values you\'re actually getting when blocked vs unblocked.' },
+              { issue: 'Laser module doesn\'t light up', solution: 'The laser module needs 5V power on VCC, not 3.3V. Also verify the signal pin (GPIO 23) is set to HIGH by checking laser.on() is called.' }
+            ]
+          }
+        }
+      ],
+      hardwareSetup: { warnings: [], steps: [], explanation: '' },
+      code: '',
+      codeWalkthrough: [],
+      conceptDeepDive: { hardware: '', software: '', connection: '' },
+      experimentMode: { tweak: '', logic: '', creative: '' },
+      troubleshooting: []
+    }
+  },
+  {
+    id: 'p12',
+    level: 12,
+    levelName: 'Physical Security',
+    title: 'The Magnetic Deadbolt',
+    skillsLearned: ['Hall Effect sensing', 'Reed switch binary reads', 'Pull-up vs Pull-down resistors', 'Sensor redundancy', 'Tamper detection'],
+    badgeEarned: 'Security Engineer',
+    content: {
+      overview: {
+        description: 'Build a redundant door monitoring system using two different magnetic sensors — a digital reed switch and an analog Hall Effect sensor. Learn how combining sensors creates tamper-resistant security and how attackers might try to spoof magnetic sensors.',
+        concepts: ['Magnetic Field Detection', 'Sensor Redundancy', 'Pull-up vs Pull-down Resistors', 'Tamper Detection', 'Magnet Spoofing'],
+        difficulty: 4,
+        estimatedTime: '35 mins'
+      },
+      pages: [
+        {
+          id: 'p12-overview',
+          title: 'Project Overview',
+          content: {
+            overview: {
+              description: 'Build a redundant door monitoring system using two different magnetic sensors — a digital reed switch and an analog Hall Effect sensor. Learn how combining sensors creates tamper-resistant security and how attackers might try to spoof magnetic sensors.',
+              concepts: ['Magnetic Field Detection', 'Sensor Redundancy', 'Pull-up vs Pull-down Resistors', 'Tamper Detection', 'Magnet Spoofing'],
+              difficulty: 4,
+              estimatedTime: '35 mins'
+            },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p12-hardware',
+          title: 'Hardware Setup',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: {
+              warnings: [
+                'Keep strong magnets away from electronics and credit cards.',
+                'The reed switch is a glass tube — handle gently to avoid cracking.',
+                'Mount both sensors close together (within 1-2cm) so they detect the same magnet.'
+              ],
+              steps: [
+                'Reed Switch Module: Connect VCC → 3.3V, GND → GND, DO (digital out) → GPIO 17. The module has a built-in pull-up resistor.',
+                'Hall Effect Sensor Module: Connect VCC → 3.3V, GND → GND, AO (analog out) → MCP3008 CH1 (for analog reads), DO (digital out) → GPIO 27 (for binary threshold).',
+                'Double Color LED: Red → GPIO 16 through 330Ω → GND, Green → GPIO 20 through 330Ω → GND. Green = door closed (secure), Red = door open or tamper detected.',
+                'MCP3008 ADC: Same wiring as Level 11 — CLK → GPIO 11, DOUT → GPIO 9, DIN → GPIO 10, CS → GPIO 8.',
+                'Mount the sensors on a door frame. Attach a small magnet to the door so it aligns with both sensors when the door is closed.',
+                'Test alignment: when the magnet is near, the reed switch should close and the Hall sensor should register a strong field.'
+              ],
+              explanation: 'The reed switch contains two metal reeds in a glass tube — a nearby magnetic field pulls them together, closing the circuit. The Hall Effect sensor detects magnetic field strength as an analog voltage proportional to the field intensity. Using BOTH sensors lets us detect tampering: if someone holds a magnet near the reed switch to fool it, the Hall sensor will see an abnormally STRONG field — stronger than the door\'s actual magnet.'
+            },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p12-code',
+          title: 'The Code',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: `#!/usr/bin/env python3
+"""
+Level 12: The Magnetic Deadbolt — Redundant door security
+
+🔒 SECURITY HARDENING:
+- Using TWO sensor types defeats simple magnet spoofing attacks.
+- If the Hall sensor sees a field STRONGER than expected, someone may be
+  holding a powerful magnet to trick the reed switch while opening the door.
+- Log all state changes with timestamps.
+
+📚 EDUCATIONAL MOMENT:
+The reed switch is BINARY — closed or open, 1 or 0.
+The Hall Effect sensor is ANALOG — it measures field STRENGTH.
+A real door magnet produces a known field strength at a known distance.
+An attacker's spoofing magnet would likely be much stronger (easier to hold
+from a distance) — and the Hall sensor will detect this anomaly!
+"""
+
+import time
+from datetime import datetime
+from gpiozero import LED, Button, MCP3008
+
+# ============================================
+# HARDWARE ABSTRACTION
+# ============================================
+
+reed_switch = Button(17, pull_up=True)   # Reed switch — closed when magnet is near
+hall_digital = Button(27, pull_up=True)  # Hall sensor digital output
+hall_analog = MCP3008(channel=1)         # Hall sensor analog output
+
+status_green = LED(20)  # Green = secure
+status_red = LED(16)    # Red = open or tamper
+
+# ============================================
+# CONFIGURATION
+# ============================================
+
+# Calibrated values — adjust after running calibration
+HALL_CLOSED_MIN = 0.40   # Minimum Hall reading when door is legitimately closed
+HALL_CLOSED_MAX = 0.70   # Maximum Hall reading when door is legitimately closed
+HALL_TAMPER_THRESHOLD = 0.85  # If Hall reads ABOVE this, suspect a strong spoofing magnet
+
+# ============================================
+# CALIBRATION
+# ============================================
+
+def calibrate_door():
+    """Measure the Hall sensor reading with the door properly closed."""
+    print("🔧 Calibration Mode")
+    print("   Close the door completely and press Enter...")
+    input()
+    
+    samples = []
+    for i in range(20):
+        samples.append(hall_analog.value)
+        time.sleep(0.05)
+    
+    avg = sum(samples) / len(samples)
+    min_val = min(samples)
+    max_val = max(samples)
+    
+    print(f"\\n📊 Door Closed Readings:")
+    print(f"   Average: {avg:.3f}")
+    print(f"   Range:   {min_val:.3f} - {max_val:.3f}")
+    print(f"\\n   Use these to set HALL_CLOSED_MIN and HALL_CLOSED_MAX in the code.")
+    return avg
+
+# ============================================
+# STATE DETECTION
+# ============================================
+
+def get_door_state():
+    """
+    Returns: 'secure', 'open', or 'tamper'
+    """
+    reed_closed = reed_switch.is_pressed  # True when magnet closes the switch
+    hall_value = hall_analog.value
+    
+    # TAMPER CHECK: Hall reading abnormally high = strong external magnet
+    if hall_value > HALL_TAMPER_THRESHOLD:
+        return 'tamper', hall_value, reed_closed
+    
+    # SECURE: Reed says closed AND Hall is in expected range
+    if reed_closed and HALL_CLOSED_MIN <= hall_value <= HALL_CLOSED_MAX:
+        return 'secure', hall_value, reed_closed
+    
+    # OPEN: Reed says open OR Hall is outside range
+    return 'open', hall_value, reed_closed
+
+def set_status(state):
+    """Update the status LED based on door state."""
+    if state == 'secure':
+        status_green.on()
+        status_red.off()
+    else:
+        status_green.off()
+        status_red.on()
+
+def log_event(state, hall_value, reed_closed):
+    """Log state changes."""
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    with open('deadbolt.log', 'a') as f:
+        f.write(f"[{timestamp}] {state.upper()} — Hall: {hall_value:.3f}, Reed: {'closed' if reed_closed else 'open'}\\n")
+
+# ============================================
+# MAIN MONITOR LOOP
+# ============================================
+
+print("🚪 Magnetic Deadbolt Security System")
+print("=" * 40)
+print(f"   Hall expected range: {HALL_CLOSED_MIN:.2f} - {HALL_CLOSED_MAX:.2f}")
+print(f"   Tamper threshold:    > {HALL_TAMPER_THRESHOLD:.2f}")
+print("\\n🛡️  Monitoring... Press Ctrl+C to exit.\\n")
+
+last_state = None
+
+try:
+    while True:
+        state, hall_value, reed_closed = get_door_state()
+        
+        if state != last_state:
+            set_status(state)
+            log_event(state, hall_value, reed_closed)
+            
+            if state == 'secure':
+                print(f"🟢 SECURE — Door closed (Hall: {hall_value:.3f})")
+            elif state == 'tamper':
+                print(f"🔴 TAMPER DETECTED! Abnormally strong magnetic field: {hall_value:.3f}")
+                print(f"   Someone may be spoofing the sensor with an external magnet!")
+            else:
+                print(f"🟡 OPEN — Door opened (Hall: {hall_value:.3f}, Reed: {'closed' if reed_closed else 'open'})")
+            
+            last_state = state
+        
+        # Live status display
+        reed_str = "CLOSED" if reed_closed else "OPEN"
+        print(f"   Reed: {reed_str} | Hall: {hall_value:.3f} | State: {state.upper()}", end="\\r")
+        
+        time.sleep(0.1)
+
+except KeyboardInterrupt:
+    status_green.off()
+    status_red.off()
+    print("\\n\\n🔓 Monitoring stopped.")`,
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p12-walkthrough',
+          title: 'Code Walkthrough',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [
+              { section: 'Reed Switch as Button', explanation: 'We use gpiozero\'s Button class with `pull_up=True`. When the magnet is near, the reed switch closes, pulling the GPIO pin LOW — which Button interprets as "pressed." This is the same logic as a physical button!' },
+              { section: 'Hall Analog + Hall Digital', explanation: 'The Hall sensor module provides BOTH outputs. The digital output (DO) gives a binary yes/no based on an onboard potentiometer threshold. The analog output (AO) gives us the raw field strength — much more useful for detecting spoofing.' },
+              { section: 'HALL_CLOSED_MIN/MAX Range', explanation: 'When the door is legitimately closed, the magnet is at a fixed distance and produces a consistent Hall reading. We calibrate this range. If the reading is outside this range while the reed switch says "closed," something is wrong.' },
+              { section: 'TAMPER_THRESHOLD', explanation: 'A strong neodymium magnet held closer than the door magnet would produce a STRONGER field. If the Hall reading exceeds our tamper threshold, we know someone is trying to fool the system.' },
+              { section: 'Three-State Logic', explanation: 'Instead of binary "open/closed," we have three states: SECURE (both sensors agree), OPEN (door is open), TAMPER (sensors disagree or readings are anomalous). This defense-in-depth approach catches attacks that would fool a single sensor.' }
+            ],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p12-deepdive',
+          title: 'Concept Deep Dive',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: {
+              hardware: 'The reed switch uses ferromagnetic reeds (iron-nickel alloy) sealed in a glass tube. A magnetic field aligns their magnetic domains, causing attraction. The Hall Effect sensor uses a semiconductor — when current flows through it and a magnetic field is perpendicular, electrons are deflected to one side (Lorentz force), creating a measurable voltage difference. This voltage is directly proportional to field strength.',
+              software: 'Pull-up resistors keep the GPIO pin at a known HIGH state when the switch is open. When the reed switch closes, it connects the pin to ground (LOW). "Pull-up" means the default is HIGH; "pull-down" means the default is LOW. Most security switches use pull-up logic so a cut wire (open circuit) reads as "alarm" rather than "secure."',
+              connection: 'This project demonstrates defense-in-depth: layered security where compromising one sensor isn\'t enough to bypass the system. Real-world alarm systems use this principle — multiple sensor types, encrypted communication, tamper switches on the sensor housings, and supervision circuits that detect cut wires.'
+            },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p12-experiment',
+          title: 'Experiment Mode',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: {
+              tweak: 'Adjust the potentiometer on the Hall sensor module — it controls the digital output threshold. Watch how it changes when DO triggers compared to your analog readings.',
+              logic: 'Add a "sensor mismatch" check: if the reed switch says closed but the Hall analog is near zero (no magnetic field at all), the wire to the reed switch may have been bypassed with a jumper!',
+              creative: 'Act out an attack scenario with your child: they try to open the "door" while holding a magnet near the sensors. Can they find a magnet strong enough to fool the reed switch but weak enough to not trigger the tamper threshold? (Spoiler: it\'s very hard!)'
+            },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p12-troubleshooting',
+          title: 'Troubleshooting',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: [
+              { issue: 'Reed switch always reads as open', solution: 'The magnet may not be close enough or strong enough. Reed switches typically need the magnet within 10-15mm. Also check that pull_up=True is set.' },
+              { issue: 'Hall sensor analog always reads ~0.5', solution: 'With no magnetic field, the Hall sensor outputs roughly VCC/2 (center of its range). This is normal! The reading should shift up or down when a magnet is near.' },
+              { issue: 'Tamper triggers with the door actually closed', solution: 'Your door magnet may be stronger than expected. Recalibrate and increase HALL_TAMPER_THRESHOLD, or use a weaker magnet on the door.' },
+              { issue: 'State flickers between secure and open', solution: 'Add hysteresis or a debounce timer. Require 3+ consecutive readings in a new state before changing — this filters out noise and vibration.' }
+            ]
+          }
+        }
+      ],
+      hardwareSetup: { warnings: [], steps: [], explanation: '' },
+      code: '',
+      codeWalkthrough: [],
+      conceptDeepDive: { hardware: '', software: '', connection: '' },
+      experimentMode: { tweak: '', logic: '', creative: '' },
+      troubleshooting: []
+    }
+  },
+  {
+    id: 'p13',
+    level: 13,
+    levelName: 'Vibration & Impact',
+    title: 'The Silent Guardian',
+    skillsLearned: ['Spring vibration sensing', 'ADXL345 accelerometer I2C', 'G-force vectors', 'Impact detection', 'Physical tamper monitoring'],
+    badgeEarned: 'Inertial Defender',
+    content: {
+      overview: {
+        description: 'Protect a safe, server, or treasure box from being moved or tampered with! We combine a simple spring vibration sensor for immediate shock detection with an ADXL345 3-axis accelerometer for precise movement tracking. Learn about G-force, vector math, and physical security hardening.',
+        concepts: ['Inertial Measurement', 'Spring Vibration Sensors', 'I2C Accelerometers', 'G-Force & Vectors', 'Physical Hardening'],
+        difficulty: 5,
+        estimatedTime: '45 mins'
+      },
+      pages: [
+        {
+          id: 'p13-overview',
+          title: 'Project Overview',
+          content: {
+            overview: {
+              description: 'Protect a safe, server, or treasure box from being moved or tampered with! We combine a simple spring vibration sensor for immediate shock detection with an ADXL345 3-axis accelerometer for precise movement tracking. Learn about G-force, vector math, and physical security hardening.',
+              concepts: ['Inertial Measurement', 'Spring Vibration Sensors', 'I2C Accelerometers', 'G-Force & Vectors', 'Physical Hardening'],
+              difficulty: 5,
+              estimatedTime: '45 mins'
+            },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p13-hardware',
+          title: 'Hardware Setup',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: {
+              warnings: [
+                'Enable I2C on your Pi before using the ADXL345: sudo raspi-config → Interface Options → I2C.',
+                'The ADXL345 is a 3.3V device. Never connect VCC to 5V!',
+                'Mount both sensors firmly on the object you\'re protecting — loose mounting creates false positives.'
+              ],
+              steps: [
+                'Spring Vibration Sensor Module: Connect VCC → 3.3V, GND → GND, DO (digital out) → GPIO 24. The spring detects physical shock.',
+                'ADXL345 Accelerometer Module: Connect VCC → 3.3V, GND → GND, SDA → GPIO 2 (Physical Pin 3), SCL → GPIO 3 (Physical Pin 5).',
+                'Run `sudo i2cdetect -y 1` — you should see address 0x53 (default ADXL345 address).',
+                'RGB LED (from Level 1): Red → GPIO 17, Green → GPIO 27, Blue → GPIO 5, GND → GND. We\'ll use this for status.',
+                'Active Buzzer: VCC → 5V, GND → GND, I/O → GPIO 18.',
+                'Mount the vibration sensor and accelerometer on a small box or book — this is your "protected asset."'
+              ],
+              explanation: 'The spring vibration sensor is a simple switch with a metal spring inside. Any shock or vibration causes the spring to touch the case, briefly closing the circuit. The ADXL345 uses MEMS (Micro-Electro-Mechanical Systems) — a tiny silicon mass suspended by springs. When the chip accelerates, the mass moves and changes capacitance, which is measured and converted to a digital G-force reading on each axis.'
+            },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p13-code',
+          title: 'The Code',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: `#!/usr/bin/env python3
+"""
+Level 13: The Silent Guardian — Vibration & Impact monitoring
+
+🔒 SECURITY HARDENING:
+- Dual sensors: vibration switch for instant shock detection, accelerometer for slow tilts.
+- Log ALL events with G-force vectors for forensic analysis.
+- A stationary object should read ~1G on the Z-axis (gravity) and ~0G on X/Y.
+
+📚 EDUCATIONAL MOMENT:
+The accelerometer doesn't just detect movement — it ALWAYS sees gravity!
+At rest, the Z-axis reads ~1G (pointing down). If you tilt the box,
+gravity's vector shifts to X and Y axes. We can detect even slow,
+sneaky tilting that wouldn't register as "vibration."
+"""
+
+import time
+import math
+from datetime import datetime
+from gpiozero import LED, Button, OutputDevice
+
+# For ADXL345 I2C communication
+import smbus2
+
+# ============================================
+# HARDWARE ABSTRACTION
+# ============================================
+
+vibration_sensor = Button(24, pull_up=True, bounce_time=0.1)  # Spring vibration sensor
+buzzer = OutputDevice(18)
+
+# RGB LED for status
+red_led = LED(17)
+green_led = LED(27)
+blue_led = LED(5)
+
+# ADXL345 I2C Setup
+ADXL345_ADDR = 0x53
+bus = smbus2.SMBus(1)
+
+# ADXL345 Registers
+REG_POWER_CTL = 0x2D
+REG_DATA_FORMAT = 0x31
+REG_DATAX0 = 0x32
+
+# ============================================
+# ADXL345 FUNCTIONS
+# ============================================
+
+def init_adxl345():
+    """Initialize the ADXL345 accelerometer."""
+    # Set data format: full resolution, +/-2g range
+    bus.write_byte_data(ADXL345_ADDR, REG_DATA_FORMAT, 0x08)
+    # Enable measurement mode
+    bus.write_byte_data(ADXL345_ADDR, REG_POWER_CTL, 0x08)
+    time.sleep(0.1)
+    print("✅ ADXL345 initialized")
+
+def read_accel():
+    """
+    Read X, Y, Z acceleration values.
+    Returns tuple of (x, y, z) in G units.
+    """
+    # Read 6 bytes starting from DATAX0
+    data = bus.read_i2c_block_data(ADXL345_ADDR, REG_DATAX0, 6)
+    
+    # Convert to signed 16-bit values (little-endian)
+    x = (data[1] << 8) | data[0]
+    y = (data[3] << 8) | data[2]
+    z = (data[5] << 8) | data[4]
+    
+    # Convert to signed
+    if x > 32767: x -= 65536
+    if y > 32767: y -= 65536
+    if z > 32767: z -= 65536
+    
+    # Convert to G (scale factor for +/-2g range)
+    scale = 0.004  # 4mg per LSB
+    return (x * scale, y * scale, z * scale)
+
+def magnitude(x, y, z):
+    """Calculate the magnitude of the acceleration vector."""
+    return math.sqrt(x*x + y*y + z*z)
+
+# ============================================
+# CONFIGURATION
+# ============================================
+
+# Baseline calibration (will be set during startup)
+baseline_x = 0.0
+baseline_y = 0.0
+baseline_z = 1.0  # At rest, Z should be ~1G (gravity)
+
+TILT_THRESHOLD = 0.15       # G deviation on any axis = tilt detected
+IMPACT_THRESHOLD = 1.5      # Total magnitude > 1.5G = impact detected
+VIBRATION_COOLDOWN = 2.0    # Seconds to wait after vibration before re-alerting
+
+# ============================================
+# STATUS & LOGGING
+# ============================================
+
+def set_status(state):
+    """Set RGB LED based on state: green=secure, yellow=alert, red=alarm"""
+    if state == 'secure':
+        green_led.on(); red_led.off(); blue_led.off()
+    elif state == 'alert':
+        green_led.on(); red_led.on(); blue_led.off()  # Yellow
+    elif state == 'alarm':
+        green_led.off(); red_led.on(); blue_led.off()
+
+def sound_alarm(pulses=3):
+    """Sound the buzzer in short pulses."""
+    for _ in range(pulses):
+        buzzer.on()
+        time.sleep(0.1)
+        buzzer.off()
+        time.sleep(0.1)
+
+def log_event(event_type, x, y, z, mag):
+    """Log tampering events with full vector data."""
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    with open('guardian.log', 'a') as f:
+        f.write(f"[{timestamp}] {event_type} — X:{x:.3f}G Y:{y:.3f}G Z:{z:.3f}G Mag:{mag:.3f}G\\n")
+
+# ============================================
+# VIBRATION CALLBACK
+# ============================================
+
+last_vibration_time = 0
+
+def on_vibration():
+    """Called when the spring vibration sensor triggers."""
+    global last_vibration_time
+    now = time.time()
+    
+    if now - last_vibration_time < VIBRATION_COOLDOWN:
+        return  # Still in cooldown
+    
+    last_vibration_time = now
+    x, y, z = read_accel()
+    mag = magnitude(x, y, z)
+    
+    print(f"\\n⚡ VIBRATION DETECTED! (Mag: {mag:.2f}G)")
+    log_event("VIBRATION", x, y, z, mag)
+    set_status('alarm')
+    sound_alarm(2)
+    time.sleep(1)
+    set_status('secure')
+
+vibration_sensor.when_pressed = on_vibration
+
+# ============================================
+# CALIBRATION
+# ============================================
+
+def calibrate():
+    """Calibrate the baseline orientation."""
+    global baseline_x, baseline_y, baseline_z
+    
+    print("📐 Calibrating orientation...")
+    print("   Keep the protected object completely still...")
+    
+    samples_x, samples_y, samples_z = [], [], []
+    for i in range(20):
+        x, y, z = read_accel()
+        samples_x.append(x)
+        samples_y.append(y)
+        samples_z.append(z)
+        time.sleep(0.05)
+    
+    baseline_x = sum(samples_x) / len(samples_x)
+    baseline_y = sum(samples_y) / len(samples_y)
+    baseline_z = sum(samples_z) / len(samples_z)
+    
+    print(f"   Baseline: X={baseline_x:.3f}G Y={baseline_y:.3f}G Z={baseline_z:.3f}G")
+    return True
+
+# ============================================
+# MAIN MONITOR LOOP
+# ============================================
+
+print("🔐 Silent Guardian — Vibration & Impact Monitor")
+print("=" * 50)
+
+init_adxl345()
+calibrate()
+
+print(f"\\n   Tilt threshold:   ±{TILT_THRESHOLD}G deviation")
+print(f"   Impact threshold: {IMPACT_THRESHOLD}G total")
+print("\\n🛡️  ARMED — Press Ctrl+C to disarm.\\n")
+
+set_status('secure')
+
+try:
+    while True:
+        x, y, z = read_accel()
+        mag = magnitude(x, y, z)
+        
+        # Check for tilt (slow movement)
+        dx = abs(x - baseline_x)
+        dy = abs(y - baseline_y)
+        dz = abs(z - baseline_z)
+        
+        if dx > TILT_THRESHOLD or dy > TILT_THRESHOLD or dz > TILT_THRESHOLD:
+            print(f"\\n📐 TILT DETECTED! ΔX:{dx:.2f} ΔY:{dy:.2f} ΔZ:{dz:.2f}")
+            log_event("TILT", x, y, z, mag)
+            set_status('alert')
+            sound_alarm(1)
+        
+        # Check for impact (sudden acceleration)
+        elif mag > IMPACT_THRESHOLD:
+            print(f"\\n💥 IMPACT DETECTED! Magnitude: {mag:.2f}G")
+            log_event("IMPACT", x, y, z, mag)
+            set_status('alarm')
+            sound_alarm(3)
+        
+        else:
+            set_status('secure')
+        
+        # Live display
+        print(f"   X:{x:+.2f}G Y:{y:+.2f}G Z:{z:+.2f}G | Mag:{mag:.2f}G", end="\\r")
+        
+        time.sleep(0.1)
+
+except KeyboardInterrupt:
+    buzzer.off()
+    red_led.off()
+    green_led.off()
+    blue_led.off()
+    print("\\n\\n🔓 Guardian disarmed.")`,
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p13-walkthrough',
+          title: 'Code Walkthrough',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [
+              { section: 'smbus2 for I2C', explanation: 'The ADXL345 communicates via I2C — a two-wire protocol (SDA for data, SCL for clock). We use the smbus2 library to read registers from the accelerometer. Each axis has two bytes of data (16-bit signed integer) that we combine and convert to G-force.' },
+              { section: 'read_accel() — Little-Endian Conversion', explanation: 'The ADXL345 stores data in little-endian format (low byte first). We read 6 bytes, combine each pair into a 16-bit value, convert to signed, and scale to G units. At +/-2G range, each LSB represents 4 milliG.' },
+              { section: 'magnitude() — Vector Math', explanation: 'The total acceleration is the square root of X² + Y² + Z². At rest, this should be ~1G (just gravity). During an impact, it spikes well above 1G. This catches jolts in ANY direction, not just up/down.' },
+              { section: 'Tilt vs Impact Detection', explanation: 'TILT checks if any single axis has deviated from baseline (slow, sneaky movement). IMPACT checks if total magnitude exceeds threshold (sudden shock). These catch different attack types — a thief slowly tilting a safe vs smashing it.' },
+              { section: 'Vibration Callback with Cooldown', explanation: 'The spring sensor triggers on any bump. Without cooldown, a single impact could trigger dozens of callbacks as the spring bounces. We ignore repeat triggers within 2 seconds.' }
+            ],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p13-deepdive',
+          title: 'Concept Deep Dive',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: {
+              hardware: 'The ADXL345 is a MEMS (Micro-Electro-Mechanical System) accelerometer. Inside the chip, a tiny proof mass is suspended by silicon springs. When the chip accelerates, the mass\'s inertia causes it to lag behind, changing the capacitance between fixed and moving plates. This capacitance change is measured and converted to a digital reading. The spring vibration sensor is far simpler — a coiled metal spring inside a metal tube. Any vibration causes the spring to touch the tube wall, completing a circuit.',
+              software: 'G-force is acceleration relative to freefall. 1G is Earth\'s gravity (9.8 m/s²). At rest, the accelerometer reads 1G pointing toward Earth\'s center. If you flip it upside down, Z becomes -1G. This is how phones know which way is "up" for screen rotation. Vector math (magnitude calculation) lets us measure total motion regardless of direction.',
+              connection: 'This is physical security at its core: the first line of defense isn\'t a password — it\'s bolting the server to the floor. If an attacker can physically carry away your hardware, no amount of encryption matters. Industrial servers use rack mounting, cable locks, and tamper-evident seals. Our accelerometer-based alarm is the same principle: detect unauthorized physical access before data theft begins.'
+            },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p13-experiment',
+          title: 'Experiment Mode',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: {
+              tweak: 'Lower TILT_THRESHOLD to 0.08 and see how sensitive the system becomes. Can you move the box at ALL without triggering? Try moving it VERY slowly over 30 seconds.',
+              logic: 'Add a "sustained tilt" check: only alarm if tilt is detected for 3+ consecutive readings. This filters out brief vibrations that momentarily shift the readings.',
+              creative: 'Discuss physical hardening with your child: what if you bolted this sensor to a concrete floor? What if you hid the wires inside a metal conduit? What if the buzzer was replaced by a silent SMS alert? Map out a "defense in depth" strategy for protecting a fictional bank vault.'
+            },
+            troubleshooting: []
+          }
+        },
+        {
+          id: 'p13-troubleshooting',
+          title: 'Troubleshooting',
+          content: {
+            overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
+            hardwareSetup: { warnings: [], steps: [], explanation: '' },
+            code: '',
+            codeWalkthrough: [],
+            conceptDeepDive: { hardware: '', software: '', connection: '' },
+            experimentMode: { tweak: '', logic: '', creative: '' },
+            troubleshooting: [
+              { issue: 'i2cdetect shows no device at 0x53', solution: 'Enable I2C via raspi-config and reboot. Check SDA→GPIO2, SCL→GPIO3 wiring. Ensure VCC is 3.3V, not 5V. Some modules have an address jumper — check if it\'s set to alternate address 0x1D.' },
+              { issue: 'Readings are always 0,0,0', solution: 'The ADXL345 may not be in measurement mode. Verify init_adxl345() is called before any reads. Check that REG_POWER_CTL is set to 0x08.' },
+              { issue: 'Z-axis doesn\'t read ~1G at rest', solution: 'The sensor may not be level, or the scale factor is wrong. At +/-2G range, scale should be 0.004 (4mg/LSB). If using +/-4G range, scale is 0.008.' },
+              { issue: 'Vibration sensor triggers constantly', solution: 'The spring is too sensitive for your surface. Add foam padding under the sensor, or increase bounce_time to 0.2 or higher. Ensure the module is firmly mounted — loose wires cause false triggers.' }
+            ]
+          }
+        }
+      ],
+      hardwareSetup: { warnings: [], steps: [], explanation: '' },
+      code: '',
+      codeWalkthrough: [],
+      conceptDeepDive: { hardware: '', software: '', connection: '' },
+      experimentMode: { tweak: '', logic: '', creative: '' },
+      troubleshooting: []
+    }
   }
 ];
