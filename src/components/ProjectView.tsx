@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Project, ProjectStatus } from '../types';
 import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wrench, Award, Copy, Check, BookOpen, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
+import InteractiveText from './InteractiveText';
+import { dictionary } from '../data/dictionary';
 
 interface ProjectViewProps {
   project: Project;
@@ -107,6 +109,51 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             </div>
           </div>
         </div>
+
+        {/* Top Page Navigation */}
+        {hasPages && content.pages && content.pages.length > 1 && (
+          <div className="flex items-center justify-between gap-4 pt-4">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPageIndex === 0}
+              className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
+                currentPageIndex === 0
+                  ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
+                  : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
+              }`}
+            >
+              <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Prev</span>
+            </button>
+
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {content.pages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPageIndex(index)}
+                  className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
+                    index === currentPageIndex ? 'bg-emerald-400' : 'bg-slate-600 hover:bg-slate-500'
+                  }`}
+                  title={`Go to page ${index + 1}: ${content.pages![index].title}`}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={handleNextPage}
+              disabled={currentPageIndex === content.pages.length - 1}
+              className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
+                currentPageIndex === content.pages.length - 1
+                  ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
+                  : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
+              }`}
+            >
+              Next
+              <ChevronRight size={18} className="sm:w-5 sm:h-5" />
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Overview */}
@@ -117,7 +164,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             Project Overview
           </h2>
           <p className="text-slate-300 leading-relaxed mb-6 text-lg">
-            {currentContent.overview.description}
+            <InteractiveText text={currentContent.overview.description} dictionary={dictionary} />
           </p>
           {currentContent.overview.concepts.length > 0 && (
             <div>
@@ -125,7 +172,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
               <div className="flex flex-wrap gap-2">
                 {currentContent.overview.concepts.map(concept => (
                   <span key={concept} className="bg-indigo-900/50 text-indigo-300 px-3 py-1 rounded-full text-sm font-medium border border-indigo-700">
-                    {concept}
+                    <InteractiveText text={concept} dictionary={dictionary} />
                   </span>
                 ))}
               </div>
@@ -150,7 +197,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
                   <h3 className="text-amber-800 font-bold">Safety Warnings</h3>
                   <ul className="list-disc list-inside text-amber-700 space-y-1 text-sm">
                     {currentContent.hardwareSetup.warnings.map((warning, i) => (
-                      <li key={i}>{warning}</li>
+                      <li key={i}><InteractiveText text={warning} dictionary={dictionary} /></li>
                     ))}
                   </ul>
                 </div>
@@ -161,14 +208,14 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           <div className="bg-slate-800/50 rounded-2xl p-4 sm:p-8 shadow-sm border border-slate-700">
             <ol className="space-y-4 list-decimal list-inside text-slate-300 marker:text-slate-500 marker:font-bold text-sm sm:text-base">
               {currentContent.hardwareSetup.steps.map((step, i) => (
-                <li key={i} className="pl-2 leading-relaxed">{step}</li>
+                <li key={i} className="pl-2 leading-relaxed"><InteractiveText text={step} dictionary={dictionary} /></li>
               ))}
             </ol>
             {currentContent.hardwareSetup.explanation && (
               <div className="mt-6 pt-6 border-t border-slate-700">
                 <p className="text-sm text-slate-400 italic">
                   <span className="font-semibold not-italic text-slate-300">What's happening: </span>
-                  {currentContent.hardwareSetup.explanation}
+                  <InteractiveText text={currentContent.hardwareSetup.explanation} dictionary={dictionary} />
                 </p>
               </div>
             )}
@@ -214,11 +261,11 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
                 <div key={i} className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                   <div className="sm:w-1/3 shrink-0">
                     <span className="font-mono text-xs sm:text-sm font-semibold text-blue-300 bg-blue-900/50 px-2 py-1 rounded border border-blue-700 inline-block">
-                      {item.section}
+                      <InteractiveText text={item.section} dictionary={dictionary} />
                     </span>
                   </div>
                   <div className="sm:w-2/3 text-slate-300 text-sm leading-relaxed">
-                    {item.explanation}
+                    <InteractiveText text={item.explanation} dictionary={dictionary} />
                   </div>
                 </div>
               ))}
@@ -229,7 +276,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
 
       {/* Concept Deep Dive */}
       {(currentContent.conceptDeepDive.hardware || currentContent.conceptDeepDive.software || currentContent.conceptDeepDive.connection) && (
-        <section className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl p-4 sm:p-8 text-white shadow-lg">
+        <section className="bg-gradient-to-br from-slate-800 to-emerald-950 rounded-2xl p-4 sm:p-8 text-white shadow-lg border border-slate-700">
           <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2">
             <Lightbulb size={24} className="text-amber-400" />
             Concept Deep Dive
@@ -238,19 +285,19 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             {currentContent.conceptDeepDive.hardware && (
               <div className="space-y-3">
                 <h3 className="text-indigo-300 font-semibold uppercase tracking-wider text-sm">Hardware</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">{currentContent.conceptDeepDive.hardware}</p>
+                <p className="text-slate-300 text-sm leading-relaxed"><InteractiveText text={currentContent.conceptDeepDive.hardware} dictionary={dictionary} /></p>
               </div>
             )}
             {currentContent.conceptDeepDive.software && (
               <div className="space-y-3">
                 <h3 className="text-indigo-300 font-semibold uppercase tracking-wider text-sm">Software</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">{currentContent.conceptDeepDive.software}</p>
+                <p className="text-slate-300 text-sm leading-relaxed"><InteractiveText text={currentContent.conceptDeepDive.software} dictionary={dictionary} /></p>
               </div>
             )}
             {currentContent.conceptDeepDive.connection && (
               <div className="space-y-3">
                 <h3 className="text-indigo-300 font-semibold uppercase tracking-wider text-sm">Connection</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">{currentContent.conceptDeepDive.connection}</p>
+                <p className="text-slate-300 text-sm leading-relaxed"><InteractiveText text={currentContent.conceptDeepDive.connection} dictionary={dictionary} /></p>
               </div>
             )}
           </div>
@@ -268,19 +315,19 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             {currentContent.experimentMode.tweak && (
               <div className="bg-slate-800/50 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-emerald-400">
                 <h3 className="font-bold text-slate-100 mb-2">Small Tweak</h3>
-                <p className="text-sm text-slate-400">{currentContent.experimentMode.tweak}</p>
+                <p className="text-sm text-slate-400"><InteractiveText text={currentContent.experimentMode.tweak} dictionary={dictionary} /></p>
               </div>
             )}
             {currentContent.experimentMode.logic && (
               <div className="bg-slate-800/50 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-blue-400">
                 <h3 className="font-bold text-slate-100 mb-2">Logic Change</h3>
-                <p className="text-sm text-slate-400">{currentContent.experimentMode.logic}</p>
+                <p className="text-sm text-slate-400"><InteractiveText text={currentContent.experimentMode.logic} dictionary={dictionary} /></p>
               </div>
             )}
             {currentContent.experimentMode.creative && (
               <div className="bg-slate-800/50 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-purple-400">
                 <h3 className="font-bold text-slate-100 mb-2">Creative Challenge</h3>
-                <p className="text-sm text-slate-400">{currentContent.experimentMode.creative}</p>
+                <p className="text-sm text-slate-400"><InteractiveText text={currentContent.experimentMode.creative} dictionary={dictionary} /></p>
               </div>
             )}
           </div>
@@ -298,10 +345,10 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             {currentContent.troubleshooting.map((item, i) => (
               <div key={i} className="flex flex-col sm:flex-row gap-2 sm:gap-4 p-4 bg-slate-800/50 rounded-xl shadow-sm border border-slate-700">
                 <div className="sm:w-1/3 font-medium text-rose-400 text-sm">
-                  {item.issue}
+                  <InteractiveText text={item.issue} dictionary={dictionary} />
                 </div>
                 <div className="sm:w-2/3 text-slate-400 text-sm">
-                  {item.solution}
+                  <InteractiveText text={item.solution} dictionary={dictionary} />
                 </div>
               </div>
             ))}

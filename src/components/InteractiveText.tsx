@@ -17,7 +17,7 @@ export default function InteractiveText({ text, dictionary }: InteractiveTextPro
   // Create a regex from the dictionary terms.
   // The \b ensures we match whole words only.
   // The 'gi' flags make it global (find all) and case-insensitive.
-  const terms = dictionary.map(entry => entry.term.replace(/[.*+?^${}()|[\]\]/g, '\$&'));
+  const terms = dictionary.map(entry => entry.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const regex = new RegExp(`\b(${terms.join('|')})\b`, 'gi');
 
   const parts = text.split(regex);
@@ -32,10 +32,9 @@ export default function InteractiveText({ text, dictionary }: InteractiveTextPro
   return (
     <>
       {parts.map((part, index) => {
-        const isTerm = regex.test(part);
-        if (isTerm) {
-          // Reset regex state for next iteration of map
-          regex.lastIndex = 0;
+        // When splitting with a capturing group, the matched terms will be at odd indices.
+        const isTerm = index % 2 === 1;
+        if (isTerm && part) {
           return (
             <button
               key={index}
