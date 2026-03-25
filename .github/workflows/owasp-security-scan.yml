@@ -42,7 +42,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload npm audit report
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: always()
         with:
           name: npm-audit-report
@@ -70,7 +70,7 @@ jobs:
             --failOnCVSS 7
 
       - name: Upload Dependency-Check results
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: always()
         with:
           name: dependency-check-report
@@ -148,7 +148,7 @@ jobs:
         run: npx eslint --config eslint.config.security.mjs src/ || true
 
       - name: Upload ESLint security report
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: always()
         with:
           name: eslint-security-report
