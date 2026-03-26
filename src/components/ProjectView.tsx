@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Project, ProjectStatus } from '../types';
 import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wrench, Award, Copy, Check, BookOpen, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
 import InteractiveText from './InteractiveText';
@@ -11,9 +11,80 @@ interface ProjectViewProps {
   onComplete: () => void;
 }
 
+interface PageNavProps {
+  pages: Array<{ title: string }>;
+  currentPageIndex: number;
+  onPrevious: () => void;
+  onNext: () => void;
+  onGoTo: (index: number) => void;
+  onHelp?: () => void;
+  position: 'top' | 'bottom';
+}
+
+function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, position }: PageNavProps) {
+  const isTop = position === 'top';
+  return (
+    <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${isTop ? 'pb-4 border-b' : 'pt-8 border-t'} border-slate-700`}>
+      <button
+        onClick={onPrevious}
+        disabled={currentPageIndex === 0}
+        className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
+          currentPageIndex === 0
+            ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
+            : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
+        }`}
+      >
+        <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
+        <span className="hidden sm:inline">Previous</span>
+        <span className="sm:hidden">Prev</span>
+      </button>
+
+      <div className="flex items-center gap-1.5 sm:gap-2 order-first sm:order-none">
+        {pages.map((page, index) => (
+          <button
+            key={index}
+            onClick={() => onGoTo(index)}
+            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
+              index === currentPageIndex ? 'bg-emerald-400' : 'bg-slate-600 hover:bg-slate-500'
+            }`}
+            title={`Go to page ${index + 1}: ${page.title}`}
+          />
+        ))}
+      </div>
+
+      <div className="flex items-center gap-2 sm:gap-3">
+        {onHelp && currentPageIndex !== pages.length - 1 && (
+          <button
+            onClick={onHelp}
+            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium bg-slate-800/50 text-blue-400 hover:bg-slate-700/50 transition-colors border border-slate-700 text-sm"
+            title="Get help or troubleshooting"
+          >
+            <HelpCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
+            <span className="hidden sm:inline text-sm">Help</span>
+          </button>
+        )}
+
+        <button
+          onClick={onNext}
+          disabled={currentPageIndex === pages.length - 1}
+          className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
+            currentPageIndex === pages.length - 1
+              ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
+              : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
+          }`}
+        >
+          Next
+          <ChevronRight size={18} className="sm:w-5 sm:h-5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ProjectView({ project, status, isLocked, onComplete }: ProjectViewProps) {
   const [copied, setCopied] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const topRef = useRef<HTMLDivElement>(null);
 
   if (isLocked) {
     return (
@@ -53,14 +124,14 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
   const handleNextPage = () => {
     if (hasPages && currentPageIndex < content.pages!.length - 1) {
       setCurrentPageIndex(currentPageIndex + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      topRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
   const handlePreviousPage = () => {
     if (hasPages && currentPageIndex > 0) {
       setCurrentPageIndex(currentPageIndex - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      topRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -72,13 +143,25 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
       );
       if (troubleshootingPageIndex !== -1) {
         setCurrentPageIndex(troubleshootingPageIndex);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        topRef.current?.scrollIntoView({ behavior: 'smooth' });
       }
     }
   };
 
   return (
-    <div className="space-y-12 pb-20 animate-in fade-in duration-500">
+    <div ref={topRef} className="space-y-12 pb-20 animate-in fade-in duration-500">
+      {/* Top Page Navigation for multi-page projects */}
+      {hasPages && content.pages && content.pages.length > 1 && (
+        <PageNav
+          pages={content.pages}
+          currentPageIndex={currentPageIndex}
+          onPrevious={handlePreviousPage}
+          onNext={handleNextPage}
+          onGoTo={(index) => { setCurrentPageIndex(index); topRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
+          position="top"
+        />
+      )}
+
       {/* Header */}
       <header className="space-y-4">
         <div className="flex items-center gap-3 text-emerald-600 font-semibold tracking-wide uppercase text-sm">
@@ -356,62 +439,17 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
         </section>
       )}
 
-      {/* Page Navigation for multi-page projects */}
+      {/* Bottom Page Navigation for multi-page projects */}
       {hasPages && content.pages && content.pages.length > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-slate-700">
-          <button
-            onClick={handlePreviousPage}
-            disabled={currentPageIndex === 0}
-            className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
-              currentPageIndex === 0
-                ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
-                : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
-            }`}
-          >
-            <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Previous</span>
-            <span className="sm:hidden">Prev</span>
-          </button>
-          
-          <div className="flex items-center gap-1.5 sm:gap-2 order-first sm:order-none">
-            {content.pages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentPageIndex(index)}
-                className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
-                  index === currentPageIndex ? 'bg-emerald-400' : 'bg-slate-600 hover:bg-slate-500'
-                }`}
-                title={`Go to page ${index + 1}: ${content.pages![index].title}`}
-              />
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            {currentPageIndex !== content.pages.length - 1 && (
-              <button
-                onClick={handleGetHelp}
-                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium bg-slate-800/50 text-blue-400 hover:bg-slate-700/50 transition-colors border border-slate-700 text-sm"
-                title="Get help or troubleshooting"
-              >
-                <HelpCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
-                <span className="hidden sm:inline text-sm">Help</span>
-              </button>
-            )}
-
-            <button
-              onClick={handleNextPage}
-              disabled={currentPageIndex === content.pages.length - 1}
-              className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
-                currentPageIndex === content.pages.length - 1
-                  ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
-                  : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
-              }`}
-            >
-              Next
-              <ChevronRight size={18} className="sm:w-5 sm:h-5" />
-            </button>
-          </div>
-        </div>
+        <PageNav
+          pages={content.pages}
+          currentPageIndex={currentPageIndex}
+          onPrevious={handlePreviousPage}
+          onNext={handleNextPage}
+          onGoTo={(index) => { setCurrentPageIndex(index); topRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
+          onHelp={handleGetHelp}
+          position="bottom"
+        />
       )}
 
       {/* Completion Action - only show on last page */}
