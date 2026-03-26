@@ -48,6 +48,7 @@ function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, 
               index === currentPageIndex ? 'bg-emerald-400' : 'bg-slate-600 hover:bg-slate-500'
             }`}
             title={`Go to page ${index + 1}: ${page.title}`}
+            aria-label={`Go to page ${index + 1}: ${page.title}`}
           />
         ))}
       </div>
@@ -192,51 +193,6 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             </div>
           </div>
         </div>
-
-        {/* Top Page Navigation */}
-        {hasPages && content.pages && content.pages.length > 1 && (
-          <div className="flex items-center justify-between gap-4 pt-4">
-            <button
-              onClick={handlePreviousPage}
-              disabled={currentPageIndex === 0}
-              className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
-                currentPageIndex === 0
-                  ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
-                  : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
-              }`}
-            >
-              <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Previous</span>
-              <span className="sm:hidden">Prev</span>
-            </button>
-
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              {content.pages.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentPageIndex(index)}
-                  className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
-                    index === currentPageIndex ? 'bg-emerald-400' : 'bg-slate-600 hover:bg-slate-500'
-                  }`}
-                  title={`Go to page ${index + 1}: ${content.pages![index].title}`}
-                />
-              ))}
-            </div>
-
-            <button
-              onClick={handleNextPage}
-              disabled={currentPageIndex === content.pages.length - 1}
-              className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
-                currentPageIndex === content.pages.length - 1
-                  ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
-                  : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
-              }`}
-            >
-              Next
-              <ChevronRight size={18} className="sm:w-5 sm:h-5" />
-            </button>
-          </div>
-        )}
       </header>
 
       {/* Overview */}

@@ -70,6 +70,7 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
           <button
             onClick={() => handleTabChange('home')}
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'home' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
+            aria-label="Home"
             title={isCollapsed ? 'Home' : undefined}
           >
             <Home size={18} />
@@ -78,6 +79,7 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
           <button 
             onClick={() => handleTabChange('progress')}
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'progress' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
+            aria-label="Progress Tracker"
             title={isCollapsed ? 'Progress Tracker' : undefined}
           >
             <LayoutDashboard size={18} />
@@ -86,6 +88,7 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
           <button 
             onClick={() => handleTabChange('notebook')}
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'notebook' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
+            aria-label="Lab Notebook"
             title={isCollapsed ? 'Lab Notebook' : undefined}
           >
             <NotebookPen size={18} />
@@ -94,6 +97,7 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
           <button 
             onClick={() => handleTabChange('dictionary')}
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'dictionary' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
+            aria-label="Dictionary"
             title={isCollapsed ? 'Dictionary' : undefined}
           >
             <BookMarked size={18} />
@@ -102,6 +106,7 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
           <button
             onClick={() => handleTabChange('pinout')}
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'pinout' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
+            aria-label="GPIO Pinout"
             title={isCollapsed ? 'GPIO Pinout' : undefined}
           >
             <Cpu size={18} />
