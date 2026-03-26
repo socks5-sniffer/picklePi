@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DictionaryEntry } from '../types';
 import DefinitionModal from './DefinitionModal';
 
@@ -10,20 +10,32 @@ interface InteractiveTextProps {
 export default function InteractiveText({ text, dictionary }: InteractiveTextProps) {
   const [selectedEntry, setSelectedEntry] = useState<DictionaryEntry | null>(null);
 
+  // Precompute a lowercase term → entry map so lookups are O(1) instead of O(n).
+  const termMap = useMemo(() => {
+    const map = new Map<string, DictionaryEntry>();
+    for (const entry of dictionary) {
+      map.set(entry.term.toLowerCase(), entry);
+    }
+    return map;
+  }, [dictionary]);
+
+  // Build the regex once per dictionary change rather than on every render.
+  // The \b ensures we match whole words only.
+  // The 'gi' flags make it global (find all) and case-insensitive.
+  const regex = useMemo(() => {
+    if (dictionary.length === 0) return null;
+    const escaped = dictionary.map(entry => entry.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    return new RegExp(`\\b(${escaped.join('|')})\\b`, 'gi');
+  }, [dictionary]);
+
   if (!text) {
     return null;
   }
 
-  // Create a regex from the dictionary terms.
-  // The \b ensures we match whole words only.
-  // The 'gi' flags make it global (find all) and case-insensitive.
-  const terms = dictionary.map(entry => entry.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const regex = new RegExp(`\\b(${terms.join('|')})\\b`, 'gi');
-
-  const parts = text.split(regex);
+  const parts = regex ? text.split(regex) : [text];
 
   const handleTermClick = (term: string) => {
-    const entry = dictionary.find(e => e.term.toLowerCase() === term.toLowerCase());
+    const entry = termMap.get(term.toLowerCase());
     if (entry) {
       setSelectedEntry(entry);
     }
