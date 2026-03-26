@@ -491,7 +491,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           </h2>
           <div className="space-y-2">
             {currentContent.codeWalkthrough.map((item, i) => (
-              <React.Fragment key={i}>
+              <React.Fragment key={`${project.id}-${currentPageIndex}-${i}-${item.section}`}>
                 <CollapsibleItem
                   header={
                     <span className="font-mono text-xs sm:text-sm font-semibold text-blue-300 bg-blue-900/50 px-2 py-1 rounded border border-blue-700">
@@ -577,7 +577,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           <p className="text-xs text-slate-500 mb-5">Click a problem to reveal the solution.</p>
           <div className="space-y-2">
             {currentContent.troubleshooting.map((item, i) => (
-              <React.Fragment key={i}>
+              <React.Fragment key={`${project.id}-${currentPageIndex}-${i}-${item.issue}`}>
                 <CollapsibleItem
                   header={item.issue}
                   accentColor="text-rose-400"
