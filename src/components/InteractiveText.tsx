@@ -18,7 +18,7 @@ export default function InteractiveText({ text, dictionary }: InteractiveTextPro
   // The \b ensures we match whole words only.
   // The 'gi' flags make it global (find all) and case-insensitive.
   const terms = dictionary.map(entry => entry.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const regex = new RegExp(`\b(${terms.join('|')})\b`, 'gi');
+  const regex = new RegExp(`\\b(${terms.join('|')})\\b`, 'gi');
 
   const parts = text.split(regex);
 
