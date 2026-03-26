@@ -417,6 +417,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
                     index === currentPageIndex ? 'bg-emerald-400' : 'bg-slate-600 hover:bg-slate-500'
                   }`}
                   title={`Go to page ${index + 1}: ${content.pages![index].title}`}
+                  aria-label={`Go to page ${index + 1}: ${content.pages![index].title}`}
                 />
               ))}
             </div>
