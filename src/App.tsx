@@ -116,7 +116,7 @@ export default function App() {
         isMobileMenuOpen={isMobileMenuOpen}
         onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
         isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
       />
       
       <main className="flex-1 overflow-y-auto">
