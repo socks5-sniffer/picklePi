@@ -1412,7 +1412,7 @@ export const dictionary: DictionaryEntry[] = [
   },
   {
     term: 'Least Privilege',
-    category: 'Security',
+    category: 'Beginner',
     definition: 'A security rule that says a program should only have access to the things it absolutely needs — no more. This limits damage if something goes wrong or is hacked.',
     example: 'A blink script only needs GPIO 17 — it should not have permission to delete files or access the internet'
   },
