@@ -1226,25 +1226,25 @@ export const dictionary: DictionaryEntry[] = [
 
   {
     term: 'Electricity',
-    category: 'Beginner',
+    category: 'Electronics',
     definition: 'The flow of tiny particles called electrons through wires. It powers everything from lights to your Raspberry Pi! Think of it like water flowing through a pipe.',
     example: 'Plugging in your Raspberry Pi lets electricity flow and turns it on'
   },
   {
     term: 'Code',
-    category: 'Beginner',
+    category: 'Python',
     definition: 'Instructions written in a special language that tells a computer what to do. It is like a recipe that the computer follows step by step.',
     example: 'led.on() is code that tells the Raspberry Pi to turn on an LED'
   },
   {
     term: 'Program',
-    category: 'Beginner',
+    category: 'Python',
     definition: 'A complete set of code instructions saved in a file that does a specific job. Also called a "script" in Python.',
     example: 'Your blink_led.py file is a program that makes an LED blink'
   },
   {
     term: 'Bug',
-    category: 'Beginner',
+    category: 'Python',
     definition: 'A mistake in your code that makes it do something wrong or not work at all. Finding and fixing bugs is called "debugging".',
     example: 'If your LED does not blink, there might be a bug in your code — maybe a typo!'
   },
