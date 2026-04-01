@@ -30,6 +30,7 @@ export default function App() {
   const [isLabModalOpen, setIsLabModalOpen] = useState(false);
   const [projectToComplete, setProjectToComplete] = useState<Project | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('rpi-lab-progress', JSON.stringify(progress));
@@ -114,6 +115,8 @@ export default function App() {
         isProjectLocked={isProjectLocked}
         isMobileMenuOpen={isMobileMenuOpen}
         onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
       />
       
       <main className="flex-1 overflow-y-auto">
