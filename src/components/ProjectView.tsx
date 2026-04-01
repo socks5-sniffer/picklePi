@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useId, useRef, useState } from 'react';
 import { Project, ProjectStatus } from '../types';
 import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wrench, Award, Copy, Check, BookOpen, ChevronLeft, ChevronRight, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -91,6 +91,8 @@ interface HardwareStepItemProps {
 }
 
 function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleDone }: HardwareStepItemProps) {
+  const panelId = `step-panel-${index}`;
+  const toggleId = `step-toggle-${index}`;
   return (
     <div className={`rounded-xl border overflow-hidden transition-colors ${
       isDone ? 'border-emerald-700/50 bg-emerald-900/10' : 'border-slate-700 bg-slate-800/50'
@@ -99,7 +101,8 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
         {/* Circular checkbox */}
         <button
           onClick={onToggleDone}
-          title={isDone ? 'Mark as not done' : 'Mark as done'}
+          aria-label={isDone ? `Step ${index + 1}: mark as not done` : `Step ${index + 1}: mark as done`}
+          aria-pressed={isDone}
           className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
             isDone
               ? 'border-emerald-500 bg-emerald-500 text-white'
@@ -110,7 +113,13 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
         </button>
 
         {/* Step number + preview */}
-        <button className="flex-1 text-left min-w-0" onClick={onToggleOpen}>
+        <button
+          id={toggleId}
+          className="flex-1 text-left min-w-0"
+          onClick={onToggleOpen}
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+        >
           <span className={`text-xs font-bold uppercase tracking-wider ${isDone ? 'text-emerald-500' : 'text-amber-400'}`}>
             Step {index + 1}
           </span>
@@ -122,13 +131,19 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
         </button>
 
         {/* Expand chevron */}
-        <button onClick={onToggleOpen} className="shrink-0 ml-2 text-slate-500 hover:text-slate-300 transition-colors">
+        <button
+          onClick={onToggleOpen}
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          aria-label={isOpen ? `Collapse step ${index + 1}` : `Expand step ${index + 1}`}
+          className="shrink-0 ml-2 text-slate-500 hover:text-slate-300 transition-colors"
+        >
           {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
       </div>
 
       {isOpen && (
-        <div className="px-4 pb-4 pt-2 border-t border-slate-700/40">
+        <div id={panelId} role="region" aria-labelledby={toggleId} className="px-4 pb-4 pt-2 border-t border-slate-700/40">
           <p className={`text-sm sm:text-base leading-relaxed ${isDone ? 'text-slate-400' : 'text-slate-200'}`}>
             {step}
           </p>
@@ -167,7 +182,17 @@ function HardwareStepsList({ steps }: HardwareStepsListProps) {
   const toggleDone = (i: number) => {
     setDoneSteps(prev => {
       const next = new Set(prev);
-      if (next.has(i)) next.delete(i); else next.add(i);
+      if (next.has(i)) {
+        next.delete(i);
+      } else {
+        next.add(i);
+        // Auto-close the step when marking it done
+        setOpenSteps(prev2 => {
+          const next2 = new Set(prev2);
+          next2.delete(i);
+          return next2;
+        });
+      }
       return next;
     });
   };
@@ -187,7 +212,14 @@ function HardwareStepsList({ steps }: HardwareStepsListProps) {
           </span>
         )}
       </div>
-      <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+      <div
+        className="h-2 bg-slate-700 rounded-full overflow-hidden"
+        role="progressbar"
+        aria-valuenow={doneCount}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-label={`${doneCount} of ${total} steps completed`}
+      >
         <div
           className="h-full bg-emerald-500 rounded-full transition-all duration-500"
           style={{ width: `${total > 0 ? (doneCount / total) * 100 : 0}%` }}
@@ -224,17 +256,20 @@ interface CollapsibleItemProps {
 
 function CollapsibleItem({ header, children, defaultOpen = false, accentColor = 'text-slate-300' }: CollapsibleItemProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const panelId = useId();
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-800/50 overflow-hidden">
       <button
         className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-700/30 transition-colors"
         onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-controls={panelId}
       >
         <span className={`font-medium text-sm sm:text-base ${accentColor}`}>{header}</span>
         {open ? <ChevronUp size={16} className="shrink-0 text-slate-500" /> : <ChevronDown size={16} className="shrink-0 text-slate-500" />}
       </button>
       {open && (
-        <div className="px-4 pb-4 pt-2 border-t border-slate-700/40 text-sm sm:text-base text-slate-300 leading-relaxed">
+        <div id={panelId} role="region" className="px-4 pb-4 pt-2 border-t border-slate-700/40 text-sm sm:text-base text-slate-300 leading-relaxed">
           {children}
         </div>
       )}
@@ -456,7 +491,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           </h2>
           <div className="space-y-2">
             {currentContent.codeWalkthrough.map((item, i) => (
-              <React.Fragment key={i}>
+              <React.Fragment key={`${project.id}-${currentPageIndex}-${i}-${item.section}`}>
                 <CollapsibleItem
                   header={
                     <span className="font-mono text-xs sm:text-sm font-semibold text-blue-300 bg-blue-900/50 px-2 py-1 rounded border border-blue-700">
@@ -542,7 +577,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           <p className="text-xs text-slate-500 mb-5">Click a problem to reveal the solution.</p>
           <div className="space-y-2">
             {currentContent.troubleshooting.map((item, i) => (
-              <React.Fragment key={i}>
+              <React.Fragment key={`${project.id}-${currentPageIndex}-${i}-${item.issue}`}>
                 <CollapsibleItem
                   header={item.issue}
                   accentColor="text-rose-400"
