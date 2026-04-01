@@ -67,8 +67,9 @@ picklePi is designed for **kids, teens, and curious people of all ages** who wan
 | 🎮 **Gamified Progress** | Earn unique badges as you complete each project — collect them all! |
 | 📓 **Lab Notebook** | Structured reflection journal for every completed project |
 | 📌 **GPIO Pinout Reference** | Interactive Raspberry Pi GPIO pin map built into the app — no more googling! |
-| 📖 **Electronics Dictionary** | Searchable glossary of Python, Raspberry Pi, and Electronics terms |
-| 📱 **Mobile Responsive** | Collapsible sidebar works on phones and tablets |
+| 📖 **Electronics Dictionary** | Searchable glossary of 100+ Python, Raspberry Pi, and Electronics terms |
+| 💡 **Interactive Term Highlighting** | Technical terms in project content are highlighted — click to see instant definitions |
+| 📱 **Mobile Responsive** | Collapsible sidebar with toggle controls works on phones and tablets |
 | 🔒 **Progress Persistence** | All progress saved to `localStorage` — survives page refreshes and accidental tab closes |
 | 🎨 **Modern Dark UI** | Clean dark-themed interface with smooth animations via Motion |
 | 📋 **One-Click Copy** | Copy any code example to clipboard instantly |
@@ -187,17 +188,19 @@ picklePi/
 │   └── images/                  # Static image assets
 ├── src/
 │   ├── components/
-│   │   ├── LandingView.tsx       # Home dashboard with "What's Next" cards
-│   │   ├── Sidebar.tsx           # Navigation sidebar (desktop + mobile drawer)
-│   │   ├── ProjectView.tsx       # Multi-page project content viewer
-│   │   ├── ProgressTracker.tsx   # Badge gallery and completion statistics
-│   │   ├── LabNotebookView.tsx   # Read-only list of lab notebook entries
-│   │   ├── LabNotebookModal.tsx  # Structured form for recording a lab entry
+│   │   ├── DefinitionModal.tsx   # Popup modal for dictionary term definitions
 │   │   ├── DictionaryView.tsx    # Searchable electronics/Python glossary
-│   │   └── PinoutView.tsx        # Interactive Raspberry Pi GPIO pinout reference
+│   │   ├── InteractiveText.tsx   # Highlights terms and shows definitions on click
+│   │   ├── LabNotebookModal.tsx  # Structured form for recording a lab entry
+│   │   ├── LabNotebookView.tsx   # Read-only list of lab notebook entries
+│   │   ├── LandingView.tsx       # Home dashboard with "What's Next" cards
+│   │   ├── PinoutView.tsx        # Interactive Raspberry Pi GPIO pinout reference
+│   │   ├── ProgressTracker.tsx   # Badge gallery and completion statistics
+│   │   ├── ProjectView.tsx       # Multi-page project content viewer
+│   │   └── Sidebar.tsx           # Collapsible navigation sidebar (desktop + mobile)
 │   ├── data/
 │   │   ├── curriculum.ts         # All 7 projects: content, code, walkthroughs
-│   │   └── dictionary.ts         # Glossary entries (Python, RPi, Electronics)
+│   │   └── dictionary.ts         # 100+ glossary entries (Python, RPi, Electronics)
 │   ├── types.ts                  # Shared TypeScript interfaces
 │   ├── App.tsx                   # Root component; routing, state, persistence
 │   ├── main.tsx                  # React entry point
@@ -279,11 +282,13 @@ The **Pinout** tab provides an interactive reference for all Raspberry Pi GPIO p
 
 ### Electronics Dictionary
 
-The **Dictionary** tab is a searchable glossary organized into three categories:
+The **Dictionary** tab is a searchable glossary of 100+ terms organized into three categories:
 
 - **Python** — language concepts and gpiozero patterns
 - **Raspberry Pi** — board-specific terms (BCM, GPIO, I2C, etc.)
 - **Electronics** — hardware fundamentals (resistor, duty cycle, PIR, etc.)
+
+**Interactive Term Highlighting:** Throughout project content, technical terms from the dictionary are automatically highlighted. Click any highlighted term to see its definition in a popup — no need to leave the page or open a new tab.
 
 ---
 
