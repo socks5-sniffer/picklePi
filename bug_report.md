@@ -15,6 +15,9 @@ assignees: ''
 2. Click on '....'
 3. See error
 
+## Screenshots
+<!-- If applicable, add screenshots to show UI or diagram changes -->
+
 ## Expected vs Actual Behavior
 <!-- What did you expect to happen, and what actually happened? -->
 
