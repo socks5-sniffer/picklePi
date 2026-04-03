@@ -236,8 +236,6 @@ All declared dependencies are free of known CVEs in the npm advisory database as
 
 ---
 
----
-
 # Security Audit Report
 
 ## Overview
