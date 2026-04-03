@@ -1,10 +1,212 @@
 # Security Audit Report
 
+---
+
+## Audit — 2026-04-02
+
+**Date:** 2026-04-02
+**Branch:** `copilot/sub-pr-17`
+**Auditor:** Claude Code (automated)
+**Scope:** All source files, config files, GitHub workflows, and dependencies
+
+### Executive Summary
+
+The codebase is a pure client-side React/TypeScript educational SPA with no active backend. It has a solid baseline of security tooling (CodeQL, Gitleaks, Dependabot, OWASP Dependency-Check, pinned GitHub Actions). However, 12 distinct findings were identified ranging from a high-severity known-vulnerable dependency to medium-severity CSP misconfigurations and a host-binding issue in the dev script.
+
+No hardcoded credentials, SQL injection vectors, or XSS sinks (`dangerouslySetInnerHTML`, `eval`) were found in the application source.
+
+### Findings Summary
+
+| # | Severity | Category | File | Description |
+|---|---|---|---|---|
+| 1 | **HIGH** | Vulnerable Dependency | `node_modules/path-to-regexp` | ReDoS via express dependency (GHSA-37ch-88jc-xwx2, CVSS 7.5) |
+| 2 | MEDIUM | CSP Misconfiguration | `vite.config.ts:28` | `unsafe-inline` in dev `script-src` |
+| 3 | MEDIUM | CSP Misconfiguration | `vite.config.ts:28` | Unrestricted `http: https:` in `connect-src` |
+| 4 | MEDIUM | Network Exposure | `package.json:25` | Dev server binds to `0.0.0.0` (all interfaces) |
+| 5 | MEDIUM | CSP Misconfiguration | `vite.config.ts:28` vs `index.html:9` | Dev/prod CSP mismatch with 5 directive differences |
+| 6 | MEDIUM | Dependency Surface | `package.json:31-41` | Unused backend deps (`express`, `better-sqlite3`, `dotenv`, `@google/genai`) in production |
+| 7 | MEDIUM | Supply Chain | `package.json:34` | `express` version mismatch — node_modules out of sync with lock file |
+| 8 | LOW | Input Validation | `src/App.tsx:25` | localStorage deserialization without schema validation |
+| 9 | LOW | Type Safety | `tsconfig.json` | TypeScript strict mode disabled |
+| 10 | LOW | CSP / Error Handling | `vite.config.ts:28` | `report-uri` target endpoint doesn't exist |
+| 11 | LOW | Supply Chain | `owasp-security-scan.yml:232` | Gitleaks action not pinned to commit SHA |
+| 12 | INFO | Process | `SECURITY.md:17-18`, `security.txt` | Contradictory vulnerability disclosure instructions |
+
+### Detailed Findings
+
+#### FINDING 1 — HIGH: Vulnerable Dependency — path-to-regexp (ReDoS)
+
+**File:** `node_modules/path-to-regexp` (via `express`)
+**Advisory:** GHSA-37ch-88jc-xwx2 | CWE-1333 | CVSS 7.5
+
+`path-to-regexp <0.1.13` is vulnerable to Regular Expression Denial of Service. The installed version is `0.1.12`, pulled in by `express@4.22.1`. An attacker can craft a malicious route string to cause catastrophic regex backtracking. This package is currently unused (no backend code), but it is in the production dependency tree.
+
+**Recommendation:** Run `npm audit fix`. Longer term, remove the unused `express` dependency (see Finding 6).
+
+---
+
+#### FINDING 2 — MEDIUM: Dev Server CSP Allows `unsafe-inline` Scripts
+
+**File:** `vite.config.ts:28`
+
+The dev server CSP includes `script-src 'self' 'unsafe-inline'`, weakening XSS protections. The production CSP in `index.html:9` correctly omits `'unsafe-inline'`.
+
+**Recommendation:** Remove `'unsafe-inline'` from the dev CSP. React's JSX compilation does not require inline scripts.
+
+---
+
+#### FINDING 3 — MEDIUM: Dev Server CSP Allows Unrestricted Outbound Connections
+
+**File:** `vite.config.ts:28`
+
+The `connect-src` directive in the dev server headers is `connect-src 'self' ws: wss: http: https:`. The `http:` and `https:` wildcards allow the page to make fetch/XHR/WebSocket requests to any host.
+
+**Recommendation:** Restrict to `connect-src 'self' ws: wss:` to match the production `index.html` policy.
+
+---
+
+#### FINDING 4 — MEDIUM: Dev Server Binds to All Network Interfaces
+
+**File:** `package.json:25`
+
+```json
+"dev": "vite --port=3000 --host=0.0.0.0"
+```
+
+`--host=0.0.0.0` exposes the development build (including unminified source and HMR WebSocket) to all machines on the local network.
+
+**Recommendation:** Remove `--host=0.0.0.0` from the default `dev` script, or extract to a separate `dev:host` script for cases where network access is intentional.
+
+---
+
+#### FINDING 5 — MEDIUM: Inconsistent CSP Between Dev and Production
+
+**Files:** `vite.config.ts:28` vs `index.html:9`
+
+| Directive | `index.html` (prod) | `vite.config.ts` (dev) |
+|---|---|---|
+| `script-src` | `'self'` | `'self' 'unsafe-inline'` |
+| `connect-src` | `'self' ws: wss:` | `'self' ws: wss: http: https:` |
+| `object-src` | `'none'` | absent |
+| `base-uri` | `'self'` | absent |
+| `form-action` | `'self'` | absent |
+
+**Recommendation:** Use the stricter `index.html` policy as the baseline for both environments.
+
+---
+
+#### FINDING 6 — MEDIUM: Unused Backend Libraries in Production Dependencies
+
+**File:** `package.json:31-41`
+
+The following packages are in `dependencies` but no server-side code exists:
+
+- `better-sqlite3` — native C++ SQLite addon
+- `express` — HTTP framework (triggers Finding 1)
+- `dotenv` — environment variable loader
+- `@google/genai` — Google Gemini API client
+
+**Recommendation:** Remove or move these to `devDependencies`. Create a separate `server/` package with its own `package.json` when backend work starts.
+
+---
+
+#### FINDING 7 — MEDIUM: express Version Mismatch — node_modules Out of Sync
+
+**File:** `package.json:34`
+
+`package.json` declares `"express": "^4.21.2"` and `package-lock.json` locks to `express@4.22.1`, but `node_modules` contains `express@5.2.1`, which doesn't satisfy the declared range. `npm ci` (used in CI) would restore the locked v4 version, creating a divergence between local dev and CI builds.
+
+**Recommendation:** Run `npm ci` to restore a clean `node_modules` from `package-lock.json`.
+
+---
+
+#### FINDING 8 — LOW: localStorage Deserialization Without Schema Validation
+
+**File:** `src/App.tsx:25`
+
+```typescript
+const saved = localStorage.getItem('rpi-lab-progress');
+return saved ? JSON.parse(saved) : INITIAL_PROGRESS;
+```
+
+JSON parse errors are caught, but the shape of the deserialized object is not validated. A schema change or corrupt data could cause unexpected runtime behavior.
+
+**Recommendation:** Validate the object shape after deserialization (e.g., with `zod`). Fall back to `INITIAL_PROGRESS` on shape mismatch.
+
+---
+
+#### FINDING 9 — LOW: TypeScript Strict Mode Disabled
+
+**File:** `tsconfig.json`
+
+`"strict": true` and related flags (`strictNullChecks`, `noImplicitAny`) are not enabled, reducing the compiler's ability to catch null/undefined dereferences.
+
+**Recommendation:** Add `"strict": true` to `tsconfig.json` and address resulting type errors.
+
+---
+
+#### FINDING 10 — LOW: CSP `report-uri` Points to Non-Existent Endpoint
+
+**File:** `vite.config.ts:28`
+
+The dev server CSP includes `report-uri /api/csp-report`. This endpoint does not exist, so all CSP violation reports silently return 404. Additionally, `report-uri` is deprecated in favor of `report-to`.
+
+**Recommendation:** Remove `report-uri /api/csp-report` until a reporting endpoint is implemented. Use the modern `report-to` directive when one is added.
+
+---
+
+#### FINDING 11 — LOW: Gitleaks GitHub Action Not Pinned to Commit SHA
+
+**File:** `.github/workflows/owasp-security-scan.yml:232`
+
+All other GitHub Actions are pinned to immutable commit SHAs except Gitleaks:
+```yaml
+uses: gitleaks/gitleaks-action@v2   # mutable tag — not pinned
+```
+
+**Recommendation:** Pin to a specific commit SHA, e.g.:
+```yaml
+uses: gitleaks/gitleaks-action@ff98106e4c7b2e9b67b4aca3c65fb81cd10800c3 # v2.3.4
+```
+
+---
+
+#### FINDING 12 — INFO: Contradictory Vulnerability Disclosure Instructions
+
+**Files:** `SECURITY.md:17-18`, `public/.well-known/security.txt`
+
+- Line 17: "**Do NOT** open a public GitHub issue for security vulnerabilities"
+- Line 18: "**Open a GitHub issue** with the tag `[SECURITY]`"
+
+Reporting vulnerabilities publicly gives attackers a window to exploit them before a patch is available.
+
+**Recommendation:** Use GitHub's private security advisory feature (Settings → Security → Advisories). Update `SECURITY.md` and `security.txt` to use a private channel.
+
+---
+
+### Positive Security Practices Observed
+
+- No `dangerouslySetInnerHTML`, `eval()`, `document.write`, or `innerHTML` in source
+- No external API fetch/XHR calls — fully offline app
+- React JSX auto-escapes all rendered strings
+- `crypto.randomUUID()` used for ID generation (`App.tsx:83`)
+- Source maps disabled in production (`vite.config.ts:35`)
+- Security headers set: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`
+- All GitHub Actions (except Gitleaks) pinned to immutable commit SHAs
+- Dependabot configured for npm and GitHub Actions ecosystems
+- CodeQL, OWASP Dependency-Check, Gitleaks, ESLint security plugins active in CI
+- HTTPS via `vite-plugin-mkcert` in development
+- `LabNotebookModal` form fields have `maxLength={2000}` client-side limits
+
+---
+
+## Audit — 2026-03-21 (Previous)
+
 ## Overview
 
 This document provides a comprehensive security audit of the picklePi project, covering OWASP Top 10 vulnerabilities and mitigation strategies.
 
-**Last Updated:** 2026-03-21  
+**Last Updated:** 2026-03-21
 **Project Version:** 1.0.0  
 **Audit Type:** OWASP Top 10 (2021)
 
