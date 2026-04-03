@@ -1,10 +1,77 @@
 # Security Audit Report
 
+---
+
+## Audit Entry — 2026-04-03
+
+**Project Version:** 1.0.0  
+**Audit Date:** 2026-04-03  
+**Auditor:** @copilot (automated)  
+**Scope:** Dependency vulnerabilities (`npm audit`), static analysis (CodeQL), code review of new UI components
+
+---
+
+### Dependency Vulnerabilities (npm audit)
+
+| Package | Severity | Advisory | Status |
+|---------|----------|----------|--------|
+| `path-to-regexp < 0.1.13` | **High** | [GHSA-37ch-88jc-xwx2](https://github.com/advisories/GHSA-37ch-88jc-xwx2) — ReDoS via multiple route parameters | ✅ **Fixed** — upgraded to `0.1.13` via `npm audit fix` (transitive dep of `express`) |
+
+**Post-fix result:** `found 0 vulnerabilities` across 343 packages.
+
+---
+
+### Code Review — New UI Components (PR #17)
+
+The following components were introduced or modified in the current PR and reviewed for security and correctness issues:
+
+#### `src/components/DefinitionModal.tsx`
+
+| Finding | Severity | Status |
+|---------|----------|--------|
+| Hard-coded `id="definition-modal-title"` — duplicate DOM IDs if multiple modals rendered simultaneously | Low | ✅ Fixed — migrated to React `useId()` for instance-unique IDs |
+| `keydown` listener re-registered on every render when `onClose` is a new inline function | Low | ✅ Fixed — `onClose` captured in a `useRef`; listener registered once per mount |
+| Close button missing `type="button"` — could trigger unintended form submission | Low | ✅ Fixed — added `type="button"` |
+
+#### `src/components/ProjectView.tsx` (PageNav)
+
+| Finding | Severity | Status |
+|---------|----------|--------|
+| All four `<button>` elements in `PageNav` (Previous, dot indicators, Help, Next) missing `type="button"` | Low | ✅ Fixed — added `type="button"` to all buttons |
+
+---
+
+### Static Analysis (CodeQL)
+
+CodeQL analysis via GitHub Actions (`codeql.yml`): **0 alerts** on this PR's branch.
+
+---
+
+### OWASP Top 10 Delta (changes since 2026-03-21 audit)
+
+| Category | Change |
+|----------|--------|
+| A03:2021 – Injection | ✅ No new injection vectors introduced. Interactive text components use React JSX auto-escaping; no `dangerouslySetInnerHTML` usage. |
+| A06:2021 – Vulnerable and Outdated Components | ⚠️ `path-to-regexp < 0.1.13` (High) found and **remediated**. No other known vulnerabilities remain. |
+| A05:2021 – Security Misconfiguration | ✅ CSP header now present in `vite.config.ts` (previous audit recommended this). |
+| All others | No change from previous audit. |
+
+---
+
+### Security Posture Summary
+
+**Overall:** ✅ **STRONG**  
+**Open vulnerabilities:** 0  
+**Newly introduced issues:** 0  
+**Issues remediated this cycle:** 4 (1 dependency + 3 code-level)
+
+---
+
 ## Overview
 
 This document provides a comprehensive security audit of the picklePi project, covering OWASP Top 10 vulnerabilities and mitigation strategies.
 
-**Last Updated:** 2026-03-21  
+**Last Updated:** 2026-04-03  
 **Project Version:** 1.0.0  
 **Audit Type:** OWASP Top 10 (2021)
 
