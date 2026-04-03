@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useId, useRef, useState } from 'react';
 import { Project, ProjectStatus } from '../types';
-import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wrench, Award, Copy, Check, BookOpen, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wrench, Award, Copy, Check, BookOpen, ChevronLeft, ChevronRight, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import InteractiveText from './InteractiveText';
 import { dictionary } from '../data/dictionary';
 
@@ -82,6 +82,204 @@ function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, 
           <ChevronRight size={18} className="sm:w-5 sm:h-5" />
         </button>
       </div>
+    </div>
+  );
+}
+
+// ── Hardware Step Accordion ──────────────────────────────────────────────────
+
+interface HardwareStepItemProps {
+  step: string;
+  index: number;
+  isOpen: boolean;
+  isDone: boolean;
+  onToggleOpen: () => void;
+  onToggleDone: () => void;
+}
+
+function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleDone }: HardwareStepItemProps) {
+  const panelId = `step-panel-${index}`;
+  const toggleId = `step-toggle-${index}`;
+  return (
+    <div className={`rounded-xl border overflow-hidden transition-colors ${
+      isDone ? 'border-emerald-700/50 bg-emerald-900/10' : 'border-slate-700 bg-slate-800/50'
+    }`}>
+      <div className="flex items-center gap-3 px-4 py-3">
+        {/* Circular checkbox */}
+        <button
+          onClick={onToggleDone}
+          aria-label={isDone ? `Step ${index + 1}: mark as not done` : `Step ${index + 1}: mark as done`}
+          aria-pressed={isDone}
+          className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+            isDone
+              ? 'border-emerald-500 bg-emerald-500 text-white'
+              : 'border-slate-500 hover:border-emerald-400 text-transparent'
+          }`}
+        >
+          <Check size={12} />
+        </button>
+
+        {/* Step number + preview */}
+        <button
+          id={toggleId}
+          className="flex-1 text-left min-w-0"
+          onClick={onToggleOpen}
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+        >
+          <span className={`text-xs font-bold uppercase tracking-wider ${isDone ? 'text-emerald-500' : 'text-amber-400'}`}>
+            Step {index + 1}
+          </span>
+          {!isOpen && (
+            <p className={`text-sm mt-0.5 truncate ${isDone ? 'line-through text-slate-500' : 'text-slate-300'}`}>
+              {step}
+            </p>
+          )}
+        </button>
+
+        {/* Expand chevron */}
+        <button
+          onClick={onToggleOpen}
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          aria-label={isOpen ? `Collapse step ${index + 1}` : `Expand step ${index + 1}`}
+          className="shrink-0 ml-2 text-slate-500 hover:text-slate-300 transition-colors"
+        >
+          {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+      </div>
+
+      {isOpen && (
+        <div id={panelId} role="region" aria-labelledby={toggleId} className="px-4 pb-4 pt-2 border-t border-slate-700/40">
+          <p className={`text-sm sm:text-base leading-relaxed ${isDone ? 'text-slate-400' : 'text-slate-200'}`}>
+            {step}
+          </p>
+          <button
+            onClick={onToggleDone}
+            className={`mt-3 flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+              isDone
+                ? 'bg-emerald-900/40 text-emerald-400 hover:bg-slate-700'
+                : 'bg-slate-700 text-slate-300 hover:bg-emerald-900/40 hover:text-emerald-400'
+            }`}
+          >
+            {isDone ? <><Check size={12} /> Completed</> : <><CheckCircle2 size={12} /> Mark as done</>}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface HardwareStepsListProps {
+  steps: string[];
+}
+
+function HardwareStepsList({ steps }: HardwareStepsListProps) {
+  const [openSteps, setOpenSteps] = useState<Set<number>>(new Set([0]));
+  const [doneSteps, setDoneSteps] = useState<Set<number>>(new Set());
+
+  const toggleOpen = (i: number) => {
+    setOpenSteps(prev => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
+  };
+
+  const toggleDone = (i: number) => {
+    setDoneSteps(prev => {
+      const next = new Set(prev);
+      if (next.has(i)) {
+        next.delete(i);
+      } else {
+        next.add(i);
+        // Auto-close the step when marking it done
+        setOpenSteps(prev2 => {
+          const next2 = new Set(prev2);
+          next2.delete(i);
+          return next2;
+        });
+      }
+      return next;
+    });
+  };
+
+  const doneCount = doneSteps.size;
+  const total = steps.length;
+  const allDone = doneCount === total;
+
+  return (
+    <div className="space-y-3">
+      {/* Progress tracker */}
+      <div className="flex items-center justify-between text-sm mb-1">
+        <span className="text-slate-400">{doneCount} of {total} steps completed</span>
+        {allDone && (
+          <span className="text-emerald-400 font-semibold flex items-center gap-1">
+            <CheckCircle2 size={14} /> All done!
+          </span>
+        )}
+      </div>
+      <div
+        className="h-2 bg-slate-700 rounded-full overflow-hidden"
+        role="progressbar"
+        aria-valuenow={doneCount}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-label={`${doneCount} of ${total} steps completed`}
+      >
+        <div
+          className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+          style={{ width: `${total > 0 ? (doneCount / total) * 100 : 0}%` }}
+        />
+      </div>
+
+      {/* Step items */}
+      <div className="space-y-2 mt-4">
+        {steps.map((step, i) => (
+          <React.Fragment key={i}>
+            <HardwareStepItem
+              step={step}
+              index={i}
+              isOpen={openSteps.has(i)}
+              isDone={doneSteps.has(i)}
+              onToggleOpen={() => toggleOpen(i)}
+              onToggleDone={() => toggleDone(i)}
+            />
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Collapsible item (code walkthrough + troubleshooting) ─────────────────────
+
+interface CollapsibleItemProps {
+  header: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+  accentColor?: string;
+}
+
+function CollapsibleItem({ header, children, defaultOpen = false, accentColor = 'text-slate-300' }: CollapsibleItemProps) {
+  const [open, setOpen] = useState(defaultOpen);
+  const panelId = useId();
+  return (
+    <div className="rounded-xl border border-slate-700 bg-slate-800/50 overflow-hidden">
+      <button
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-700/30 transition-colors"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-controls={panelId}
+      >
+        <span className={`font-medium text-sm sm:text-base ${accentColor}`}>{header}</span>
+        {open ? <ChevronUp size={16} className="shrink-0 text-slate-500" /> : <ChevronDown size={16} className="shrink-0 text-slate-500" />}
+      </button>
+      {open && (
+        <div id={panelId} role="region" className="px-4 pb-4 pt-2 border-t border-slate-700/40 text-sm sm:text-base text-slate-300 leading-relaxed">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -197,6 +395,52 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             </div>
           </div>
         </div>
+
+        {/* Top Page Navigation */}
+        {hasPages && content.pages && content.pages.length > 1 && (
+          <div className="flex items-center justify-between gap-4 pt-4">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPageIndex === 0}
+              className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
+                currentPageIndex === 0
+                  ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
+                  : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
+              }`}
+            >
+              <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Prev</span>
+            </button>
+
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {content.pages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPageIndex(index)}
+                  className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
+                    index === currentPageIndex ? 'bg-emerald-400' : 'bg-slate-600 hover:bg-slate-500'
+                  }`}
+                  title={`Go to page ${index + 1}: ${content.pages![index].title}`}
+                  aria-label={`Go to page ${index + 1}: ${content.pages![index].title}`}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={handleNextPage}
+              disabled={currentPageIndex === content.pages.length - 1}
+              className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
+                currentPageIndex === content.pages.length - 1
+                  ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
+                  : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
+              }`}
+            >
+              Next
+              <ChevronRight size={18} className="sm:w-5 sm:h-5" />
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Overview */}
@@ -249,11 +493,11 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           )}
 
           <div className="bg-slate-800/50 rounded-2xl p-4 sm:p-8 shadow-sm border border-slate-700">
-            <ol className="space-y-4 list-decimal list-inside text-slate-300 marker:text-slate-500 marker:font-bold text-sm sm:text-base">
-              {currentContent.hardwareSetup.steps.map((step, i) => (
-                <li key={i} className="pl-2 leading-relaxed"><InteractiveText text={step} dictionary={dictionary} /></li>
-              ))}
-            </ol>
+            <React.Fragment key={`${project.id}-${currentPageIndex}`}>
+              <HardwareStepsList
+                steps={currentContent.hardwareSetup.steps}
+              />
+            </React.Fragment>
             {currentContent.hardwareSetup.explanation && (
               <div className="mt-6 pt-6 border-t border-slate-700">
                 <p className="text-sm text-slate-400 italic">
@@ -298,21 +542,20 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             <Code2 size={24} className="text-blue-500" />
             Code Walkthrough
           </h2>
-          <div className="bg-slate-800/50 rounded-2xl p-4 sm:p-8 shadow-sm border border-slate-700 space-y-6">
-            <div className="space-y-6">
-              {currentContent.codeWalkthrough.map((item, i) => (
-                <div key={i} className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                  <div className="sm:w-1/3 shrink-0">
-                    <span className="font-mono text-xs sm:text-sm font-semibold text-blue-300 bg-blue-900/50 px-2 py-1 rounded border border-blue-700 inline-block">
-                      <InteractiveText text={item.section} dictionary={dictionary} />
+          <div className="space-y-2">
+            {currentContent.codeWalkthrough.map((item, i) => (
+              <React.Fragment key={`${project.id}-${currentPageIndex}-${i}-${item.section}`}>
+                <CollapsibleItem
+                  header={
+                    <span className="font-mono text-xs sm:text-sm font-semibold text-blue-300 bg-blue-900/50 px-2 py-1 rounded border border-blue-700">
+                      {item.section}
                     </span>
-                  </div>
-                  <div className="sm:w-2/3 text-slate-300 text-sm leading-relaxed">
-                    <InteractiveText text={item.explanation} dictionary={dictionary} />
-                  </div>
-                </div>
-              ))}
-            </div>
+                  }
+                >
+                  <InteractiveText text={item.explanation} dictionary={dictionary} />
+                </CollapsibleItem>
+              </React.Fragment>
+            ))}
           </div>
         </section>
       )}
@@ -380,20 +623,21 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
       {/* Troubleshooting */}
       {currentContent.troubleshooting.length > 0 && (
         <section className="bg-slate-800/30 rounded-2xl p-4 sm:p-8 border border-slate-700">
-          <h2 className="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-slate-100 mb-2 flex items-center gap-2">
             <AlertTriangle size={20} className="text-rose-400" />
             Troubleshooting
           </h2>
-          <div className="space-y-4">
+          <p className="text-xs text-slate-500 mb-5">Click a problem to reveal the solution.</p>
+          <div className="space-y-2">
             {currentContent.troubleshooting.map((item, i) => (
-              <div key={i} className="flex flex-col sm:flex-row gap-2 sm:gap-4 p-4 bg-slate-800/50 rounded-xl shadow-sm border border-slate-700">
-                <div className="sm:w-1/3 font-medium text-rose-400 text-sm">
-                  <InteractiveText text={item.issue} dictionary={dictionary} />
-                </div>
-                <div className="sm:w-2/3 text-slate-400 text-sm">
+              <React.Fragment key={`${project.id}-${currentPageIndex}-${i}-${item.issue}`}>
+                <CollapsibleItem
+                  header={<InteractiveText text={item.issue} dictionary={dictionary} />}
+                  accentColor="text-rose-400"
+                >
                   <InteractiveText text={item.solution} dictionary={dictionary} />
-                </div>
-              </div>
+                </CollapsibleItem>
+              </React.Fragment>
             ))}
           </div>
         </section>
