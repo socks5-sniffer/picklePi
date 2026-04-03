@@ -28,7 +28,7 @@
 
 ## 📖 About
 
-**picklePi** is a structured, gamified, project-based learning platform designed to teach electronics and Python programming using the Raspberry Pi. Learners progress from their very first LED blink all the way to building a complete multi-module alarm system — across 7 carefully sequenced levels.
+**picklePi** is a structured, gamified, project-based learning platform designed to teach electronics and Python programming using the Raspberry Pi. Learners progress from their very first LED blink all the way to building a complete physical tamper-monitoring security system — across 13 carefully sequenced levels.
 
 No prior experience needed. If you can plug in a USB cable and type on a keyboard, you're already qualified. 🎉
 
@@ -79,19 +79,25 @@ picklePi is designed for **kids, teens, and curious people of all ages** who wan
 
 ## 🎓 Curriculum
 
-picklePi ships with a 7-level curriculum that builds skills progressively. Each level introduces new hardware components and Python concepts that build on everything before it. Think of it like a video game — Level 1 teaches you the controls, and by Level 7 you're the boss.
+picklePi ships with a 13-level curriculum that builds skills progressively. Each level introduces new hardware components and Python concepts that build on everything before it. Think of it like a video game — Level 1 teaches you the controls, and by Level 13 you're building real physical security systems.
 
 ### Level Overview
 
 | Level | Topic | Project | Skills | Badge |
 |-------|-------|---------|--------|-------|
-| **1** | Digital Output Basics | Hello, LED | `gpiozero LED`, `blink()`, `signal.pause()` | GPIO Initiate |
-| **2** | Digital Input | Button Controls LED | `Button`, pull-up/down resistors, event-driven logic | Input Investigator |
-| **3** | PWM & Analog Concepts | PWM Brightness | `PWMLED`, duty cycle, `pulse()`, for loops | PWM Tamer |
+| **1** | Digital Output Basics | Hello, RGB LED | `gpiozero LED`, color mixing, `signal.pause()`, multiple GPIO control | GPIO Initiate |
+| **2** | Digital Input | Button Controls LED | `Button`, pull-up/down resistors, event callbacks, source binding | Input Investigator |
+| **3** | PWM & Analog Concepts | PWM Brightness | `PWMLED`, duty cycle, `pulse()`, background threads | PWM Tamer |
 | **4** | Sensors & Reactive Systems | Buzzer Tones | `TonalBuzzer`, `Tone`, frequencies, musical notes | Signal Wrangler |
-| **5** | Displays & User Feedback | Motion / Light Sensor | `MotionSensor`, callbacks, `when_motion` hooks, PIR warm-up | Sensor Specialist |
-| **6** | Multi-Module Systems | LCD / OLED Output | I2C protocol, `RPLCD`, external libraries, string formatting | Display Master |
-| **7** | Mini Capstone Projects | Multi-Module Alarm System | State machines, `SignalDevice`, system integration | Mini Systems Architect |
+| **5** | Displays & User Feedback | Motion / Light Sensor | `MotionSensor`, `when_motion` callbacks, PIR warm-up | Sensor Specialist |
+| **6** | Multi-Module Systems | Tilt & Shake Detector | I2C protocol, ADXL345 accelerometer, Adafruit CircuitPython library, 3-axis data | Motion Intelligence |
+| **7** | Mini Capstone Projects | Multi-Module Alarm System | Enum state machines, `Threading.Event`, multi-component integration | Mini Systems Architect |
+| **8** | Analog Input & ADC | Twist to Control | MCP3008 SPI ADC, `source`/`values` binding, voltage division, SPI protocol | Analog Alchemist |
+| **9** | Distance Sensing | Sonar Proximity Alert | `DistanceSensor`, time-of-flight math, threshold logic, live terminal output | Sonar Scout |
+| **10** | Full System Capstone | The Smart Guardian | DS18B20 1-Wire sensor, `OutputDevice` relay, filesystem reads, fail-safe design | Systems Architect |
+| **11** | Optical Security | The Laser Tripwire | Laser emitter control, photoresistor analog reads, ambient light calibration, beam-break detection | Optical Guardian |
+| **12** | Physical Security | The Magnetic Deadbolt | Hall Effect sensing, reed switch reads, pull-up/down resistors, sensor redundancy, tamper detection | Security Engineer |
+| **13** | Vibration & Impact | The Silent Guardian | Spring vibration sensing, ADXL345 I2C, G-force vectors, impact detection, physical tamper monitoring | Inertial Defender |
 
 ### What Each Project Teaches
 
@@ -111,12 +117,18 @@ Each project is split into structured **pages** within the app:
 |-----------|---------|
 | Raspberry Pi (any GPIO model) | All levels |
 | Breadboard + jumper wires | All levels |
-| LED + 220Ω–330Ω resistors | Levels 1, 2, 3 |
+| RGB LED + 220Ω–330Ω resistors | Levels 1, 2, 3 |
 | Push button | Level 2 |
 | Passive buzzer | Level 4 |
 | PIR motion sensor | Level 5 |
-| I2C LCD display (16×2) | Level 6 |
+| ADXL345 3-axis accelerometer (I2C) | Levels 6, 13 |
 | All of the above | Level 7 (capstone) |
+| MCP3008 SPI ADC + potentiometer | Levels 8, 11 |
+| HC-SR04 ultrasonic distance sensor + voltage divider resistors | Level 9 |
+| DS18B20 temperature sensor + relay module | Level 10 |
+| Laser emitter module + photoresistor (LDR) module | Level 11 |
+| Reed switch or Hall Effect sensor module | Level 12 |
+| Spring vibration sensor | Level 13 |
 
 > 💰 **Budget tip:** Most of these components are available in beginner electronics starter kits for under $20–$30. Look for "Raspberry Pi starter kit" or "Arduino components kit" on any major online retailer.
 
@@ -199,7 +211,7 @@ picklePi/
 │   │   ├── ProjectView.tsx       # Multi-page project content viewer
 │   │   └── Sidebar.tsx           # Collapsible navigation sidebar (desktop + mobile)
 │   ├── data/
-│   │   ├── curriculum.ts         # All 7 projects: content, code, walkthroughs
+│   │   ├── curriculum.ts         # All 13 projects: content, code, walkthroughs
 │   │   └── dictionary.ts         # 100+ glossary entries (Python, RPi, Electronics)
 │   ├── types.ts                  # Shared TypeScript interfaces
 │   ├── App.tsx                   # Root component; routing, state, persistence
@@ -384,7 +396,7 @@ These areas need the most help:
 
 | Area | Examples |
 |------|---------|
-| 📝 **Project content** | Fully flesh out Levels 2–7 with complete page content |
+| 📝 **Project content** | Flesh out or improve content across any of the 13 levels |
 | 🐛 **Bug fixes** | Open an issue or submit a PR |
 | ✨ **New features** | Themes, export/import progress, accessibility improvements |
 | 📖 **Documentation** | Improve this README, add inline comments |
