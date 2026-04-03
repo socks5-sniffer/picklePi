@@ -26,6 +26,7 @@ function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, 
   return (
     <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${isTop ? 'pb-4 border-b' : 'pt-8 border-t'} border-slate-700`}>
       <button
+        type="button"
         onClick={onPrevious}
         disabled={currentPageIndex === 0}
         className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
@@ -42,6 +43,7 @@ function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, 
       <div className="flex items-center gap-1.5 sm:gap-2 order-first sm:order-none">
         {pages.map((page, index) => (
           <button
+            type="button"
             key={index}
             onClick={() => onGoTo(index)}
             className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
@@ -56,6 +58,7 @@ function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, 
       <div className="flex items-center gap-2 sm:gap-3">
         {onHelp && currentPageIndex !== pages.length - 1 && (
           <button
+            type="button"
             onClick={onHelp}
             className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium bg-slate-800/50 text-blue-400 hover:bg-slate-700/50 transition-colors border border-slate-700 text-sm"
             title="Get help or troubleshooting"
@@ -66,6 +69,7 @@ function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, 
         )}
 
         <button
+          type="button"
           onClick={onNext}
           disabled={currentPageIndex === pages.length - 1}
           className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
