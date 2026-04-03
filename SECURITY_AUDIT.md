@@ -1,12 +1,142 @@
 # Security Audit Report
 
-## Overview
+---
 
-This document provides a comprehensive security audit of the picklePi project, covering OWASP Top 10 vulnerabilities and mitigation strategies.
+## Audit: 2026-04-03
 
-**Last Updated:** 2026-03-21  
+**Date:** 2026-04-03  
 **Project Version:** 1.0.0  
-**Audit Type:** OWASP Top 10 (2021)
+**Audit Type:** OWASP Top 10 (2021) — Full Re-Audit  
+**Auditor:** Automated Security Review
+
+### Dependency Scan (npm audit)
+
+- **Packages Audited:** 424 (221 prod, 103 dev, 101 optional)
+- **Vulnerabilities Found:** 0 (info: 0, low: 0, moderate: 0, high: 0, critical: 0)
+- **Status:** ✅ **CLEAN**
+
+### Static Code Analysis
+
+| Check | Result |
+|---|---|
+| `dangerouslySetInnerHTML` usage | ✅ None found |
+| `eval()` / `Function()` usage | ✅ None found |
+| Unsanitized `innerHTML` / `document.write` | ✅ None found |
+| User input stored in localStorage | ✅ Wrapped in `try/catch` with fallback |
+| Form input length validation (`maxLength`) | ✅ All textarea fields capped at 2000 chars |
+| Secret / credential exposure | ✅ None detected (`.env` gitignored, `.env.example` clean) |
+
+### Security Header Review (vite.config.ts)
+
+| Header | Value | Assessment |
+|---|---|---|
+| `X-Content-Type-Options` | `nosniff` | ✅ Correct |
+| `X-Frame-Options` | `DENY` | ✅ Correct |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | ✅ Correct |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | ✅ Correct |
+| `Content-Security-Policy` | Set — see findings below | ⚠️ Needs tightening |
+| `Strict-Transport-Security` | Not configured | ℹ️ Add for production |
+
+### OWASP Top 10 (2021) Summary
+
+| Category | Status | Notes |
+|---|---|---|
+| A01: Broken Access Control | ✅ Protected | Security headers in place; no access control regressions |
+| A02: Cryptographic Failures | ✅ Protected | No external data transmission; HTTPS via mkcert; Gitleaks clean |
+| A03: Injection | ✅ Protected | React JSX auto-escapes output; no eval/innerHTML patterns |
+| A04: Insecure Design | ✅ Protected | localStorage-only; no server state; TypeScript typed |
+| A05: Security Misconfiguration | ⚠️ Partial | CSP `script-src` includes `'unsafe-inline'`; HSTS absent |
+| A06: Vulnerable Components | ✅ Protected | 0 known CVEs across all 424 packages |
+| A07: Auth Failures | ✅ N/A | No authentication system; no credentials stored |
+| A08: Data Integrity Failures | ✅ Protected | `package-lock.json` in version control; npm ci used in CI |
+| A09: Logging Failures | ✅ Protected | CodeQL + OWASP + Gitleaks automated weekly scans |
+| A10: SSRF | ✅ N/A | No server-side requests in current codebase |
+
+### Findings
+
+#### ⚠️ MEDIUM — CSP `script-src 'unsafe-inline'` (A05)
+
+**File:** `vite.config.ts`
+
+The `Content-Security-Policy` header permits inline scripts via `'unsafe-inline'` in `script-src`. This negates a significant portion of the XSS protection that CSP is designed to provide; a successful DOM-injection or Markdown-injection attack could escalate to arbitrary script execution in a browser that honours CSP but still permits inline scripts.
+
+**Current value:**
+```
+script-src 'self' 'unsafe-inline'
+```
+
+**Recommendation:** Replace `'unsafe-inline'` with a per-request cryptographic nonce or a hash of each inline script. If Vite's dev HMR requires inline scripts, scope `'unsafe-inline'` to the development build only via an environment variable, and emit a strict CSP in the production build. For the immediate term, adding `'strict-dynamic'` alongside a nonce gives a usable middle ground.
+
+---
+
+#### ⚠️ LOW — CSP `connect-src` wildcard (A05)
+
+**File:** `vite.config.ts`
+
+```
+connect-src 'self' ws: wss: http: https:
+```
+
+The bare `http:` and `https:` tokens allow the page to `fetch()` or `XMLHttpRequest` any origin on the internet, bypassing the intent of same-origin enforcement.
+
+**Recommendation:** Replace with the specific origins the app needs:
+```
+connect-src 'self' ws://localhost:* wss://localhost:* https://generativelanguage.googleapis.com
+```
+
+---
+
+#### ⚠️ LOW — TypeScript `strict` not enabled (A04)
+
+**File:** `tsconfig.json`
+
+The `"strict": true` compiler flag is absent. Without it, a subset of strictness checks (`noImplicitAny`, `strictNullChecks`, `strictFunctionTypes`, etc.) may be inactive, reducing the type-safety guarantees that guard against logic and injection errors at compile time.
+
+**Evidence:** Pre-existing type errors in `src/data/dictionary.ts` (lines 1331–1415, 1546) where `"Beginner"` and `"Security"` are assigned to a field typed as `'Python' | 'Raspberry Pi' | 'Electronics'` — these would be caught immediately with strict mode enforced.
+
+**Recommendation:** Add `"strict": true` to `compilerOptions` in `tsconfig.json` and resolve the resulting type errors.
+
+---
+
+#### ℹ️ INFO — HSTS header absent (A05)
+
+**File:** `vite.config.ts`
+
+`Strict-Transport-Security` is not configured. While this is acceptable for local development via `mkcert`, it should be added at the reverse-proxy or hosting layer before any production deployment to ensure browsers always upgrade to HTTPS.
+
+**Recommended value:**
+```
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+```
+
+---
+
+#### ℹ️ INFO — Dev proxy `secure: false` (A05)
+
+**File:** `vite.config.ts`
+
+The `/api` proxy target disables TLS certificate verification (`secure: false`). This is low-risk for local development but should be documented to avoid it being carried into a staging or production reverse-proxy configuration.
+
+---
+
+### Overall Security Posture
+
+**Rating:** ✅ **STRONG** (no critical or high vulnerabilities; two medium/low configuration findings)
+
+### Recommended Actions
+
+1. Tighten CSP: replace `'unsafe-inline'` in `script-src` with a nonce-based policy
+2. Restrict `connect-src` to known origins
+3. Enable `"strict": true` in `tsconfig.json` and fix the resulting type errors
+4. Add HSTS at hosting layer before production deployment
+
+---
+
+## Audit: 2026-03-21
+
+**Date:** 2026-03-21  
+**Project Version:** 1.0.0  
+**Audit Type:** OWASP Top 10 (2021) — Initial Audit
 
 ---
 
