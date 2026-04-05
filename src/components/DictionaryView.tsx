@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { dictionary } from '../data/dictionary';
-import { DictionaryEntry } from '../types';
+import { DictionaryCategory, DictionaryEntry } from '../types';
 import { Search, Zap, Cpu, CircuitBoard } from 'lucide-react';
 
 const sortedDictionary = [...dictionary].sort((a, b) =>
@@ -11,10 +11,10 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 export default function DictionaryView() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'All' | 'Python' | 'Raspberry Pi' | 'Electronics'>('All');
+  const [selectedCategory, setSelectedCategory] = useState<'All' | DictionaryCategory>('All');
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
 
-  const categories: Array<'All' | 'Python' | 'Raspberry Pi' | 'Electronics'> = ['All', 'Python', 'Raspberry Pi', 'Electronics'];
+  const categories: Array<'All' | DictionaryCategory> = ['All', 'Python', 'Raspberry Pi', 'Electronics', 'Beginner', 'Security'];
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);

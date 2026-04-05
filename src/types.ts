@@ -65,9 +65,16 @@ export interface LabEntry {
   date: string;
 }
 
+export type DictionaryCategory =
+  | 'Python'
+  | 'Raspberry Pi'
+  | 'Electronics'
+  | 'Beginner'
+  | 'Security';
+
 export interface DictionaryEntry {
   term: string;
-  category: 'Python' | 'Raspberry Pi' | 'Electronics';
+  category: DictionaryCategory;
   definition: string;
   example?: string;
 }
