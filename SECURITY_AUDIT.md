@@ -44,7 +44,7 @@
 | A01: Broken Access Control | ✅ Protected | Security headers in place; no access control regressions |
 | A02: Cryptographic Failures | ✅ Protected | No external data transmission; HTTPS via mkcert; Gitleaks clean |
 | A03: Injection | ✅ Protected | React JSX auto-escapes output; no eval/innerHTML patterns |
-| A04: Insecure Design | ✅ Protected | localStorage-only; no server state; TypeScript typed |
+| A04: Insecure Design | ⚠️ Partial | localStorage-only; no server state; TypeScript present, but strictness checks need tightening |
 | A05: Security Misconfiguration | ⚠️ Partial | CSP `script-src` includes `'unsafe-inline'`; HSTS absent |
 | A06: Vulnerable Components | ✅ Protected | 0 known CVEs across all 424 packages |
 | A07: Auth Failures | ✅ N/A | No authentication system; no credentials stored |
