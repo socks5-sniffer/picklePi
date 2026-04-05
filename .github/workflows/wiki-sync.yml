@@ -31,6 +31,8 @@ jobs:
           cp wiki/Components/Features.md            wiki-repo/Features.md
           cp wiki/Components/Getting-Started.md     wiki-repo/Getting-Started.md
           cp wiki/Components/_Sidebar.md            wiki-repo/_Sidebar.md
+          # Remove legacy file that used a non-breaking hyphen in its name
+          rm -f "wiki-repo/Adding"$'\xe2\x80\x90'"New"$'\xe2\x80\x90'"Content.md"
 
       - name: Commit and push to wiki
         run: |
