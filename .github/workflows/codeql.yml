@@ -13,6 +13,7 @@ permissions:
   contents: read
   security-events: write
 
+
 jobs:
   javascript-typescript:
     name: Analyze (javascript-typescript)
@@ -20,9 +21,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13
+        with:
+          languages: javascript-typescript
+=======
 
+>>>>>>> main
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'

@@ -1,12 +1,380 @@
-# Security Audit Report
+# Security Audit Report — 2026-04-03
 
 ## Overview
 
-This document provides a comprehensive security audit of the picklePi project, covering OWASP Top 10 vulnerabilities and mitigation strategies.
+This document provides a comprehensive security audit of the picklePi project based on a manual source-code review, dependency analysis (`npm audit`), and configuration review conducted on **2026-04-03**.
 
-**Last Updated:** 2026-03-21  
+**Audit Date:** 2026-04-03  
 **Project Version:** 1.0.0  
-**Audit Type:** OWASP Top 10 (2021)
+**Auditor:** Manual security review  
+**Audit Type:** Manual code review + OWASP Top 10 (2021) + Dependency scan  
+**npm audit result:** ✅ 0 known vulnerabilities
+
+---
+
+## Executive Summary
+
+The overall security posture of picklePi remains **STRONG** for a client-side educational application. No critical or high-severity issues were found. Several medium and low-severity observations are documented below with actionable recommendations.
+
+---
+
+## Findings
+
+### FINDING-01 — CSP `unsafe-inline` Weakens XSS Protection
+
+**Severity:** ⚠️ Medium  
+**File:** `vite.config.ts` (line 28)
+
+The Content-Security-Policy header is configured with `script-src 'self' 'unsafe-inline'` and `style-src 'self' 'unsafe-inline'`. The `unsafe-inline` directive allows inline `<script>` and `<style>` blocks, which significantly reduces the effectiveness of CSP as an XSS mitigation. An attacker who can inject arbitrary HTML (e.g., via a third-party library vulnerability or a future `dangerouslySetInnerHTML` usage) could execute inline scripts even with CSP enabled.
+
+**Current configuration:**
+```typescript
+'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; ..."
+```
+
+**Recommendation:**  
+- For scripts: replace `'unsafe-inline'` with a nonce-based or hash-based approach. Vite supports `vite-plugin-csp` or can be configured with build-time hashes.  
+- For styles: Tailwind CSS currently requires `unsafe-inline` at runtime. Consider using the Tailwind CSS Vite plugin's SafeList approach and enabling `style-src 'nonce-...'` once styles are fully extracted at build time.  
+- As an immediate improvement, remove `unsafe-inline` from `script-src` since no inline scripts are needed in the built output.
+
+**Status:** ⚠️ Open
+
+---
+
+### FINDING-02 — Security Headers Not Applied in Production Builds
+
+**Severity:** ⚠️ Medium  
+**File:** `vite.config.ts` (lines 25–31)
+
+All security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy`, `Referrer-Policy`, `Permissions-Policy`) are set under `server.headers`, which only applies during **Vite development server** runs (`npm run dev`). After `npm run build`, the `dist/` folder is a static bundle. These headers must be separately configured on the production hosting environment (e.g., Nginx, Apache, Netlify `_headers`, Vercel `vercel.json`) — they are **not** automatically included in the production output.
+
+**Recommendation:**
+- Document clearly in `README.md` or deployment docs that production headers must be manually configured on the hosting layer.
+- If deploying to Netlify, add a `public/_headers` file. If using Vercel, add a `vercel.json` with `headers`. Example for Netlify:
+
+```
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'
+```
+
+**Status:** ⚠️ Open
+
+---
+
+### FINDING-03 — `connect-src` in CSP is Overly Permissive
+
+**Severity:** 🔵 Low  
+**File:** `vite.config.ts` (line 28)
+
+The CSP `connect-src` directive is set to `'self' ws: wss: http: https:`, which allows `fetch()`, `XMLHttpRequest`, and WebSocket connections to **any** HTTP/HTTPS URL on the internet. This removes a key protection layer that would otherwise alert on or block unexpected data exfiltration.
+
+**Recommendation:**  
+Tighten `connect-src` to only what is actually needed:
+```
+connect-src 'self' ws://localhost:* wss://localhost:*
+```
+If a production API backend is added in the future, explicitly list its origin (e.g., `https://api.picklePi.example.com`).
+
+**Status:** 🔵 Open
+
+---
+
+### FINDING-04 — TypeScript `strict` Mode Not Enabled
+
+**Severity:** 🔵 Low  
+**File:** `tsconfig.json`
+
+The TypeScript configuration does not include `"strict": true`. Without strict mode, the following checks are disabled:
+- `strictNullChecks` — null/undefined dereference errors are not caught at compile time
+- `noImplicitAny` — implicit `any` types are allowed, undermining type safety
+- `strictFunctionTypes` — unsound function type assignments are permitted
+
+This is relevant to security because unchecked nulls and implicit `any` can allow malformed or attacker-influenced data to flow through the application without type errors.
+
+**Recommendation:**  
+Add `"strict": true` to `tsconfig.json` and resolve the resulting type errors:
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    ...
+  }
+}
+```
+
+**Status:** 🔵 Open
+
+---
+
+### FINDING-05 — `@google/genai` Installed but Not Used
+
+**Severity:** 🔵 Low  
+**File:** `package.json` (line 31)
+
+The `@google/genai` package (v1.29.0) is listed as a runtime `dependency` but has no import or usage anywhere in the `src/` directory. Unused dependencies increase the attack surface (supply-chain risk) and bundle size, and may mislead reviewers into thinking AI features are active.
+
+**Recommendation:**  
+- Remove the dependency with `npm uninstall @google/genai` if the Gemini AI integration is not yet implemented.  
+- If it is planned, move it to a feature branch and document the intended integration path and required secret handling (`GEMINI_API_KEY`).
+
+**Status:** 🔵 Open
+
+---
+
+### FINDING-06 — Backend Dependencies (`express`, `better-sqlite3`) in Production `dependencies`
+
+**Severity:** 🔵 Low  
+**File:** `package.json` (lines 34–35)
+
+`express` (v5.2.1) and `better-sqlite3` (v12.8.0) are listed under `dependencies` (runtime). The application is currently a pure client-side React/Vite app. Bundling unused server-side packages:
+- Unnecessarily increases the surface area for future vulnerability disclosures
+- Signals intent without implementation, which can confuse security reviewers
+- Vite will attempt to bundle or warn about these Node.js-only packages if imported
+
+**Recommendation:**  
+If backend work has not started, move these to `devDependencies` or remove them entirely. If a backend is actively being developed in a separate file (e.g., `server.ts`), ensure it is excluded from the Vite frontend bundle via `build.rollupOptions.external`.
+
+**Status:** 🔵 Open
+
+---
+
+### FINDING-07 — No Runtime Schema Validation of `localStorage` Data
+
+**Severity:** 🔵 Low  
+**File:** `src/App.tsx` (lines 23–27)
+
+`localStorage` data is parsed with `JSON.parse()` and used directly as `UserProgress` without any runtime schema validation:
+
+```typescript
+const saved = localStorage.getItem('rpi-lab-progress');
+return saved ? JSON.parse(saved) : INITIAL_PROGRESS;
+```
+
+While the try/catch handles JSON parse failures, it does not guard against a structurally-valid JSON object that doesn't match the `UserProgress` shape (e.g., missing fields, unexpected types). In a cross-origin scenario or if a browser extension manipulates localStorage, malformed data could cause runtime errors downstream.
+
+**Recommendation:**  
+Add lightweight shape validation after parsing:
+```typescript
+function isValidProgress(data: unknown): data is UserProgress {
+  return (
+    typeof data === 'object' && data !== null &&
+    'projectStatuses' in data &&
+    'badges' in data &&
+    'labNotebook' in data
+  );
+}
+const parsed = JSON.parse(saved);
+return isValidProgress(parsed) ? parsed : INITIAL_PROGRESS;
+```
+
+**Status:** 🔵 Open
+
+---
+
+### FINDING-08 — `ProjectView` Rendered Without React `key` (State Leakage Between Projects)
+
+**Severity:** 🔵 Low  
+**File:** `src/App.tsx` (lines 144–150)
+
+`<ProjectView>` is rendered without a `key` prop:
+```tsx
+{activeTab === 'curriculum' && (
+  <ProjectView
+    project={activeProject}
+    ...
+  />
+)}
+```
+
+Because React reuses component instances when no key changes, internal state in `ProjectView` (e.g., current page index, completed hardware steps) persists when the user switches between projects on the curriculum tab. A user could accidentally submit a lab entry for the wrong project if they switch projects mid-flow.
+
+**Recommendation:**  
+Add `key={activeProject.id}` to `<ProjectView>` so that switching projects triggers a full remount and resets all internal state:
+```tsx
+<ProjectView
+  key={activeProject.id}
+  project={activeProject}
+  ...
+/>
+```
+
+**Status:** 🔵 Open
+
+---
+
+## Dependency Scan Results
+
+**Tool:** `npm audit`  
+**Date:** 2026-04-03  
+**Result:** ✅ **0 vulnerabilities found** (0 critical, 0 high, 0 moderate, 0 low)
+
+All declared dependencies are free of known CVEs in the npm advisory database as of the audit date.
+
+---
+
+## Summary Table
+
+| ID | Title | Severity | Status |
+|----|-------|----------|--------|
+| FINDING-01 | CSP `unsafe-inline` weakens XSS protection | ⚠️ Medium | Open |
+| FINDING-02 | Security headers not applied in production | ⚠️ Medium | Open |
+| FINDING-03 | `connect-src` overly permissive | 🔵 Low | Open |
+| FINDING-04 | TypeScript strict mode not enabled | 🔵 Low | Open |
+| FINDING-05 | `@google/genai` unused dependency | 🔵 Low | Open |
+| FINDING-06 | Backend deps in production `dependencies` | 🔵 Low | Open |
+| FINDING-07 | No runtime localStorage schema validation | 🔵 Low | Open |
+| FINDING-08 | `ProjectView` missing React key | 🔵 Low | Open |
+
+**Critical/High findings:** 0  
+**Medium findings:** 2  
+**Low findings:** 6  
+**Overall posture:** ✅ **STRONG** (no blocking issues; all findings are improvements)
+
+---
+
+# Security Audit Report
+
+---
+
+## Audit: 2026-04-03
+
+**Date:** 2026-04-03  
+**Project Version:** 1.0.0  
+**Audit Type:** OWASP Top 10 (2021) — Full Re-Audit  
+**Auditor:** Automated Security Review
+
+### Dependency Scan (npm audit)
+
+- **Packages Audited:** 424 (221 prod, 103 dev, 101 optional)
+- **Vulnerabilities Found:** 0 (info: 0, low: 0, moderate: 0, high: 0, critical: 0)
+- **Status:** ✅ **CLEAN**
+
+### Static Code Analysis
+
+| Check | Result |
+|---|---|
+| `dangerouslySetInnerHTML` usage | ✅ None found |
+| `eval()` / `Function()` usage | ✅ None found |
+| Unsanitized `innerHTML` / `document.write` | ✅ None found |
+| User input stored in localStorage | ✅ Wrapped in `try/catch` with fallback |
+| Form input length validation (`maxLength`) | ✅ All textarea fields capped at 2000 chars |
+| Secret / credential exposure | ✅ None detected (`.env` gitignored, `.env.example` clean) |
+
+### Security Header Review (vite.config.ts)
+
+| Header | Value | Assessment |
+|---|---|---|
+| `X-Content-Type-Options` | `nosniff` | ✅ Correct |
+| `X-Frame-Options` | `DENY` | ✅ Correct |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | ✅ Correct |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | ✅ Correct |
+| `Content-Security-Policy` | Set — see findings below | ⚠️ Needs tightening |
+| `Strict-Transport-Security` | Not configured | ℹ️ Add for production |
+
+### OWASP Top 10 (2021) Summary
+
+| Category | Status | Notes |
+|---|---|---|
+| A01: Broken Access Control | ✅ Protected | Security headers in place; no access control regressions |
+| A02: Cryptographic Failures | ✅ Protected | No external data transmission; HTTPS via mkcert; Gitleaks clean |
+| A03: Injection | ✅ Protected | React JSX auto-escapes output; no eval/innerHTML patterns |
+| A04: Insecure Design | ⚠️ Partial | localStorage-only; no server state; TypeScript present, but strictness checks need tightening |
+| A05: Security Misconfiguration | ⚠️ Partial | CSP `script-src` includes `'unsafe-inline'`; HSTS absent |
+| A06: Vulnerable Components | ✅ Protected | 0 known CVEs across all 424 packages |
+| A07: Auth Failures | ✅ N/A | No authentication system; no credentials stored |
+| A08: Data Integrity Failures | ✅ Protected | `package-lock.json` in version control; npm ci used in CI |
+| A09: Logging Failures | ✅ Protected | CodeQL + OWASP + Gitleaks automated weekly scans |
+| A10: SSRF | ✅ N/A | No server-side requests in current codebase |
+
+### Findings
+
+#### ⚠️ MEDIUM — CSP `script-src 'unsafe-inline'` (A05)
+
+**File:** `vite.config.ts`
+
+The `Content-Security-Policy` header permits inline scripts via `'unsafe-inline'` in `script-src`. This negates a significant portion of the XSS protection that CSP is designed to provide; a successful DOM-injection or Markdown-injection attack could escalate to arbitrary script execution in a browser that honours CSP but still permits inline scripts.
+
+**Current value:**
+```
+script-src 'self' 'unsafe-inline'
+```
+
+**Recommendation:** Replace `'unsafe-inline'` with a per-request cryptographic nonce or a hash of each inline script. If Vite's dev HMR requires inline scripts, scope `'unsafe-inline'` to the development build only via an environment variable, and emit a strict CSP in the production build. For the immediate term, adding `'strict-dynamic'` alongside a nonce gives a usable middle ground.
+
+---
+
+#### ⚠️ LOW — CSP `connect-src` wildcard (A05)
+
+**File:** `vite.config.ts`
+
+```
+connect-src 'self' ws: wss: http: https:
+```
+
+The bare `http:` and `https:` tokens allow the page to `fetch()` or `XMLHttpRequest` any origin on the internet, bypassing the intent of same-origin enforcement.
+
+**Recommendation:** Replace with the specific origins the app needs:
+```
+connect-src 'self' ws://localhost:* wss://localhost:* https://generativelanguage.googleapis.com
+```
+
+---
+
+#### ⚠️ LOW — TypeScript `strict` not enabled (A04)
+
+**File:** `tsconfig.json`
+
+The `"strict": true` compiler flag is absent. Without it, a subset of strictness checks (`noImplicitAny`, `strictNullChecks`, `strictFunctionTypes`, etc.) may be inactive, reducing the type-safety guarantees that guard against logic and injection errors at compile time.
+
+**Evidence:** Pre-existing type errors in `src/data/dictionary.ts` (lines 1331–1415, 1546) where `"Beginner"` and `"Security"` are assigned to a field typed as `'Python' | 'Raspberry Pi' | 'Electronics'` — these would be caught immediately with strict mode enforced.
+
+**Recommendation:** Add `"strict": true` to `compilerOptions` in `tsconfig.json` and resolve the resulting type errors.
+
+---
+
+#### ℹ️ INFO — HSTS header absent (A05)
+
+**File:** `vite.config.ts`
+
+`Strict-Transport-Security` is not configured. While this is acceptable for local development via `mkcert`, it should be added at the reverse-proxy or hosting layer before any production deployment to ensure browsers always upgrade to HTTPS.
+
+**Recommended value:**
+```
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+```
+
+---
+
+#### ℹ️ INFO — Dev proxy `secure: false` (A05)
+
+**File:** `vite.config.ts`
+
+The `/api` proxy target disables TLS certificate verification (`secure: false`). This is low-risk for local development but should be documented to avoid it being carried into a staging or production reverse-proxy configuration.
+
+---
+
+### Overall Security Posture
+
+**Rating:** ✅ **STRONG** (no critical or high vulnerabilities; two medium/low configuration findings)
+
+### Recommended Actions
+
+1. Tighten CSP: replace `'unsafe-inline'` in `script-src` with a nonce-based policy
+2. Restrict `connect-src` to known origins
+3. Enable `"strict": true` in `tsconfig.json` and fix the resulting type errors
+4. Add HSTS at hosting layer before production deployment
+
+---
+
+## Audit: 2026-03-21
+
+**Date:** 2026-03-21  
+**Project Version:** 1.0.0  
+**Audit Type:** OWASP Top 10 (2021) — Initial Audit
 
 ---
 

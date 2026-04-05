@@ -41,7 +41,7 @@ export default function InteractiveText({ text, dictionary }: InteractiveTextPro
             <button
               key={index}
               onClick={() => handleTermClick(part)}
-              className="font-bold text-cyan-400 hover:text-cyan-300 bg-cyan-900/30 hover:bg-cyan-900/50 px-1 py-0.5 rounded-md transition-colors cursor-pointer border-b-2 border-cyan-700/50 hover:border-cyan-600/50"
+              className="font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-900/30 hover:bg-emerald-900/50 px-1 py-0.5 rounded-md transition-colors cursor-pointer border-b-2 border-emerald-700/50 hover:border-emerald-600/50"
             >
               {part}
             </button>
