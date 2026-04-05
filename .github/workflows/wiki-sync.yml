@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4b8a7f1d8c6b5a4e3f2d1c0b9a8e7d6
 
       - name: Clone wiki
         run: |
