@@ -6,7 +6,7 @@ This document provides a comprehensive security audit of the picklePi project ba
 
 **Audit Date:** 2026-04-03  
 **Project Version:** 1.0.0  
-**Auditor:** Automated security review  
+**Auditor:** Manual security review  
 **Audit Type:** Manual code review + OWASP Top 10 (2021) + Dependency scan  
 **npm audit result:** ✅ 0 known vulnerabilities
 
