@@ -1,5 +1,7 @@
 ### 🥒 picklePi Wiki
-- Home
-- Architecture & Tech Stack
-- Curriculum Overview
-- Adding New Content
+- [Home](Home)
+- [Getting Started](Getting-Started)
+- [Curriculum Overview](Curriculum-Overview)
+- [Features](Features)
+- [Architecture & Tech Stack](Architecture)
+- [Adding New Content](Adding-New-Content)
