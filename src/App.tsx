@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Sun, Moon } from 'lucide-react';
 import { curriculum } from './data/curriculum';
 import { Project, UserProgress, LabEntry } from './types';
 import Sidebar from './components/Sidebar';
@@ -31,6 +32,25 @@ export default function App() {
   const [projectToComplete, setProjectToComplete] = useState<Project | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // ── Theme toggle ────────────────────────────────────────────────────────
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('picklePi-theme') !== 'light';
+    } catch {
+      return true;
+    }
+  });
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    // Add transition class first so the swap is animated, not flashed
+    document.documentElement.classList.add('theme-transitioning');
+    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    try { localStorage.setItem('picklePi-theme', next ? 'dark' : 'light'); } catch { /* noop */ }
+    setIsDark(next);
+    setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 350);
+  };
 
   useEffect(() => {
     localStorage.setItem('rpi-lab-progress', JSON.stringify(progress));
@@ -105,7 +125,19 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-[#1e2530] text-slate-100 font-sans">
+    <div className="flex h-screen bg-[var(--picklePi-bg-app)] text-slate-100 font-sans">
+
+      {/* ── Theme toggle button ── fixed top-right, visible in all views ── */}
+      <button
+        onClick={toggleTheme}
+        className="fixed top-4 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-600/60 text-slate-200 text-sm font-medium shadow-lg transition-colors"
+        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      >
+        {isDark
+          ? <Sun  size={16} className="text-amber-400" />
+          : <Moon size={16} className="text-indigo-400" />}
+        <span className="hidden sm:inline select-none">{isDark ? 'Light' : 'Dark'}</span>
+      </button>
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 

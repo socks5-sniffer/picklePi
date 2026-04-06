@@ -1,5 +1,62 @@
 @import "tailwindcss";
 
+/* ── App-level background token ─────────────────────────────────────────── */
+:root {
+  --picklePi-bg-app: #1e2530;
+}
+
+/* ── Body inherits the app bg so there is no white flash behind the root ── */
+body {
+  background-color: var(--picklePi-bg-app);
+}
+
+/* ── Light mode: flip the entire slate scale ─────────────────────────────
+   Tailwind v4 utilities reference --color-slate-* CSS vars, so swapping
+   them here flips every slate-based utility in the whole app at once.
+   Technique: replace each dark value with the matching light-end mirror.
+     dark-default  →  light-override
+     slate-900 (near-black)  →  what was slate-50  (near-white)
+     slate-800 (very dark)   →  what was slate-100 (very light)
+     slate-700 (dark)        →  what was slate-200 (light)
+     slate-600 (mid-dark)    →  what was slate-300 (mid-light)
+     slate-400 (mid-light)   →  what was slate-600 (mid-dark, for text contrast)
+     slate-300 (light text)  →  what was slate-700 (dark text)
+     slate-200 (lighter)     →  what was slate-800 (darker)
+     slate-100 (near-white)  →  what was slate-900 (near-black)
+   Accent colors (emerald, indigo, amber, cyan …) are intentionally left
+   unchanged — they read well on both backgrounds.
+──────────────────────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --picklePi-bg-app:   #f1f5f9;
+
+  --color-slate-950: oklch(0.984 0.003 247.858);  /* ← was slate-50  */
+  --color-slate-900: oklch(0.968 0.007 247.896);  /* ← was slate-100 */
+  --color-slate-800: oklch(0.929 0.013 255.508);  /* ← was slate-200 */
+  --color-slate-700: oklch(0.869 0.022 252.894);  /* ← was slate-300 */
+  --color-slate-600: oklch(0.704 0.040 256.788);  /* ← was slate-400 */
+  /* slate-500 stays unchanged (it's the mid-point anchor)  */
+  --color-slate-400: oklch(0.446 0.043 257.281);  /* ← was slate-600 */
+  --color-slate-300: oklch(0.372 0.044 257.287);  /* ← was slate-700 */
+  --color-slate-200: oklch(0.279 0.041 260.031);  /* ← was slate-800 */
+  --color-slate-100: oklch(0.208 0.042 265.755);  /* ← was slate-900 */
+  --color-slate-50:  oklch(0.129 0.042 264.695);  /* ← was slate-950 */
+}
+
+/* ── Smooth transitions ONLY while the theme is actively toggling ────────
+   Adding .theme-transitioning to <html> before the state flip and removing
+   it afterward keeps hover/animation transitions unaffected at all other
+   times, and avoids any flash on first load.
+──────────────────────────────────────────────────────────────────────────── */
+.theme-transitioning,
+.theme-transitioning * {
+  transition:
+    background-color 0.25s ease,
+    color            0.2s  ease,
+    border-color     0.2s  ease,
+    fill             0.2s  ease,
+    stroke           0.2s  ease !important;
+}
+
 .progress-fill {
   width: var(--fill-width, 0%);
 }
