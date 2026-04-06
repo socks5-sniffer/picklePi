@@ -1,7 +1,8 @@
 import React from 'react';
 import { UserProgress } from '../types';
 import { curriculum } from '../data/curriculum';
-import { CheckCircle2, Circle, PlayCircle, Award } from 'lucide-react';
+import { CheckCircle2, Circle, PlayCircle } from 'lucide-react';
+import BadgeIcon from './BadgeIcon';
 
 export default function ProgressTracker({ progress }: { progress: UserProgress }) {
   return (
@@ -61,11 +62,24 @@ export default function ProgressTracker({ progress }: { progress: UserProgress }
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className={`flex items-center gap-1.5 font-medium ${
-                        status === 'Completed' ? 'text-indigo-400' : 'text-slate-500 opacity-50'
-                      }`}>
-                        <Award size={16} className={status === 'Completed' ? 'text-amber-400' : 'text-slate-300'} />
-                        {project.badgeEarned}
+                      <div className="flex items-center gap-2.5">
+                        <BadgeIcon
+                          level={project.level}
+                          name={project.badgeEarned}
+                          earned={status === 'Completed'}
+                          size={44}
+                        />
+                        <span className={`font-medium text-sm ${
+                          status === 'Completed'
+                            ? 'text-indigo-300'
+                            : status === 'In Progress'
+                            ? 'text-amber-400/60'
+                            : 'text-slate-600'
+                        }`}>
+                          {status === 'Completed' || status === 'In Progress'
+                            ? project.badgeEarned
+                            : '???'}
+                        </span>
                       </div>
                     </td>
                   </tr>
