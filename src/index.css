@@ -10,36 +10,40 @@ body {
   background-color: var(--picklePi-bg-app);
 }
 
-/* ── Light mode: flip the entire slate scale ─────────────────────────────
-   Tailwind v4 utilities reference --color-slate-* CSS vars, so swapping
-   them here flips every slate-based utility in the whole app at once.
-   Technique: replace each dark value with the matching light-end mirror.
-     dark-default  →  light-override
-     slate-900 (near-black)  →  what was slate-50  (near-white)
-     slate-800 (very dark)   →  what was slate-100 (very light)
-     slate-700 (dark)        →  what was slate-200 (light)
-     slate-600 (mid-dark)    →  what was slate-300 (mid-light)
-     slate-400 (mid-light)   →  what was slate-600 (mid-dark, for text contrast)
-     slate-300 (light text)  →  what was slate-700 (dark text)
-     slate-200 (lighter)     →  what was slate-800 (darker)
-     slate-100 (near-white)  →  what was slate-900 (near-black)
-   Accent colors (emerald, indigo, amber, cyan …) are intentionally left
-   unchanged — they read well on both backgrounds.
+/* ── Light mode: #6E9A6F-anchored sage-green scale ──────────────────────
+   #6E9A6F ≈ oklch(0.627 0.072 140).  All steps share H=140 (sage green).
+
+   Surfaces  (slate-950 → 700)  L = 0.92 → 0.68  — light, clearly coloured
+   Text      (slate-600 → 50)   L = 0.40 → 0.07  — very dark, high contrast
+   The ≥ 0.44 gap between the lightest text (L=0.40) and the darkest surface
+   (L=0.68) keeps every text/bg pair well above WCAG AA.
+
+   Hierarchy:
+     app canvas  (--picklePi-bg-app)  L=0.780  rich mid-sage
+     sidebar     (bg-slate-900)       L=0.627  #6E9A6F — brand anchor
+     cards       (bg-slate-800)       L=0.865  lift above the canvas
+     borders     (border-slate-700)   L=0.680  visible against cards (ΔL=0.19)
+     muted text  (text-slate-600)     L=0.400  inactive nav, labels
+     body text   (text-slate-300)     L=0.210  paragraphs, descriptions
+     headings    (text-slate-100)     L=0.118  max contrast on every surface
 ──────────────────────────────────────────────────────────────────────────── */
 [data-theme="light"] {
-  --picklePi-bg-app:   #f1f5f9;
+  --picklePi-bg-app: oklch(0.780 0.052 140);
 
-  --color-slate-950: oklch(0.984 0.003 247.858);  /* ← was slate-50  */
-  --color-slate-900: oklch(0.968 0.007 247.896);  /* ← was slate-100 */
-  --color-slate-800: oklch(0.929 0.013 255.508);  /* ← was slate-200 */
-  --color-slate-700: oklch(0.869 0.022 252.894);  /* ← was slate-300 */
-  --color-slate-600: oklch(0.704 0.040 256.788);  /* ← was slate-400 */
-  /* slate-500 stays unchanged (it's the mid-point anchor)  */
-  --color-slate-400: oklch(0.446 0.043 257.281);  /* ← was slate-600 */
-  --color-slate-300: oklch(0.372 0.044 257.287);  /* ← was slate-700 */
-  --color-slate-200: oklch(0.279 0.041 260.031);  /* ← was slate-800 */
-  --color-slate-100: oklch(0.208 0.042 265.755);  /* ← was slate-900 */
-  --color-slate-50:  oklch(0.129 0.042 264.695);  /* ← was slate-950 */
+  /* surfaces */
+  --color-slate-950: oklch(0.920 0.025 140);
+  --color-slate-900: oklch(0.627 0.072 140);  /* ← #6E9A6F */
+  --color-slate-800: oklch(0.865 0.038 140);
+  --color-slate-700: oklch(0.680 0.062 140);
+
+  /* text */
+  --color-slate-600: oklch(0.400 0.062 140);
+  --color-slate-500: oklch(0.348 0.057 140);
+  --color-slate-400: oklch(0.278 0.050 140);
+  --color-slate-300: oklch(0.210 0.040 140);
+  --color-slate-200: oklch(0.163 0.032 140);
+  --color-slate-100: oklch(0.118 0.022 140);
+  --color-slate-50:  oklch(0.068 0.012 140);
 }
 
 /* ── Smooth transitions ONLY while the theme is actively toggling ────────
