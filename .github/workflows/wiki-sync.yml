@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'wiki/Components/**'
+      - '.github/workflows/wiki-sync.yml'
   workflow_dispatch:
 
 permissions:
