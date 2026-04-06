@@ -1,9 +1,12 @@
-import React from 'react';
-import { UserProgress } from '../types';
+import React, { useState } from 'react';
+import { UserProgress, Project } from '../types';
 import { curriculum } from '../data/curriculum';
-import { CheckCircle2, Circle, PlayCircle, Award } from 'lucide-react';
+import { CheckCircle2, Circle, PlayCircle } from 'lucide-react';
+import BadgeIcon from './BadgeIcon';
+import BadgeModal from './BadgeModal';
 
 export default function ProgressTracker({ progress }: { progress: UserProgress }) {
+  const [selectedBadge, setSelectedBadge] = useState<{ project: Project; earned: boolean } | null>(null);
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <header className="space-y-2">
@@ -61,12 +64,31 @@ export default function ProgressTracker({ progress }: { progress: UserProgress }
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className={`flex items-center gap-1.5 font-medium ${
-                        status === 'Completed' ? 'text-indigo-400' : 'text-slate-500 opacity-50'
-                      }`}>
-                        <Award size={16} className={status === 'Completed' ? 'text-amber-400' : 'text-slate-300'} />
-                        {project.badgeEarned}
-                      </div>
+                      <button
+                        className="flex items-center gap-2.5 group cursor-pointer"
+                        onClick={() => setSelectedBadge({ project, earned: status === 'Completed' })}
+                        aria-label={`View badge: ${status === 'Completed' ? project.badgeEarned : 'Locked'}`}
+                      >
+                        <span className="transition-transform group-hover:scale-110 duration-150">
+                          <BadgeIcon
+                            level={project.level}
+                            name={project.badgeEarned}
+                            earned={status === 'Completed'}
+                            size={44}
+                          />
+                        </span>
+                        <span className={`font-medium text-sm ${
+                          status === 'Completed'
+                            ? 'text-indigo-300 group-hover:text-indigo-200'
+                            : status === 'In Progress'
+                            ? 'text-amber-400/60'
+                            : 'text-slate-600'
+                        } transition-colors`}>
+                          {status === 'Completed' || status === 'In Progress'
+                            ? project.badgeEarned
+                            : '???'}
+                        </span>
+                      </button>
                     </td>
                   </tr>
                 );
@@ -75,6 +97,14 @@ export default function ProgressTracker({ progress }: { progress: UserProgress }
           </table>
         </div>
       </div>
+
+      {selectedBadge && (
+        <BadgeModal
+          project={selectedBadge.project}
+          earned={selectedBadge.earned}
+          onClose={() => setSelectedBadge(null)}
+        />
+      )}
     </div>
   );
 }
