@@ -99,15 +99,15 @@ async function generateNewLevel(topic: string, levelNumber: number) {
           content: {
             type: Type.OBJECT,
             properties: {
-              overview: { /* Omitted for brevity, matches pageSchema overview */ type: Type.ANY },
+              overview: { /* Omitted for brevity, matches pageSchema overview */ type: Type.OBJECT },
               pages: { type: Type.ARRAY, items: pageSchema },
               // Top level structure padding
-              hardwareSetup: { type: Type.ANY },
+              hardwareSetup: { type: Type.OBJECT },
               code: { type: Type.STRING },
-              codeWalkthrough: { type: Type.ARRAY, items: { type: Type.ANY } },
-              conceptDeepDive: { type: Type.ANY },
-              experimentMode: { type: Type.ANY },
-              troubleshooting: { type: Type.ARRAY, items: { type: Type.ANY } }
+              codeWalkthrough: { type: Type.ARRAY, items: { type: Type.OBJECT } },
+              conceptDeepDive: { type: Type.OBJECT },
+              experimentMode: { type: Type.OBJECT },
+              troubleshooting: { type: Type.ARRAY, items: { type: Type.OBJECT } }
             }
           }
         }
