@@ -1,4 +1,4 @@
-import React, { useId, useRef, useState } from 'react';
+import { ReactNode, useId, useRef, useState } from 'react';
 import { Project, ProjectStatus } from '../types';
 import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wrench, Award, Copy, Check, BookOpen, ChevronLeft, ChevronRight, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import InteractiveText from './InteractiveText';
@@ -231,16 +231,15 @@ function HardwareStepsList({ steps }: HardwareStepsListProps) {
       {/* Step items */}
       <div className="space-y-2 mt-4">
         {steps.map((step, i) => (
-          <React.Fragment key={i}>
-            <HardwareStepItem
-              step={step}
-              index={i}
-              isOpen={openSteps.has(i)}
-              isDone={doneSteps.has(i)}
-              onToggleOpen={() => toggleOpen(i)}
-              onToggleDone={() => toggleDone(i)}
-            />
-          </React.Fragment>
+          <HardwareStepItem
+            key={i}
+            step={step}
+            index={i}
+            isOpen={openSteps.has(i)}
+            isDone={doneSteps.has(i)}
+            onToggleOpen={() => toggleOpen(i)}
+            onToggleDone={() => toggleDone(i)}
+          />
         ))}
       </div>
     </div>
@@ -250,8 +249,8 @@ function HardwareStepsList({ steps }: HardwareStepsListProps) {
 // ── Collapsible item (code walkthrough + troubleshooting) ─────────────────────
 
 interface CollapsibleItemProps {
-  header: React.ReactNode;
-  children: React.ReactNode;
+  header: ReactNode;
+  children: ReactNode;
   defaultOpen?: boolean;
   accentColor?: string;
 }
@@ -334,7 +333,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
   };
 
   const handleGetHelp = () => {
-    // Find troubleshooting page (last page with 'p1-troubleshooting' id)
+    // Find the first page whose id includes 'troubleshooting'
     if (hasPages) {
       const troubleshootingPageIndex = content.pages!.findIndex(
         page => page.id.includes('troubleshooting')
@@ -372,7 +371,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
         {/* Page indicator for multi-page projects */}
         {hasPages && (
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <span>📄 Page {currentPageIndex + 1} of {content.pages!.length}: {currentPage!.title}</span>
+            <span><span aria-hidden="true">📄</span> Page {currentPageIndex + 1} of {content.pages!.length}: {currentPage!.title}</span>
           </div>
         )}
         
@@ -391,51 +390,6 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           </div>
         </div>
 
-        {/* Top Page Navigation */}
-        {hasPages && content.pages && content.pages.length > 1 && (
-          <div className="flex items-center justify-between gap-4 pt-4">
-            <button
-              onClick={handlePreviousPage}
-              disabled={currentPageIndex === 0}
-              className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
-                currentPageIndex === 0
-                  ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
-                  : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
-              }`}
-            >
-              <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Previous</span>
-              <span className="sm:hidden">Prev</span>
-            </button>
-
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              {content.pages.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentPageIndex(index)}
-                  className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
-                    index === currentPageIndex ? 'bg-emerald-400' : 'bg-slate-600 hover:bg-slate-500'
-                  }`}
-                  title={`Go to page ${index + 1}: ${content.pages![index].title}`}
-                  aria-label={`Go to page ${index + 1}: ${content.pages![index].title}`}
-                />
-              ))}
-            </div>
-
-            <button
-              onClick={handleNextPage}
-              disabled={currentPageIndex === content.pages.length - 1}
-              className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
-                currentPageIndex === content.pages.length - 1
-                  ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
-                  : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
-              }`}
-            >
-              Next
-              <ChevronRight size={18} className="sm:w-5 sm:h-5" />
-            </button>
-          </div>
-        )}
       </header>
 
       {/* Overview */}
@@ -488,11 +442,10 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           )}
 
           <div className="bg-slate-800/50 rounded-2xl p-4 sm:p-8 shadow-sm border border-slate-700">
-            <React.Fragment key={`${project.id}-${currentPageIndex}`}>
-              <HardwareStepsList
-                steps={currentContent.hardwareSetup.steps}
-              />
-            </React.Fragment>
+            <HardwareStepsList
+              key={`${project.id}-${currentPageIndex}`}
+              steps={currentContent.hardwareSetup.steps}
+            />
             {currentContent.hardwareSetup.explanation && (
               <div className="mt-6 pt-6 border-t border-slate-700">
                 <p className="text-sm text-slate-400 italic">
@@ -539,17 +492,16 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           </h2>
           <div className="space-y-2">
             {currentContent.codeWalkthrough.map((item, i) => (
-              <React.Fragment key={`${project.id}-${currentPageIndex}-${i}-${item.section}`}>
-                <CollapsibleItem
-                  header={
-                    <span className="font-mono text-xs sm:text-sm font-semibold text-blue-300 bg-blue-900/50 px-2 py-1 rounded border border-blue-700">
-                      {item.section}
-                    </span>
-                  }
-                >
-                  <InteractiveText text={item.explanation} dictionary={dictionary} />
-                </CollapsibleItem>
-              </React.Fragment>
+              <CollapsibleItem
+                key={`${project.id}-${currentPageIndex}-${i}-${item.section}`}
+                header={
+                  <span className="font-mono text-xs sm:text-sm font-semibold text-blue-300 bg-blue-900/50 px-2 py-1 rounded border border-blue-700">
+                    {item.section}
+                  </span>
+                }
+              >
+                <InteractiveText text={item.explanation} dictionary={dictionary} />
+              </CollapsibleItem>
             ))}
           </div>
         </section>
@@ -625,14 +577,13 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           <p className="text-xs text-slate-500 mb-5">Click a problem to reveal the solution.</p>
           <div className="space-y-2">
             {currentContent.troubleshooting.map((item, i) => (
-              <React.Fragment key={`${project.id}-${currentPageIndex}-${i}-${item.issue}`}>
-                <CollapsibleItem
-                  header={<InteractiveText text={item.issue} dictionary={dictionary} />}
-                  accentColor="text-rose-400"
-                >
-                  <InteractiveText text={item.solution} dictionary={dictionary} />
-                </CollapsibleItem>
-              </React.Fragment>
+              <CollapsibleItem
+                key={`${project.id}-${currentPageIndex}-${i}-${item.issue}`}
+                header={<InteractiveText text={item.issue} dictionary={dictionary} />}
+                accentColor="text-rose-400"
+              >
+                <InteractiveText text={item.solution} dictionary={dictionary} />
+              </CollapsibleItem>
             ))}
           </div>
         </section>

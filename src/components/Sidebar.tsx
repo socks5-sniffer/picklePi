@@ -69,40 +69,40 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
         <div className={`${isCollapsed ? 'px-2' : 'px-4'} mb-6 space-y-1`}>
           <button
             onClick={() => handleTabChange('home')}
+            aria-label="Home"
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'home' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
-            title={isCollapsed ? 'Home' : undefined}
           >
             <Home size={18} />
             {!isCollapsed && <span className="font-medium">Home</span>}
           </button>
-          <button 
+          <button
             onClick={() => handleTabChange('progress')}
+            aria-label="Progress Tracker"
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'progress' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
-            title={isCollapsed ? 'Progress Tracker' : undefined}
           >
             <LayoutDashboard size={18} />
             {!isCollapsed && <span className="font-medium">Progress Tracker</span>}
           </button>
-          <button 
+          <button
             onClick={() => handleTabChange('notebook')}
+            aria-label="Lab Notebook"
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'notebook' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
-            title={isCollapsed ? 'Lab Notebook' : undefined}
           >
             <NotebookPen size={18} />
             {!isCollapsed && <span className="font-medium">Lab Notebook</span>}
           </button>
-          <button 
+          <button
             onClick={() => handleTabChange('dictionary')}
+            aria-label="Dictionary"
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'dictionary' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
-            title={isCollapsed ? 'Dictionary' : undefined}
           >
             <BookMarked size={18} />
             {!isCollapsed && <span className="font-medium">Dictionary</span>}
           </button>
           <button
             onClick={() => handleTabChange('pinout')}
+            aria-label="GPIO Pinout"
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'pinout' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'}`}
-            title={isCollapsed ? 'GPIO Pinout' : undefined}
           >
             <Cpu size={18} />
             {!isCollapsed && <span className="font-medium">GPIO Pinout</span>}
@@ -165,25 +165,26 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
         </div>
       </div>
 
-      {progress.badges.length > 0 && !isCollapsed && (
-        <div className="p-6 border-t border-slate-800 bg-slate-900/50">
-          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Award size={14} />
-            Earned Badges
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {progress.badges.map(badge => (
-              <span key={badge} className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-400/10 text-emerald-400 border border-emerald-400/20">
-                {badge}
-              </span>
-            ))}
+      {progress.badges.length > 0 && (
+        isCollapsed ? (
+          <div className="p-4 border-t border-slate-800 bg-slate-900/50 flex justify-center">
+            <Award size={18} className="text-emerald-400" />
           </div>
-        </div>
-      )}
-      {progress.badges.length > 0 && isCollapsed && (
-        <div className="p-4 border-t border-slate-800 bg-slate-900/50 flex justify-center">
-          <Award size={18} className="text-emerald-400" />
-        </div>
+        ) : (
+          <div className="p-6 border-t border-slate-800 bg-slate-900/50">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Award size={14} />
+              Earned Badges
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {progress.badges.map(badge => (
+                <span key={badge} className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-400/10 text-emerald-400 border border-emerald-400/20">
+                  {badge}
+                </span>
+              ))}
+            </div>
+          </div>
+        )
       )}
       </div>
     </>
