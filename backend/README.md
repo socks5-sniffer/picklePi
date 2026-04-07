@@ -58,7 +58,7 @@ cd backend
 python app.py
 ```
 
-The API will be available at `http://localhost:5000` by default. The Vite dev server already proxies `/api` requests to `http://localhost:3001` — update `vite.config.ts` if you change the Flask port.
+The API will be available at `http://localhost:3001` by default — matching the `/api` proxy already configured in `vite.config.ts`.
 
 ## Security
 
