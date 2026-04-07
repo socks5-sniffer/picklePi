@@ -156,7 +156,7 @@ Conventional commit prefixes: `feat`, `fix`, `docs`, `style`, `refactor`, `test`
 
 ## 🔄 Pull Request Process
 
-This project includes a [pull request template](./.github/PULL_REQUEST_TEMPLATE.md) — it will be pre-filled when you open a PR. Please complete all sections.
+This project includes a [pull request template](./.github/PULL_REQUEST_TEMPLATE.md) that will be pre-filled when you open a PR. Please complete all sections.
 
 1. **Update your fork** with the latest main branch:
    ```bash
@@ -210,17 +210,7 @@ picklePi/
 
 ## 📜 Code of Conduct
 
-### Our Pledge
-
-We are committed to providing a welcoming and inspiring community for all. Please be respectful and considerate in your interactions.
-
-### Expected Behavior
-
-- Be kind and courteous
-- Respect differing viewpoints
-- Accept constructive criticism gracefully
-- Focus on what's best for the community
-- Show empathy towards others
+This project follows the [Contributor Covenant Code of Conduct](./CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behaviour as described in [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
 
 ---
 
