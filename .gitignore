@@ -31,3 +31,9 @@ eslint.config.security.mjs
 .eslintrc.security.json
 # Keep docs directory structure but not necessarily all contents
 !docs/screenshots/.gitkeep
+
+# backend
+backend/logger.py
+backend/app.py
+backend/bouncer.py
+backend/middleware.py

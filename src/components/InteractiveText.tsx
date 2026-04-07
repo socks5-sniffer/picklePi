@@ -5,9 +5,10 @@ import DefinitionModal from './DefinitionModal';
 interface InteractiveTextProps {
   text: string;
   dictionary: DictionaryEntry[];
+  variant?: 'dark' | 'light';
 }
 
-export default function InteractiveText({ text, dictionary }: InteractiveTextProps) {
+export default function InteractiveText({ text, dictionary, variant = 'dark' }: InteractiveTextProps) {
   const [selectedEntry, setSelectedEntry] = useState<DictionaryEntry | null>(null);
 
   // Compiled once per dictionary reference — dictionary is a static module constant
@@ -43,7 +44,10 @@ export default function InteractiveText({ text, dictionary }: InteractiveTextPro
               type="button"
               key={index}
               onClick={() => handleTermClick(part)}
-              className="font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-900/30 hover:bg-emerald-900/50 px-1 py-0.5 rounded-md transition-colors cursor-pointer border-b-2 border-emerald-700/50 hover:border-emerald-600/50"
+              className={variant === 'light'
+                ? 'font-semibold text-amber-900 hover:text-amber-950 bg-amber-200/70 hover:bg-amber-300/80 px-1 py-0.5 rounded-md transition-colors cursor-pointer border-b-2 border-amber-600/60 hover:border-amber-700'
+                : 'dict-term font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-900/30 hover:bg-emerald-900/50 px-1 py-0.5 rounded-md transition-colors cursor-pointer border-b-2 border-emerald-700/50 hover:border-emerald-600/50'
+              }
             >
               {part}
             </button>

@@ -433,7 +433,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
                   <h3 className="text-amber-800 font-bold">Safety Warnings</h3>
                   <ul className="list-disc list-inside text-amber-700 space-y-1 text-sm">
                     {currentContent.hardwareSetup.warnings.map((warning, i) => (
-                      <li key={i}><InteractiveText text={warning} dictionary={dictionary} /></li>
+                      <li key={i}><InteractiveText text={warning} dictionary={dictionary} variant="light" /></li>
                     ))}
                   </ul>
                 </div>
