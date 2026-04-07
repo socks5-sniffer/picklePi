@@ -2,15 +2,23 @@
 """
 picklePi – AI-Driven Scrum Team Orchestration
 ==============================================
-Orchestrates a 3-agent Scrum team using CrewAI:
+Orchestrates a 5-agent Scrum team using CrewAI:
 
-  1. Product Owner  – manages the backlog and writes secure, hardware-focused
-                      user stories for the picklePi curriculum.
-  2. Lead Developer – implements Python / PHP code for Raspberry Pi GPIO and
-                      the web interface using strict secure-coding patterns.
-  3. Security Auditor – reviews all output for OWASP vulnerabilities, PoLP
+  1. Business Analyst – translates raw ideas into structured, dev-ready
+                        requirements; writes user stories and acceptance
+                        criteria; surfaces edge cases before dev starts.
+  2. Product Owner    – manages the backlog and prioritises sprint-ready user
+                        stories for the picklePi curriculum.
+  3. Lead Developer   – implements Python / PHP code for Raspberry Pi GPIO and
+                        the web interface using strict secure-coding patterns.
+  4. Security Auditor – reviews all output for OWASP vulnerabilities, PoLP
                         violations, and unsafe patterns (e.g. eval(), missing
                         error handling).
+  5. Scrum Master     – guards the Agile process; produces a sprint
+                        retrospective that captures blockers, process
+                        improvements, and next-sprint recommendations.
+
+Workflow: BA refines → PO prioritises → Dev implements → QA reviews → SM retrospective
 
 Usage
 -----
@@ -192,6 +200,26 @@ lead_developer = Agent(
     allow_delegation=False,
 )
 
+business_analyst = Agent(
+    role="Business Analyst",
+    goal=(
+        "Translate raw picklePi feature ideas into structured, unambiguous, "
+        "dev-ready requirements. Write clear user stories with acceptance criteria, "
+        "identify edge cases, and ensure every requirement is testable and "
+        "actionable before it reaches the Product Owner or Developer."
+    ),
+    backstory=(
+        "You are a meticulous Business Analyst with experience bridging the gap "
+        "between stakeholders and engineering teams on hardware education projects. "
+        "You ask the questions developers forget to ask – 'What happens if the GPIO "
+        "pin is already in use?', 'Which user personas are affected?', 'What's the "
+        "failure mode?' – and you turn ambiguous ideas into crisp, reviewable "
+        "specifications that leave no room for misinterpretation."
+    ),
+    verbose=True,
+    allow_delegation=False,
+)
+
 security_auditor = Agent(
     role="Security Auditor",
     goal=(
@@ -210,9 +238,52 @@ security_auditor = Agent(
     allow_delegation=False,
 )
 
+scrum_master = Agent(
+    role="Scrum Master",
+    goal=(
+        "Guard the Agile process for the picklePi team. After each sprint, produce "
+        "a structured retrospective that captures what went well, what was blocked, "
+        "process improvements for the next sprint, and a prioritised list of "
+        "follow-up actions."
+    ),
+    backstory=(
+        "You are a Certified Scrum Master who has facilitated dozens of embedded-"
+        "systems sprints. You keep the team focused, surface blockers early, and "
+        "ensure every sprint ends with actionable retrospective notes. You care "
+        "deeply about continuous improvement and making the next sprint run more "
+        "smoothly than the last."
+    ),
+    verbose=True,
+    allow_delegation=False,
+)
+
 # ---------------------------------------------------------------------------
 # Tasks
 # ---------------------------------------------------------------------------
+
+task_refine_requirements = Task(
+    description=(
+        "A new picklePi curriculum feature idea has arrived. Your job is to "
+        "transform it into a structured requirements document before it reaches "
+        "the Product Owner. You must:\n"
+        "  1. Identify the target user persona(s) (student, teacher, maker, etc.).\n"
+        "  2. Write at least one user story per persona using the format:\n"
+        "     'As a [persona], I want [feature] so that [benefit].'\n"
+        "  3. Define a minimum of 3 acceptance criteria per user story.\n"
+        "  4. List at least 3 edge cases or clarifying questions that must be "
+        "     answered before development begins.\n"
+        "  5. Flag any ambiguities, missing constraints, or hardware safety "
+        "     considerations (e.g. GPIO voltage limits, concurrent pin access).\n"
+        "  6. Confirm that every requirement is testable and unambiguous.\n"
+        "Deliver a structured requirements document ready for Product Owner review."
+    ),
+    expected_output=(
+        "A structured requirements document containing user stories with acceptance "
+        "criteria, a list of edge cases and clarifying questions, flagged "
+        "ambiguities, and hardware safety notes."
+    ),
+    agent=business_analyst,
+)
 
 task_create_user_story = Task(
     description=(
@@ -230,6 +301,7 @@ task_create_user_story = Task(
         "GPIO details, security notes, and learning objectives."
     ),
     agent=product_owner,
+    context=[task_refine_requirements],
 )
 
 task_implement_feature = Task(
@@ -275,13 +347,43 @@ task_security_audit = Task(
     context=[task_implement_feature],
 )
 
+task_sprint_retrospective = Task(
+    description=(
+        "The sprint has completed. Review the outputs from the Business Analyst, "
+        "Product Owner, Lead Developer, and Security Auditor, then produce a "
+        "sprint retrospective. You must:\n"
+        "  1. Summarise what went well (process strengths, quality wins).\n"
+        "  2. Identify what was blocked or slowed down (bottlenecks, unclear "
+        "     requirements, security findings that required rework).\n"
+        "  3. Propose at least 3 concrete process improvements for the next sprint.\n"
+        "  4. List prioritised follow-up action items with a suggested owner "
+        "     (BA, PO, Dev, or Security Auditor) for each.\n"
+        "  5. Confirm whether the sprint goal was met and whether the delivered "
+        "     feature is ready for the picklePi curriculum.\n"
+        "Deliver the retrospective as a structured, actionable report."
+    ),
+    expected_output=(
+        "A structured sprint retrospective report with sections for: went well, "
+        "blockers, process improvements, prioritised action items (with owners), "
+        "and a sprint-goal verdict."
+    ),
+    agent=scrum_master,
+    context=[task_refine_requirements, task_create_user_story, task_implement_feature, task_security_audit],
+)
+
 # ---------------------------------------------------------------------------
 # Crew
 # ---------------------------------------------------------------------------
 
 scrum_crew = Crew(
-    agents=[product_owner, lead_developer, security_auditor],
-    tasks=[task_create_user_story, task_implement_feature, task_security_audit],
+    agents=[business_analyst, product_owner, lead_developer, security_auditor, scrum_master],
+    tasks=[
+        task_refine_requirements,
+        task_create_user_story,
+        task_implement_feature,
+        task_security_audit,
+        task_sprint_retrospective,
+    ],
     verbose=True,
 )
 
@@ -323,6 +425,11 @@ def main() -> None:
         "audit_verdict": _extract_verdict(str(result)),
         "stories": [
             {
+                "task": _truncate(task_refine_requirements.description),
+                "agent": business_analyst.role,
+                "status": "Done",
+            },
+            {
                 "task": _truncate(task_create_user_story.description),
                 "agent": product_owner.role,
                 "status": "Done",
@@ -335,6 +442,11 @@ def main() -> None:
             {
                 "task": _truncate(task_security_audit.description),
                 "agent": security_auditor.role,
+                "status": "Done",
+            },
+            {
+                "task": _truncate(task_sprint_retrospective.description),
+                "agent": scrum_master.role,
                 "status": "Done",
             },
         ],
