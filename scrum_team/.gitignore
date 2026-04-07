@@ -1,0 +1,18 @@
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+
+# Environment secrets – never commit real credentials
+.env
+
+# Firebase service-account key (contains private credentials)
+*serviceAccountKey*.json
+*.json.secret
+
+# Dependency lock artefacts (optional – uncomment if not pinning)
+# requirements.lock
