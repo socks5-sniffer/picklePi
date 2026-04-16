@@ -1,4 +1,4 @@
-﻿﻿import tailwindcss from '@tailwindcss/vite';
+﻿﻿﻿﻿import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
@@ -15,7 +15,7 @@ export default defineConfig({
     // Proxy /api requests to your upcoming Express/SQLite backend
     proxy: {
       '/api': {
-        target: 'http://localhost:3001', // Your future Express server port
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       },
@@ -25,7 +25,7 @@ export default defineConfig({
     headers: {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws: wss: http: https:; report-uri /api/csp-report",
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.googleusercontent.com; font-src 'self'; connect-src 'self' ws: wss: http: https: https://*.googleapis.com https://*.firebaseio.com; frame-src 'self' https://accounts.google.com https://picklepi-ab14d.firebaseapp.com; report-uri /api/csp-report",
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     },

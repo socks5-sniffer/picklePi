@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%">
+  <defs>
+    <linearGradient id="pickleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ade80;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#15803d;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Angled Pickle Body -->
+  <g transform="translate(128, 128) rotate(25) translate(-128, -128)" filter="url(#shadow)">
+    <!-- Main Capsule Shape -->
+    <rect x="78" y="38" width="100" height="180" rx="50" fill="url(#pickleGradient)" stroke="#14532d" stroke-width="8"/>
+    
+    <!-- Circuit Traces / Pickle Bumps -->
+    <!-- Trace 1 -->
+    <path d="M 128,60 L 128,100 L 158,130 L 158,180" fill="none" stroke="#14532d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="128" cy="60" r="8" fill="#facc15" stroke="#14532d" stroke-width="4"/>
+    <circle cx="158" cy="180" r="8" fill="#facc15" stroke="#14532d" stroke-width="4"/>
+    
+    <!-- Trace 2 -->
+    <path d="M 98,110 L 118,130 L 118,190" fill="none" stroke="#14532d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="98" cy="110" r="8" fill="#facc15" stroke="#14532d" stroke-width="4"/>
+    <circle cx="118" cy="190" r="8" fill="#facc15" stroke="#14532d" stroke-width="4"/>
+    
+    <!-- Trace 3 -->
+    <path d="M 158,70 L 148,80 L 148,100" fill="none" stroke="#14532d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="158" cy="70" r="8" fill="#facc15" stroke="#14532d" stroke-width="4"/>
+    <circle cx="148" cy="100" r="8" fill="#facc15" stroke="#14532d" stroke-width="4"/>
+  </g>
+</svg>

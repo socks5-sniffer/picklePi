@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, LogOut } from 'lucide-react';
 import { curriculum } from './data/curriculum';
 import { Project, UserProgress, LabEntry } from './types';
+import { fetchProgress, saveProgress, createLabEntry } from './lib/api';
+import AuthGate from './components/AuthGate';
+import { type User } from './lib/firebase';
 import Sidebar from './components/Sidebar';
 import ProjectView from './components/ProjectView';
 import ProgressTracker from './components/ProgressTracker';
@@ -18,6 +21,14 @@ const INITIAL_PROGRESS: UserProgress = {
 };
 
 export default function App() {
+  return (
+    <AuthGate>
+      {(user, onSignOut) => <AppShell user={user} onSignOut={onSignOut} />}
+    </AuthGate>
+  );
+}
+
+function AppShell({ user, onSignOut }: { user: User; onSignOut: () => void }) {
   const [activeTab, setActiveTab] = useState<'home' | 'curriculum' | 'progress' | 'notebook' | 'dictionary' | 'pinout'>('home');
   const [activeProjectId, setActiveProjectId] = useState<string>(curriculum[0].id);
   const [progress, setProgress] = useState<UserProgress>(() => {
@@ -128,16 +139,27 @@ export default function App() {
     <div className="flex h-screen bg-[var(--picklePi-bg-app)] text-slate-100 font-sans">
 
       {/* ── Theme toggle button ── fixed top-right, visible in all views ── */}
-      <button
-        onClick={toggleTheme}
-        className="fixed top-4 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-600/60 text-slate-200 text-sm font-medium shadow-lg transition-colors"
-        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      >
-        {isDark
-          ? <Sun  size={16} className="text-amber-400" />
-          : <Moon size={16} className="text-indigo-400" />}
-        <span className="hidden sm:inline select-none">{isDark ? 'Light' : 'Dark'}</span>
-      </button>
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <button
+          onClick={toggleTheme}
+          className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-600/60 text-slate-200 text-sm font-medium shadow-lg transition-colors"
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark
+            ? <Sun  size={16} className="text-amber-400" />
+            : <Moon size={16} className="text-indigo-400" />}
+          <span className="hidden sm:inline select-none">{isDark ? 'Light' : 'Dark'}</span>
+        </button>
+        <button
+          onClick={onSignOut}
+          title={`Sign out (${user.email})`}
+          className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/90 hover:bg-red-900/70 backdrop-blur-sm border border-slate-600/60 text-slate-200 text-sm font-medium shadow-lg transition-colors"
+          aria-label="Sign out"
+        >
+          {user.photoURL && <img src={user.photoURL} className="w-5 h-5 rounded-full" alt="" />}
+          <LogOut size={16} />
+        </button>
+      </div>
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
