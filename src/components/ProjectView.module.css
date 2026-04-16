@@ -1,0 +1,6 @@
+.progress-bar {
+  height: 0.5rem;
+  background-color: #059669; /* emerald-500 */
+  border-radius: 9999px;
+  transition: width 0.5s;
+}

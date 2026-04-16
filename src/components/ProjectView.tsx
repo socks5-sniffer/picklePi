@@ -1,4 +1,6 @@
 import { ReactNode, useId, useRef, useState } from 'react';
+import './ProjectView.module.css';
+import progressWidths from './ProgressWidths.module.css';
 import { Project, ProjectStatus } from '../types';
 import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wrench, Award, Copy, Check, BookOpen, ChevronLeft, ChevronRight, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import InteractiveText from './InteractiveText';
@@ -104,7 +106,7 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
         <button
           onClick={onToggleDone}
           aria-label={isDone ? `Step ${index + 1}: mark as not done` : `Step ${index + 1}: mark as done`}
-          aria-pressed={isDone}
+          aria-pressed={isDone ? 'true' : 'false'}
           className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
             isDone
               ? 'border-emerald-500 bg-emerald-500 text-white'
@@ -119,7 +121,7 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
           id={toggleId}
           className="flex-1 text-left min-w-0"
           onClick={onToggleOpen}
-          aria-expanded={isOpen}
+          aria-expanded={isOpen ? 'true' : 'false'}
           aria-controls={panelId}
         >
           <span className={`text-xs font-bold uppercase tracking-wider ${isDone ? 'text-emerald-500' : 'text-amber-400'}`}>
@@ -135,7 +137,7 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
         {/* Expand chevron */}
         <button
           onClick={onToggleOpen}
-          aria-expanded={isOpen}
+          aria-expanded={isOpen ? 'true' : 'false'}
           aria-controls={panelId}
           aria-label={isOpen ? `Collapse step ${index + 1}` : `Expand step ${index + 1}`}
           className="shrink-0 ml-2 text-slate-500 hover:text-slate-300 transition-colors"
@@ -217,15 +219,17 @@ function HardwareStepsList({ steps }: HardwareStepsListProps) {
       <div
         className="h-2 bg-slate-700 rounded-full overflow-hidden"
         role="progressbar"
-        aria-valuenow={doneCount}
-        aria-valuemin={0}
-        aria-valuemax={total}
+        aria-valuenow={String(doneCount)}
+        aria-valuemin="0"
+        aria-valuemax={String(total)}
         aria-label={`${doneCount} of ${total} steps completed`}
       >
-        <div
-          className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-          style={{ width: `${total > 0 ? (doneCount / total) * 100 : 0}%` }}
-        />
+        {(() => {
+          const percent = total > 0 ? (doneCount / total) * 100 : 0;
+          const rounded = Math.round(percent / 10) * 10;
+          const widthClass = progressWidths["w-" + rounded] || progressWidths["w-0"];
+          return <div className={`progress-bar ${widthClass}`} />;
+        })()}
       </div>
 
       {/* Step items */}
@@ -263,7 +267,7 @@ function CollapsibleItem({ header, children, defaultOpen = false, accentColor = 
       <button
         className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-700/30 transition-colors"
         onClick={() => setOpen(o => !o)}
-        aria-expanded={open}
+        aria-expanded={open ? 'true' : 'false'}
         aria-controls={panelId}
       >
         <span className={`font-medium text-sm sm:text-base ${accentColor}`}>{header}</span>
@@ -272,14 +276,14 @@ function CollapsibleItem({ header, children, defaultOpen = false, accentColor = 
       {open && (
         <div id={panelId} role="region" className="px-4 pb-4 pt-2 border-t border-slate-700/40 text-sm sm:text-base text-slate-300 leading-relaxed">
           {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function ProjectView({ project, status, isLocked, onComplete }: ProjectViewProps) {
-  const [copied, setCopied] = useState(false);
+        <div
+          className="h-2 bg-slate-700 rounded-full overflow-hidden"
+          role="progressbar"
+          aria-valuenow={doneCount.toString()}
+          aria-valuemin="0"
+          aria-valuemax={total.toString()}
+          aria-label={`${doneCount} of ${total} steps completed`}
+        >
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -443,7 +447,6 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
 
           <div className="bg-slate-800/50 rounded-2xl p-4 sm:p-8 shadow-sm border border-slate-700">
             <HardwareStepsList
-              key={`${project.id}-${currentPageIndex}`}
               steps={currentContent.hardwareSetup.steps}
             />
             {currentContent.hardwareSetup.explanation && (
