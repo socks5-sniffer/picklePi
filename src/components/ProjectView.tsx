@@ -104,7 +104,7 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
         <button
           onClick={onToggleDone}
           aria-label={isDone ? `Step ${index + 1}: mark as not done` : `Step ${index + 1}: mark as done`}
-          aria-pressed={isDone}
+          aria-pressed={isDone ? "true" : "false"}
           className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
             isDone
               ? 'border-emerald-500 bg-emerald-500 text-white'
@@ -119,7 +119,7 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
           id={toggleId}
           className="flex-1 text-left min-w-0"
           onClick={onToggleOpen}
-          aria-expanded={isOpen}
+          aria-expanded={isOpen ? "true" : "false"}
           aria-controls={panelId}
         >
           <span className={`text-xs font-bold uppercase tracking-wider ${isDone ? 'text-emerald-500' : 'text-amber-400'}`}>
@@ -135,7 +135,7 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
         {/* Expand chevron */}
         <button
           onClick={onToggleOpen}
-          aria-expanded={isOpen}
+          aria-expanded={isOpen ? "true" : "false"}
           aria-controls={panelId}
           aria-label={isOpen ? `Collapse step ${index + 1}` : `Expand step ${index + 1}`}
           className="shrink-0 ml-2 text-slate-500 hover:text-slate-300 transition-colors"
@@ -217,15 +217,32 @@ function HardwareStepsList({ steps }: HardwareStepsListProps) {
       <div
         className="h-2 bg-slate-700 rounded-full overflow-hidden"
         role="progressbar"
-        aria-valuenow={doneCount}
-        aria-valuemin={0}
-        aria-valuemax={total}
+        aria-valuenow={doneCount.toString()}
+        aria-valuemin="0"
+        aria-valuemax={total.toString()}
         aria-label={`${doneCount} of ${total} steps completed`}
       >
-        <div
-          className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-          style={{ width: `${total > 0 ? (doneCount / total) * 100 : 0}%` }}
-        />
+        {(() => {
+          const percent = total > 0 ? (doneCount / total) : 0;
+          let widthClass = "w-0";
+          if (percent >= 0.99) widthClass = "w-full";
+          else if (percent >= 0.9) widthClass = "w-11/12";
+          else if (percent >= 0.83) widthClass = "w-10/12";
+          else if (percent >= 0.75) widthClass = "w-9/12";
+          else if (percent >= 0.66) widthClass = "w-8/12";
+          else if (percent >= 0.58) widthClass = "w-7/12";
+          else if (percent >= 0.5) widthClass = "w-6/12";
+          else if (percent >= 0.41) widthClass = "w-5/12";
+          else if (percent >= 0.33) widthClass = "w-4/12";
+          else if (percent >= 0.25) widthClass = "w-3/12";
+          else if (percent >= 0.16) widthClass = "w-2/12";
+          else if (percent > 0) widthClass = "w-1/12";
+          return (
+            <div
+              className={`h-full bg-emerald-500 rounded-full transition-all duration-500 ${widthClass}`}
+            />
+          );
+        })()}
       </div>
 
       {/* Step items */}
@@ -263,7 +280,7 @@ function CollapsibleItem({ header, children, defaultOpen = false, accentColor = 
       <button
         className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-700/30 transition-colors"
         onClick={() => setOpen(o => !o)}
-        aria-expanded={open}
+        aria-expanded={open ? "true" : "false"}
         aria-controls={panelId}
       >
         <span className={`font-medium text-sm sm:text-base ${accentColor}`}>{header}</span>
