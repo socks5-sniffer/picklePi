@@ -35,7 +35,7 @@
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
     "firebase": "^12.11.0",
-    "lucide-react": "^1.7.0",
+    "lucide-react": "^1.8.0",
     "motion": "^12.38.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
