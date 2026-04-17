@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { onAuthChanged, signInWithGoogle, signOutUser, handleRedirectResult, type User } from '../lib/firebase';
 
 // ── DEV BYPASS ──────────────────────────────────────────────────────────────
-// Set to true to skip auth and test the app without signing in.
-// Remember to set back to false before committing.
-const DEV_BYPASS_AUTH = true;
+// Only allow the auth bypass in development builds.
+const DEV_BYPASS_AUTH = import.meta.env.DEV;
 const DEV_MOCK_USER = { uid: 'dev-user', email: 'dev@local.test', displayName: 'Dev User' } as User;
 // ────────────────────────────────────────────────────────────────────────────
 
