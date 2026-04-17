@@ -198,9 +198,11 @@ The production build is output to the `dist/` directory. It is a fully static si
 picklePi/
 ├── backend/
 │   ├── app.py                   # Flask application entry point; routes and Firebase init
-│   ├── bouncer.py               # Input sanitization (XSS, path traversal, injection)
-│   ├── middleware.py             # HTTP security headers (HSTS, CSP, X-Frame-Options, etc.)
-│   └── logger.py                # Secure error logging — raw details to file, safe messages to client
+│   ├── bouncer.py               # Input sanitisation (XSS, path traversal, injection)
+│   ├── middleware.py            # HTTP security headers (HSTS, CSP, X-Frame-Options, etc.)
+│   ├── logger.py                # Secure error logging — raw details to file, safe messages to client
+│   ├── requirements.txt         # Python package dependencies
+│   └── .env.example             # Backend environment variable template
 ├── public/
 │   └── images/                  # Static image assets
 ├── src/
@@ -218,6 +220,8 @@ picklePi/
 │   ├── data/
 │   │   ├── curriculum.ts         # All 13 projects: content, code, walkthroughs
 │   │   └── dictionary.ts         # 100+ glossary entries (Python, RPi, Electronics)
+│   ├── lib/
+│   │   └── api.ts                # Fetch wrapper for all backend API endpoints
 │   ├── types.ts                  # Shared TypeScript interfaces
 │   ├── App.tsx                   # Root component; routing, state, persistence
 │   ├── main.tsx                  # React entry point
@@ -235,16 +239,18 @@ picklePi/
 
 ---
 
-## � Backend
+## 🐍 Backend
 
-The backend is a **Flask (Python)** application that provides a secure REST API for authentication and persistent data storage. It is designed to work with the React frontend and is found in a seperate repo (upon request). The backend is optional for local development — the frontend runs fully standalone using `localStorage` for progress persistence. The Flask API is only required if you want server-side user accounts, token verification, or cloud-synced progress via Firestore.
+The backend is a **Flask (Python)** application that provides a secure REST API for authentication and persistent data storage. It is designed to work with the React frontend and lives in the `backend/` directory. See [`backend/README.md`](backend/README.md) for full setup instructions.
+
+> **The backend is optional for local development.** The frontend runs fully standalone using `localStorage` for progress persistence. The Flask API is only required if you want server-side user accounts, token verification, or cloud-synced progress via Firestore.
 
 ### Key Files
 
 | File | Role |
 |------|------|
-| `app.py` | Application entry point — initializes Firebase Admin SDK, registers routes, and wires up all middleware |
-| `bouncer.py` | Input sanitization layer — strips HTML/XSS payloads, blocks path traversal in filenames, and validates numeric inputs before any data is processed |
+| `app.py` | Application entry point — initialises Firebase Admin SDK, registers routes, and wires up all middleware |
+| `bouncer.py` | Input sanitisation layer — strips HTML/XSS payloads, blocks path traversal in filenames, and validates numeric inputs before any data is processed |
 | `middleware.py` | Attaches a full suite of HTTP security headers (`Strict-Transport-Security`, `X-Frame-Options`, `Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`) to every response |
 | `logger.py` | Secure error logger — writes detailed error information to `app.log`, never to the HTTP response, so stack traces and internal state are never leaked to clients |
 
@@ -253,35 +259,22 @@ The backend is a **Flask (Python)** application that provides a secure REST API 
 | Method | Route | Description |
 |--------|-------|-------------|
 | `GET` | `/api/status` | Health check — returns `{"status": "online", "secure": true}` |
-| `POST` | `/api/login` | Accepts a username, sanitizes input via `Bouncer`, and authenticates the user |
+| `POST` | `/api/login` | Accepts a username, sanitises input via `bouncer.py`, and authenticates the user |
 | `POST` | `/api/verify-token` | Validates a Firebase ID token and returns user identity |
+| `GET` | `/api/progress/:userId` | Fetches a user's full progress object |
+| `PUT` | `/api/progress/:userId` | Persists a user's progress object |
+| `POST` | `/api/progress/:userId/notebook` | Creates a new lab notebook entry |
+| `DELETE` | `/api/progress/:userId/notebook/:entryId` | Deletes a lab notebook entry |
+| `GET` | `/api/curriculum` | Serves the full curriculum JSON |
+| `GET` | `/api/dictionary` | Serves the full dictionary JSON |
 
-### Running the Backend
+### Frontend API Client
 
-1. **Install Python dependencies**
-
-   ```bash
-   pip install flask flask-cors firebase-admin bleach
-   ```
-
-2. **Add your Firebase service account key**
-
-   Place your `firebase-secret.json` file in the `backend/` directory. (Do **not** commit this file — it is already covered by `.gitignore`.)
-
-3. **Start the server**
-
-   ```bash
-   cd backend
-   python app.py
-   ```
-
-   The API will be available at `http://localhost:5000` by default.
-
-> **Note:** The backend is optional for local development. The frontend runs fully standalone using `localStorage` for progress persistence. The Flask API is only required if you want server-side user accounts, token verification, or cloud-synced progress via Firestore.
+`src/lib/api.ts` provides typed wrappers around every endpoint. All calls fail silently — if the backend is unavailable, `localStorage` continues to handle persistence automatically.
 
 ---
 
-## �🛠️ Tech Stack
+## 🛠️ Tech Stack
 
 | Technology | Version | Role |
 |------------|---------|------|
