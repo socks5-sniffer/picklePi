@@ -485,6 +485,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 - The [gpiozero](https://gpiozero.readthedocs.io/) team for an outstanding Python GPIO library that makes hardware fun
 - The open-source community behind React, Vite, TypeScript, and Tailwind CSS
 - All contributors who help make this project better
+- AI coding assistants for helping bring this project to life
 - Every kid who ever asked "but *why* does it blink?" — this one's for you 🥒⚡
 
 ---
@@ -493,7 +494,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 **Made with 🥒 for makers, students, and curious minds everywhere**
 
-*Go build something awesome. Seriously, what are you still reading for?*
+*Built with AI assistance — Go build something awesome. Seriously, what are you still reading for?*
 
 [⬆ Back to Top](#-picklePi)
 
