@@ -1,4 +1,4 @@
-import { ReactNode, useId, useRef, useState } from 'react';
+import { Key, ReactNode, useId, useRef, useState } from 'react';
 import { Project, ProjectStatus } from '../types';
 import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wrench, Award, Copy, Check, BookOpen, ChevronLeft, ChevronRight, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import InteractiveText from './InteractiveText';
@@ -84,6 +84,7 @@ function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, 
 // ── Hardware Step Accordion ──────────────────────────────────────────────────
 
 interface HardwareStepItemProps {
+  key?: Key;
   step: string;
   index: number;
   isOpen: boolean;
@@ -166,6 +167,7 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
 }
 
 interface HardwareStepsListProps {
+  key?: Key;
   steps: string[];
 }
 
@@ -266,6 +268,7 @@ function HardwareStepsList({ steps }: HardwareStepsListProps) {
 // ── Collapsible item (code walkthrough + troubleshooting) ─────────────────────
 
 interface CollapsibleItemProps {
+  key?: Key;
   header: ReactNode;
   children: ReactNode;
   defaultOpen?: boolean;
