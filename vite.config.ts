@@ -4,8 +4,8 @@ import path from 'path';
 import {defineConfig} from 'vite';
 import mkcert from 'vite-plugin-mkcert';
 
-export default defineConfig({
-  plugins: [react(), tailwindcss(), mkcert()],
+export default defineConfig(({ command }) => ({
+  plugins: [react(), tailwindcss(), ...(command === 'serve' ? [mkcert()] : [])],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
@@ -34,4 +34,4 @@ export default defineConfig({
     // Prevents source maps from leaking frontend source code to the public
     sourcemap: false, 
   }
-});
+}));
