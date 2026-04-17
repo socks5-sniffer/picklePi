@@ -103,8 +103,8 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
         {/* Circular checkbox */}
         <button
           onClick={onToggleDone}
-          aria-label={isDone ? `Step ${index + 1}: mark as not done` : `Step ${index + 1}: mark as done`}
-          aria-pressed={isDone ? "true" : "false"}
+          aria-label="Toggle step done"
+          aria-pressed="false"
           className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
             isDone
               ? 'border-emerald-500 bg-emerald-500 text-white'
@@ -119,7 +119,7 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
           id={toggleId}
           className="flex-1 text-left min-w-0"
           onClick={onToggleOpen}
-          aria-expanded={isOpen ? "true" : "false"}
+          aria-expanded="false"
           aria-controls={panelId}
         >
           <span className={`text-xs font-bold uppercase tracking-wider ${isDone ? 'text-emerald-500' : 'text-amber-400'}`}>
@@ -135,9 +135,9 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
         {/* Expand chevron */}
         <button
           onClick={onToggleOpen}
-          aria-expanded={isOpen ? "true" : "false"}
+          aria-expanded="false"
           aria-controls={panelId}
-          aria-label={isOpen ? `Collapse step ${index + 1}` : `Expand step ${index + 1}`}
+          aria-label="Toggle step details"
           className="shrink-0 ml-2 text-slate-500 hover:text-slate-300 transition-colors"
         >
           {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -217,10 +217,10 @@ function HardwareStepsList({ steps }: HardwareStepsListProps) {
       <div
         className="h-2 bg-slate-700 rounded-full overflow-hidden"
         role="progressbar"
-        aria-valuenow={doneCount.toString()}
+        aria-valuenow="0"
         aria-valuemin="0"
-        aria-valuemax={total.toString()}
-        aria-label={`${doneCount} of ${total} steps completed`}
+        aria-valuemax="0"
+        aria-label="Progress bar"
       >
         {(() => {
           const percent = total > 0 ? (doneCount / total) : 0;
@@ -280,7 +280,7 @@ function CollapsibleItem({ header, children, defaultOpen = false, accentColor = 
       <button
         className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-700/30 transition-colors"
         onClick={() => setOpen(o => !o)}
-        aria-expanded={open ? "true" : "false"}
+        aria-expanded="false"
         aria-controls={panelId}
       >
         <span className={`font-medium text-sm sm:text-base ${accentColor}`}>{header}</span>
