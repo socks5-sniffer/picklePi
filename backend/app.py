@@ -1,12 +1,29 @@
+import os
 import firebase_admin
 from firebase_admin import credentials, auth, firestore # <--- Add firestore
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from config import Config
 from bouncer import Bouncer
 from middleware import SecurityHeaders
 from logger import TattleTale
 
+
+class Config:
+    """
+    Local fallback configuration used by this module so the backend
+    can start even when no separate config.py file is present.
+    """
+
+    FLASK_ENV = os.getenv("FLASK_ENV", "production")
+
+    @classmethod
+    def validate(cls):
+        allowed_envs = {"development", "production", "testing"}
+        if cls.FLASK_ENV not in allowed_envs:
+            raise ValueError(
+                f"Invalid FLASK_ENV '{cls.FLASK_ENV}'. "
+                f"Expected one of: {', '.join(sorted(allowed_envs))}"
+            )
 # Initialize Firebase Admin SDK
 # (Make sure firebase-secret.json is in the same folder!)
 try:
