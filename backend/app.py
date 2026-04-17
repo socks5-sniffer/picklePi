@@ -38,9 +38,9 @@ except Exception as e:
 app = Flask(__name__)
 
 # 2. Enable CORS (Allow Faithville Frontend to talk to us)
-# --- THE FIX: ALLOW EVERYTHING ---
-# This tells the browser "Yes, I accept requests from anywhere, with any header."
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+# Allow cross-origin requests, but do not permit credentials from every origin.
+# If credentialed cross-origin requests are needed later, replace "*" with a trusted origin allowlist.
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=False)
 
 # 3. Security Check (The Pre-Flight)
 try:
