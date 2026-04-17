@@ -32,8 +32,10 @@ export async function signInWithGoogle(): Promise<void> {
   } catch (e: unknown) {
     const code = (e as { code?: string }).code;
     // Only fall back to redirect if the popup was actually blocked
-    if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user') {
+    if (code === 'auth/popup-blocked') {
       await signInWithRedirect(auth, googleProvider);
+    } else if (code === 'auth/popup-closed-by-user') {
+      throw new Error('Google sign-in was cancelled. Please try again if you want to continue.');
     } else {
       throw e;
     }
