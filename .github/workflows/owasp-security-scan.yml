@@ -31,7 +31,7 @@ jobs:
 
       # A06:2021 – Vulnerable and Outdated Components
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run npm audit
         run: npm audit --audit-level=moderate
@@ -91,7 +91,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       # A03:2021 – Injection
       # A01:2021 – Broken Access Control
@@ -169,7 +169,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       # A05:2021 – Security Misconfiguration
       # A01:2021 – Broken Access Control
@@ -248,7 +248,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       # A04:2021 – Insecure Design
       # Type safety helps prevent many security issues
