@@ -142,8 +142,9 @@ def verify_token():
         }), 200
 
     except Exception as e:
-        print(f"⛔ ACCESS DENIED: {e}")
-        return jsonify({"error": str(e)}), 401
+        TattleTale.record_error(f"Token verification failed: {e}", "AUTH")
+        print("⛔ ACCESS DENIED: Invalid token")
+        return jsonify({"error": "Invalid token"}), 401
 @app.route('/api/missions', methods=['GET', 'OPTIONS'])
 def get_missions():
     # 1. CORS Pre-Flight
