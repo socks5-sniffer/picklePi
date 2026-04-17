@@ -5,13 +5,15 @@ const USER_ID = 'default';
 
 async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
   const token = await getIdToken();
+  const headers = new Headers(options?.headers);
+  headers.set('Content-Type', 'application/json');
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
   return fetch(`/api${path}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options?.headers,
-    },
+    headers,
   });
 }
 
