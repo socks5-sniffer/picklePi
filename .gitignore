@@ -42,5 +42,5 @@ backend/.env
 backend/__pycache__/
 backend/*.pyc
 
-notes.md
-
+NOTES.md
+SESSION_JOURNAL.md
