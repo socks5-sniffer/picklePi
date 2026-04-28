@@ -45,7 +45,7 @@
     "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@typescript-eslint/parser": "^8.57.2",
+    "@typescript-eslint/parser": "^8.59.1",
     "@vitejs/plugin-basic-ssl": "^2.2.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^10.2.0",
