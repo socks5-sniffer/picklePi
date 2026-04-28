@@ -41,3 +41,6 @@ backend/firebase-secret.json
 backend/.env
 backend/__pycache__/
 backend/*.pyc
+
+notes.md
+
