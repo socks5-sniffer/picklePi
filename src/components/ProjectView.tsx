@@ -201,9 +201,12 @@ function HardwareStepsList({ steps }: HardwareStepsListProps) {
     });
   };
 
-  const doneCount = doneSteps.size;
-  const total = steps.length;
-  const allDone = doneCount === total;
+  // Ensure doneCount and total are always numbers
+  const doneCountRaw = doneSteps?.size;
+  const totalRaw = steps?.length;
+  const doneCount = typeof doneCountRaw === 'number' && !isNaN(doneCountRaw) ? doneCountRaw : 0;
+  const total = typeof totalRaw === 'number' && !isNaN(totalRaw) ? totalRaw : 0;
+  const allDone = doneCount === total && total > 0;
 
   return (
     <div className="space-y-3">
@@ -219,9 +222,9 @@ function HardwareStepsList({ steps }: HardwareStepsListProps) {
       <div
         className="h-2 bg-slate-700 rounded-full overflow-hidden"
         role="progressbar"
-        aria-valuenow="0"
-        aria-valuemin="0"
-        aria-valuemax="0"
+        aria-valuenow={doneCount}
+        aria-valuemin={0}
+        aria-valuemax={total}
         aria-label="Progress bar"
       >
         {(() => {
