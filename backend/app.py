@@ -150,8 +150,11 @@ def login():
         return jsonify({'error': 'Invalid username. Use only letters, digits, hyphens, and underscores.'}), 400
 
     try:
+        # Use the sanitised username directly as the Firebase UID.
+        # Simple deployments treat username == UID for custom-token issuance.
+        # More complex deployments should look up or create a Firebase user
+        # record first and pass that record's uid here instead.
         raw_token = firebase_auth.create_custom_token(username)
-        # Firebase SDK may return bytes or str depending on the SDK version.
         token_str = raw_token.decode('utf-8') if isinstance(raw_token, bytes) else str(raw_token)
         return jsonify({'token': token_str})
     except Exception as exc:

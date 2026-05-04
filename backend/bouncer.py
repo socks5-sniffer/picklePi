@@ -117,7 +117,9 @@ def sanitise_filename(value: object) -> str:
 
     # Reject any input that contains path-traversal or separator characters
     # before calling basename — this is the primary traversal guard.
-    if '..' in raw or '/' in raw or '\\' in raw or os.sep in raw:
+    # Both '/' and '\\' are checked explicitly because on Windows os.sep is '\\'
+    # but Python also accepts '/' as a path separator, so both must be blocked.
+    if '..' in raw or '/' in raw or '\\' in raw:
         raise ValueError('Invalid or unsafe filename.')
 
     base = os.path.basename(raw)
