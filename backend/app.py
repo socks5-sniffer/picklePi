@@ -10,10 +10,9 @@ The server binds to the port defined by the ``FLASK_PORT`` environment
 variable (default 3001) so it matches the ``/api`` proxy in ``vite.config.ts``.
 """
 
-import json
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 import firebase_admin
 from firebase_admin import auth as firebase_auth
@@ -30,6 +29,10 @@ from bouncer import (
 )
 from logger import log_error, log_info, log_warning
 from middleware import apply_security_headers
+
+# ── Constants ──────────────────────────────────────────────────────────────
+
+_INTERNAL_ERROR_MSG = 'An internal error occurred. Please try again later.'
 
 # ── Firebase Admin SDK ─────────────────────────────────────────────────────
 
@@ -80,7 +83,7 @@ def _verify_token(token: str | None) -> str | None:
         decoded = firebase_auth.verify_id_token(token)
         return decoded['uid']
     except Exception as exc:
-        log_warning(f'Token verification failed: {exc}')
+        log_warning(f'Token verification failed: {type(exc).__name__}')
         return None
 
 
@@ -143,16 +146,17 @@ def login():
     try:
         username = sanitise_username(data.get('username', ''))
     except (TypeError, ValueError) as exc:
-        return jsonify({'error': str(exc)}), 400
+        log_warning(f'login: invalid username — {type(exc).__name__}')
+        return jsonify({'error': 'Invalid username. Use only letters, digits, hyphens, and underscores.'}), 400
 
     try:
-        # Use the username as the uid for simplicity; real deployments would
-        # look up or create a user record in Firestore first.
-        custom_token = firebase_auth.create_custom_token(username)
-        return jsonify({'token': custom_token.decode('utf-8') if isinstance(custom_token, bytes) else custom_token})
+        raw_token = firebase_auth.create_custom_token(username)
+        # Firebase SDK may return bytes or str depending on the SDK version.
+        token_str = raw_token.decode('utf-8') if isinstance(raw_token, bytes) else str(raw_token)
+        return jsonify({'token': token_str})
     except Exception as exc:
-        safe_msg = log_error(exc, 'login')
-        return jsonify({'error': safe_msg}), 500
+        log_error(exc, 'login')
+        return jsonify({'error': _INTERNAL_ERROR_MSG}), 500
 
 
 @app.post('/api/verify-token')
@@ -172,8 +176,8 @@ def verify_token():
     except firebase_auth.InvalidIdTokenError:
         return jsonify({'error': 'Invalid or expired token.'}), 401
     except Exception as exc:
-        safe_msg = log_error(exc, 'verify-token')
-        return jsonify({'error': safe_msg}), 500
+        log_error(exc, 'verify-token')
+        return jsonify({'error': _INTERNAL_ERROR_MSG}), 500
 
 
 # ── Progress ───────────────────────────────────────────────────────────────
@@ -186,8 +190,8 @@ def get_progress(user_id: str, auth_uid: str):
     """Fetch a user's full progress object from Firestore."""
     try:
         uid = sanitise_user_id(user_id)
-    except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid userId.'}), 400
 
     if uid != auth_uid:
         return jsonify({'error': 'Forbidden.'}), 403
@@ -198,8 +202,8 @@ def get_progress(user_id: str, auth_uid: str):
             return jsonify(None), 404
         return jsonify(doc.to_dict())
     except Exception as exc:
-        safe_msg = log_error(exc, f'get_progress uid={uid}')
-        return jsonify({'error': safe_msg}), 500
+        log_error(exc, f'get_progress uid={uid}')
+        return jsonify({'error': _INTERNAL_ERROR_MSG}), 500
 
 
 @app.put('/api/progress/<user_id>')
@@ -209,8 +213,8 @@ def save_progress(user_id: str, auth_uid: str):
     """Persist a user's full progress object to Firestore."""
     try:
         uid = sanitise_user_id(user_id)
-    except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid userId.'}), 400
 
     if uid != auth_uid:
         return jsonify({'error': 'Forbidden.'}), 403
@@ -250,8 +254,8 @@ def save_progress(user_id: str, auth_uid: str):
         _db.collection('progress').document(uid).set(payload)
         return jsonify({'ok': True})
     except Exception as exc:
-        safe_msg = log_error(exc, f'save_progress uid={uid}')
-        return jsonify({'error': safe_msg}), 500
+        log_error(exc, f'save_progress uid={uid}')
+        return jsonify({'error': _INTERNAL_ERROR_MSG}), 500
 
 
 # ── Lab Notebook ───────────────────────────────────────────────────────────
@@ -264,8 +268,8 @@ def create_notebook_entry(user_id: str, auth_uid: str):
     """Append a new lab-notebook entry to the user's progress document."""
     try:
         uid = sanitise_user_id(user_id)
-    except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid userId.'}), 400
 
     if uid != auth_uid:
         return jsonify({'error': 'Forbidden.'}), 403
@@ -274,23 +278,23 @@ def create_notebook_entry(user_id: str, auth_uid: str):
     text_fields = ('whatWorked', 'whatDidnt', 'whatChanged', 'oneThingLearned')
     entry: dict = {
         'id': str(uuid.uuid4()),
-        'date': datetime.utcnow().isoformat() + 'Z',
+        'date': datetime.now(timezone.utc).isoformat(),
     }
 
     try:
         entry['projectId'] = sanitise_string(data.get('projectId', ''), 128)
         for field in text_fields:
             entry[field] = sanitise_string(data.get(field, ''), MAX_TEXT_FIELD_LENGTH)
-    except (TypeError, ValueError) as exc:
-        return jsonify({'error': str(exc)}), 400
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid notebook entry data.'}), 400
 
     try:
         doc_ref = _db.collection('progress').document(uid)
         doc_ref.update({'labNotebook': firestore.ArrayUnion([entry])})
         return jsonify(entry), 201
     except Exception as exc:
-        safe_msg = log_error(exc, f'create_notebook_entry uid={uid}')
-        return jsonify({'error': safe_msg}), 500
+        log_error(exc, f'create_notebook_entry uid={uid}')
+        return jsonify({'error': _INTERNAL_ERROR_MSG}), 500
 
 
 @app.delete('/api/progress/<user_id>/notebook/<entry_id>')
@@ -301,8 +305,8 @@ def delete_notebook_entry(user_id: str, entry_id: str, auth_uid: str):
     try:
         uid = sanitise_user_id(user_id)
         eid = sanitise_entry_id(entry_id)
-    except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid userId or entryId.'}), 400
 
     if uid != auth_uid:
         return jsonify({'error': 'Forbidden.'}), 403
@@ -318,8 +322,8 @@ def delete_notebook_entry(user_id: str, entry_id: str, auth_uid: str):
         doc_ref.update({'labNotebook': updated})
         return jsonify({'ok': True})
     except Exception as exc:
-        safe_msg = log_error(exc, f'delete_notebook_entry uid={uid} entry={eid}')
-        return jsonify({'error': safe_msg}), 500
+        log_error(exc, f'delete_notebook_entry uid={uid} entry={eid}')
+        return jsonify({'error': _INTERNAL_ERROR_MSG}), 500
 
 
 # ── Static data endpoints ──────────────────────────────────────────────────
@@ -339,8 +343,8 @@ def get_curriculum():
     except FileNotFoundError:
         return jsonify({'error': 'curriculum.json not found.'}), 404
     except Exception as exc:
-        safe_msg = log_error(exc, 'get_curriculum')
-        return jsonify({'error': safe_msg}), 500
+        log_error(exc, 'get_curriculum')
+        return jsonify({'error': _INTERNAL_ERROR_MSG}), 500
 
 
 @app.get('/api/dictionary')
@@ -357,8 +361,8 @@ def get_dictionary():
     except FileNotFoundError:
         return jsonify({'error': 'dictionary.json not found.'}), 404
     except Exception as exc:
-        safe_msg = log_error(exc, 'get_dictionary')
-        return jsonify({'error': safe_msg}), 500
+        log_error(exc, 'get_dictionary')
+        return jsonify({'error': _INTERNAL_ERROR_MSG}), 500
 
 
 # ── Error handlers ─────────────────────────────────────────────────────────
@@ -376,8 +380,8 @@ def method_not_allowed(_err):
 
 @app.errorhandler(500)
 def internal_error(err):
-    safe_msg = log_error(err, 'unhandled')
-    return jsonify({'error': safe_msg}), 500
+    log_error(err, 'unhandled')
+    return jsonify({'error': _INTERNAL_ERROR_MSG}), 500
 
 
 # ── Entry point ────────────────────────────────────────────────────────────

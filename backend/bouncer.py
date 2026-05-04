@@ -110,13 +110,17 @@ def sanitise_filename(value: object) -> str:
     """
     Return a safe basename from *value*, blocking directory-traversal attempts.
 
-    Raises ``ValueError`` if the result is empty or suspicious.
+    Raises ``ValueError`` if the input contains path separators or traversal
+    sequences, or if the resulting filename is empty.
     """
     raw = sanitise_string(value, 255)
-    base = os.path.basename(raw)
-    # Reject paths that resolve outside the current directory
-    if base != raw or '..' in base or '/' in base or '\\' in base:
+
+    # Reject any input that contains path-traversal or separator characters
+    # before calling basename — this is the primary traversal guard.
+    if '..' in raw or '/' in raw or '\\' in raw or os.sep in raw:
         raise ValueError('Invalid or unsafe filename.')
+
+    base = os.path.basename(raw)
     if not base:
         raise ValueError('Filename must not be empty.')
     return base

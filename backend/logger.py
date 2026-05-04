@@ -11,39 +11,41 @@ import traceback
 from logging.handlers import RotatingFileHandler
 
 # ── Log setup ──────────────────────────────────────────────────────────────
-_handler = RotatingFileHandler(
+_file_handler = RotatingFileHandler(
     'app.log',
     maxBytes=5 * 1024 * 1024,  # 5 MB per file
     backupCount=3,
 )
-_handler.setFormatter(
+_file_handler.setLevel(logging.DEBUG)
+_file_handler.setFormatter(
     logging.Formatter('%(asctime)s  %(levelname)-8s  %(name)s  %(message)s')
 )
 
+# stderr shows warnings and above, but NEVER exception details
+_stderr_handler = logging.StreamHandler()
+_stderr_handler.setLevel(logging.WARNING)
+_stderr_handler.setFormatter(logging.Formatter('%(levelname)s %(name)s: %(message)s'))
+
 logger = logging.getLogger('picklePi')
 logger.setLevel(logging.DEBUG)
-logger.addHandler(_handler)
-
-# Also log warnings and above to stderr so they appear in systemd/container logs
-_stderr = logging.StreamHandler()
-_stderr.setLevel(logging.WARNING)
-_stderr.setFormatter(logging.Formatter('%(levelname)s %(name)s: %(message)s'))
-logger.addHandler(_stderr)
+logger.addHandler(_file_handler)
+logger.addHandler(_stderr_handler)
 
 
 # ── Public helpers ─────────────────────────────────────────────────────────
 
-def log_error(exc: Exception, context: str = '') -> str:
+def log_error(exc: Exception, context: str = '') -> None:
     """
-    Log *exc* with full traceback to app.log.
+    Log *exc* with full traceback to app.log only.
 
-    Returns a generic, client-safe message string (never the real exception
-    text) so callers can safely forward it to the HTTP response.
+    The detailed trace is written at DEBUG level so it only reaches the
+    rotating file handler (the stderr handler threshold is WARNING).
+    This ensures stack-trace information is never forwarded to an external
+    consumer via standard output.
     """
-    detail = traceback.format_exc()
-    message = f'{context}: {exc}' if context else str(exc)
-    logger.error('%s\n%s', message, detail)
-    return 'An internal error occurred. Please try again later.'
+    summary = f'{context}: {type(exc).__name__}' if context else type(exc).__name__
+    logger.error('Internal error — %s', summary)
+    logger.debug('Full traceback:\n%s', traceback.format_exc())
 
 
 def log_warning(msg: str) -> None:
