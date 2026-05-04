@@ -14,12 +14,14 @@ We take the security of picklePi seriously. If you discover a security vulnerabi
 
 ### How to Report
 
-1. **Do NOT** open a public GitHub issue for security vulnerabilities
-2. **Open a GitHub issue** with the tag `[SECURITY]` and provide:
-   - A description of the vulnerability
-   - Steps to reproduce the issue
-   - Potential impact assessment
-   - Suggested fix (if available)
+1. **Do NOT** open a public GitHub issue for security vulnerabilities — public disclosure before a fix is available could put users at risk.
+2. **Use GitHub's private vulnerability reporting** instead:
+   - Navigate to the [Security tab](https://github.com/socks5-sniffer/picklePi/security/advisories/new) of this repository.
+   - Click **"Report a vulnerability"** and fill in the form with:
+     - A description of the vulnerability
+     - Steps to reproduce the issue
+     - Potential impact assessment
+     - Suggested fix (if available)
 
 ### What to Include
 
@@ -149,8 +151,7 @@ We appreciate security researchers who help keep picklePi secure. Contributors w
 
 ## Contact
 
-For security-related questions:
-- Open an issue tagged `[SECURITY]`
+For security-related questions, use GitHub's private vulnerability reporting (link above) rather than opening a public issue.
 - Visit: https://github.com/socks5-sniffer/picklePi
 
 ---

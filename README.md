@@ -227,7 +227,6 @@ picklePi/
 │   ├── main.tsx                  # React entry point
 │   └── index.css                 # Global styles (Tailwind base + custom)
 ├── index.html                    # HTML shell with meta tags
-├── metadata.json                 # App metadata (name, description, permissions)
 ├── package.json                  # Dependencies and npm scripts
 ├── tsconfig.json                 # TypeScript compiler configuration
 ├── vite.config.ts                # Vite config (plugins, aliases, HTTPS, HMR)
