@@ -329,7 +329,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
   const { content } = project;
   const pages = content.pages ?? [];
   const hasPages = pages.length > 0;
-  const currentPage = hasPages && currentPageIndex < pages.length ? pages[currentPageIndex] : null;
+  const currentPage = hasPages ? pages[currentPageIndex] ?? null : null;
   const currentContent = currentPage ? currentPage.content : content;
 
   const handleCopyCode = async () => {
@@ -393,9 +393,9 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
         <h1 className="text-2xl sm:text-4xl font-bold text-slate-100 tracking-tight">{project.title}</h1>
         
         {/* Page indicator for multi-page projects */}
-        {hasPages && (
+        {hasPages && currentPage && (
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <span><span aria-hidden="true">📄</span> Page {currentPageIndex + 1} of {pages.length}: {currentPage!.title}</span>
+            <span><span aria-hidden="true">📄</span> Page {currentPageIndex + 1} of {pages.length}: {currentPage.title}</span>
           </div>
         )}
         
