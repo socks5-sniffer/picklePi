@@ -329,7 +329,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
   const { content } = project;
   const pages = content.pages ?? [];
   const hasPages = pages.length > 0;
-  const currentPage = hasPages ? pages[currentPageIndex] : null;
+  const currentPage = hasPages && currentPageIndex < pages.length ? pages[currentPageIndex] : null;
   const currentContent = currentPage ? currentPage.content : content;
 
   const handleCopyCode = async () => {
