@@ -327,8 +327,9 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
   }
 
   const { content } = project;
-  const hasPages = content.pages && content.pages.length > 0;
-  const currentPage = hasPages ? content.pages[currentPageIndex] : null;
+  const pages = content.pages ?? [];
+  const hasPages = pages.length > 0;
+  const currentPage = pages[currentPageIndex] ?? null;
   const currentContent = currentPage ? currentPage.content : content;
 
   const handleCopyCode = async () => {
@@ -342,7 +343,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
   };
 
   const handleNextPage = () => {
-    if (hasPages && currentPageIndex < content.pages!.length - 1) {
+    if (hasPages && currentPageIndex < pages.length - 1) {
       setCurrentPageIndex(currentPageIndex + 1);
       topRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
@@ -358,7 +359,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
   const handleGetHelp = () => {
     // Find the first page whose id includes 'troubleshooting'
     if (hasPages) {
-      const troubleshootingPageIndex = content.pages!.findIndex(
+      const troubleshootingPageIndex = pages.findIndex(
         page => page.id.includes('troubleshooting')
       );
       if (troubleshootingPageIndex !== -1) {
@@ -371,9 +372,9 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
   return (
     <div ref={topRef} className="space-y-12 pb-20 animate-in fade-in duration-500">
       {/* Top Page Navigation for multi-page projects */}
-      {hasPages && content.pages && content.pages.length > 1 && (
+      {hasPages && pages.length > 1 && (
         <PageNav
-          pages={content.pages}
+          pages={pages}
           currentPageIndex={currentPageIndex}
           onPrevious={handlePreviousPage}
           onNext={handleNextPage}
@@ -392,9 +393,9 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
         <h1 className="text-2xl sm:text-4xl font-bold text-slate-100 tracking-tight">{project.title}</h1>
         
         {/* Page indicator for multi-page projects */}
-        {hasPages && (
+        {hasPages && currentPage && (
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <span><span aria-hidden="true">📄</span> Page {currentPageIndex + 1} of {content.pages!.length}: {currentPage!.title}</span>
+            <span><span aria-hidden="true">📄</span> Page {currentPageIndex + 1} of {pages.length}: {currentPage.title}</span>
           </div>
         )}
         
@@ -613,9 +614,9 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
       )}
 
       {/* Bottom Page Navigation for multi-page projects */}
-      {hasPages && content.pages && content.pages.length > 1 && (
+      {hasPages && pages.length > 1 && (
         <PageNav
-          pages={content.pages}
+          pages={pages}
           currentPageIndex={currentPageIndex}
           onPrevious={handlePreviousPage}
           onNext={handleNextPage}
@@ -626,7 +627,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
       )}
 
       {/* Completion Action - only show on last page */}
-      {(!hasPages || currentPageIndex === content.pages!.length - 1) && (
+      {(!hasPages || currentPageIndex === pages.length - 1) && (
         <div className="pt-8 flex justify-center">
           {status === 'Completed' ? (
             <div className="flex items-center gap-3 text-emerald-400 bg-emerald-900/30 px-6 py-4 rounded-2xl border border-emerald-700 font-bold text-lg">
