@@ -61,6 +61,22 @@ body {
     stroke           0.2s  ease !important;
 }
 
+/* ── Dictionary term pills: light-mode override ─────────────────────────────
+   In dark mode the emerald-400-on-emerald-900/30 pills look great.
+   In light mode the slate tokens remap to sage-green, so we need dark text
+   on a distinct near-white pill so they remain readable on every surface.
+──────────────────────────────────────────────────────────────────────────── */
+[data-theme="light"] .dict-term {
+  color:            oklch(0.118 0.022 140);
+  background-color: oklch(0.96 0.02 140 / 0.75);
+  border-color:     oklch(0.118 0.022 140 / 0.45);
+}
+[data-theme="light"] .dict-term:hover {
+  color:            oklch(0.07 0.014 140);
+  background-color: oklch(0.91 0.04 140 / 0.85);
+  border-color:     oklch(0.07 0.014 140 / 0.60);
+}
+
 .progress-fill {
   width: var(--fill-width, 0%);
 }

@@ -7,6 +7,8 @@ async function apiFetch(path: string, options?: RequestInit): Promise<Response> 
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      // Forces a CORS preflight for cross-origin requests, blocking CSRF from other origins.
+      'X-Requested-With': 'XMLHttpRequest',
       ...options?.headers,
     },
   });
@@ -50,7 +52,7 @@ export async function createLabEntry(
 
 export async function deleteLabEntry(entryId: string): Promise<void> {
   try {
-    await apiFetch(`/progress/${USER_ID}/notebook/${entryId}`, {
+    await apiFetch(`/progress/${USER_ID}/notebook/${encodeURIComponent(entryId)}`, {
       method: 'DELETE',
     });
   } catch {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { curriculum } from './data/curriculum';
 import { Project, UserProgress, LabEntry } from './types';
+import { fetchProgress, saveProgress, createLabEntry } from './lib/api';
 import Sidebar from './components/Sidebar';
 import ProjectView from './components/ProjectView';
 import ProgressTracker from './components/ProgressTracker';
@@ -28,6 +29,13 @@ export default function App() {
       return INITIAL_PROGRESS;
     }
   });
+
+  // Sync from backend on mount; localStorage above gives an instant baseline
+  useEffect(() => {
+    fetchProgress().then(data => {
+      if (data) setProgress(data);
+    });
+  }, []);
   const [isLabModalOpen, setIsLabModalOpen] = useState(false);
   const [projectToComplete, setProjectToComplete] = useState<Project | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -54,6 +62,7 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('rpi-lab-progress', JSON.stringify(progress));
+    saveProgress(progress);
   }, [progress]);
 
   const activeProject = curriculum.find(p => p.id === activeProjectId) || curriculum[0];
@@ -95,10 +104,12 @@ export default function App() {
     setIsLabModalOpen(true);
   };
 
-  const handleSaveLabEntry = (entry: Omit<LabEntry, 'id' | 'date'>) => {
+  const handleSaveLabEntry = async (entry: Omit<LabEntry, 'id' | 'date'>) => {
     if (!projectToComplete) return;
 
-    const newEntry: LabEntry = {
+    // Try to create entry via backend; fall back to a local UUID if unavailable
+    const backendEntry = await createLabEntry(entry);
+    const newEntry: LabEntry = backendEntry ?? {
       ...entry,
       id: crypto.randomUUID(),
       date: new Date().toISOString()

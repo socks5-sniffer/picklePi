@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BookOpen, CheckCircle, Circle, PlayCircle, Award, LayoutDashboard, NotebookPen, Lock, X, BookMarked, Home, Cpu, ChevronLeft, ChevronRight } from 'lucide-react';
 import { curriculum } from '../data/curriculum';
-import { UserProgress } from '../types';
+import { UserProgress, Project } from '../types';
+import BadgeIcon from './BadgeIcon';
+import BadgeModal from './BadgeModal';
 
 interface SidebarProps {
   activeTab: 'home' | 'curriculum' | 'progress' | 'notebook' | 'dictionary' | 'pinout';
@@ -17,9 +19,16 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, setActiveTab, progress, activeProjectId, onSelectProject, isProjectLocked, isMobileMenuOpen, onCloseMobileMenu, isCollapsed, onToggleCollapse }: SidebarProps) {
+  const [selectedBadge, setSelectedBadge] = useState<Project | null>(null);
+
   const handleTabChange = (tab: 'home' | 'curriculum' | 'progress' | 'notebook' | 'dictionary' | 'pinout') => {
     setActiveTab(tab);
     onCloseMobileMenu(); // Close menu when tab changes on mobile
+  };
+
+  const handleBadgeClick = (badgeName: string) => {
+    const project = curriculum.find(p => p.badgeEarned === badgeName) ?? null;
+    setSelectedBadge(project);
   };
 
   return (
@@ -168,25 +177,46 @@ export default function Sidebar({ activeTab, setActiveTab, progress, activeProje
       {progress.badges.length > 0 && (
         isCollapsed ? (
           <div className="p-4 border-t border-slate-800 bg-slate-900/50 flex justify-center">
-            <Award size={18} className="text-emerald-400" />
+            <Award size={18} style={{ color: '#FFB900' }} />
           </div>
         ) : (
           <div className="p-6 border-t border-slate-800 bg-slate-900/50">
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: '#FFB900' }}>
               <Award size={14} />
               Earned Badges
             </h3>
             <div className="flex flex-wrap gap-2">
-              {progress.badges.map(badge => (
-                <span key={badge} className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-400/10 text-emerald-400 border border-emerald-400/20">
-                  {badge}
-                </span>
-              ))}
+              {progress.badges.map(badge => {
+                const project = curriculum.find(p => p.badgeEarned === badge);
+                return (
+                  <button
+                    key={badge}
+                    type="button"
+                    onClick={() => handleBadgeClick(badge)}
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-opacity hover:opacity-75"
+                    style={{ color: '#FFB900', border: '1px solid #FFB90050', backgroundColor: '#FFB90015' }}
+                    title="Click to view badge"
+                  >
+                    {project && (
+                      <BadgeIcon level={project.level} name={badge} earned size={18} />
+                    )}
+                    {badge}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )
       )}
       </div>
+
+      {selectedBadge && (
+        <BadgeModal
+          project={selectedBadge}
+          earned
+          onClose={() => setSelectedBadge(null)}
+        />
+      )}
     </>
   );
 }
