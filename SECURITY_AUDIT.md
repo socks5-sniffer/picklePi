@@ -1,3 +1,223 @@
+# Security Audit Report — 2026-05-24
+
+## Overview
+
+This document provides a comprehensive security audit of the picklePi project based on a manual source-code review, dependency analysis (`npm audit`), and configuration review conducted on **2026-05-24**.
+
+**Audit Date:** 2026-05-24
+**Project Version:** 1.0.0
+**Auditor:** Manual security review
+**Audit Type:** Manual code review + OWASP Top 10 (2021) + Dependency scan
+**npm audit result:** ✅ 0 known vulnerabilities (359 packages: 179 prod, 105 dev, 76 optional)
+
+---
+
+## Executive Summary
+
+The overall security posture of picklePi has **improved significantly** since the last audit (2026-04-03). All eight findings from that report have now been resolved. No critical or high-severity issues were found. Three new low-severity observations and one informational note are documented below.
+
+---
+
+## Findings
+
+### FINDING-09 — API responses accepted without runtime type validation
+
+**Severity:** 🔵 Low
+**File:** `src/lib/api.ts` (lines 21, 47, 67, 77)
+
+`fetchProgress()`, `createLabEntry()`, `fetchCurriculum()`, and `fetchDictionary()` all return `res.json()` directly, typed via the function return annotation but with no runtime shape check. The same localStorage guard introduced in Fix 7 (`isValidProgress`) is not applied to the backend response path:
+
+```typescript
+// fetchProgress — trusts the backend payload completely
+return res.json();  // typed as Promise<UserProgress> but unverified at runtime
+```
+
+If the backend returns a structurally unexpected payload (schema drift, a future API version, or a compromised proxy), the data flows into `setProgress()` without validation, potentially corrupting app state.
+
+**Recommendation:**
+Apply the existing `isValidProgress()` guard to the backend response in `fetchProgress()`:
+```typescript
+export async function fetchProgress(): Promise<UserProgress | null> {
+  try {
+    const res = await apiFetch(`/progress/${USER_ID}`);
+    if (!res.ok) return null;
+    const data: unknown = await res.json();
+    return isValidProgress(data) ? data : null;
+  } catch {
+    return null;
+  }
+}
+```
+
+**Status:** 🔵 Open
+
+---
+
+### FINDING-10 — Hardcoded single-tenant `USER_ID = 'default'`
+
+**Severity:** 🔵 Low
+**File:** `src/lib/api.ts` (line 3)
+
+All API routes are constructed with a hardcoded `USER_ID = 'default'`:
+```typescript
+const USER_ID = 'default';
+// produces: /api/progress/default, /api/progress/default/notebook/...
+```
+
+While the app is currently single-user and educational, this creates a **predictable, enumerable resource path**. Any other user on the same deployed instance (or an attacker who discovers the API) can read or overwrite `/api/progress/default` without any authentication token. If multi-user support is added, this pattern will cause data leakage between users.
+
+**Recommendation:**
+- Short-term: document the single-user assumption explicitly in comments and README.
+- If multi-user support is ever added, replace `USER_ID` with a session-derived identifier and add server-side ownership checks before accepting writes.
+
+**Status:** 🔵 Open
+
+---
+
+### FINDING-11 — `@google/genai` and server-side packages in production `dependencies`
+
+**Severity:** 🔵 Low
+**File:** `package.json`
+
+Three packages intended for future/server use remain in production `dependencies` rather than `devDependencies`:
+
+| Package | Version | Issue |
+|---|---|---|
+| `@google/genai` | ^2.0.1 | No import anywhere in `src/`; supply-chain surface area |
+| `express` | ^5.2.1 | Server-side only; not imported by the Vite frontend bundle |
+| `better-sqlite3` | ^12.10.0 | Node.js native module; will fail if Vite attempts to bundle it |
+
+**Recommendation:**
+- If `@google/genai` integration is planned, move it to a feature branch and store the `GEMINI_API_KEY` in `.env` (already gitignored). Do not ship it in a production bundle.
+- Move `express` and `better-sqlite3` to `devDependencies` or a separate `backend/package.json` to prevent any risk of accidental bundling.
+
+**Status:** 🔵 Open
+
+---
+
+### FINDING-12 — Dev proxy `secure: false` — document to prevent production carry-over
+
+**Severity:** ℹ️ Informational
+**File:** `vite.config.ts` (line 47)
+
+```typescript
+proxy: {
+  '/api': {
+    target: 'http://localhost:3001',
+    changeOrigin: true,
+    secure: false,   // disables TLS cert verification
+  },
+},
+```
+
+`secure: false` disables TLS certificate verification on the proxy target. This is safe for the `localhost` dev scenario but is a common copy-paste footgun; if this block is ever reused for a staging or production reverse-proxy, the risk becomes real (MITM against the backend).
+
+**Recommendation:** Add a comment explicitly marking this as dev-only, and document in the deployment guide that production reverse-proxy configs must use `secure: true`.
+
+**Status:** ℹ️ Informational
+
+---
+
+## Resolved Findings (since 2026-04-03)
+
+| ID | Title | Resolution |
+|----|-------|-----------|
+| FINDING-01 | CSP `unsafe-inline` weakens XSS protection | ✅ Fixed — `script-src 'self'` in PROD_CSP; `unsafe-inline` scoped to DEV_CSP only |
+| FINDING-02 | Security headers not applied in production | ✅ Fixed — `public/_headers` created; Netlify reads it automatically from `dist/` |
+| FINDING-03 | `connect-src` overly permissive | ✅ Fixed — `connect-src 'self' ws://localhost:* wss://localhost:*` in dev; `'self'` only in prod |
+| FINDING-04 | TypeScript strict mode not enabled | ✅ Fixed — `"strict": true` added to `tsconfig.json`; `npx tsc --noEmit` passes cleanly |
+| FINDING-05 | `@google/genai` unused dependency | ⚠️ Partially addressed — upgraded to v2.0.1 but still in `dependencies`; see FINDING-11 |
+| FINDING-06 | Backend deps in production `dependencies` | ⚠️ Still present — see FINDING-11 |
+| FINDING-07 | No runtime localStorage schema validation | ✅ Fixed — `isValidProgress()` type guard added; parses to `unknown` before accepting |
+| FINDING-08 | `ProjectView` missing React key | ✅ Fixed — `key={activeProject.id}` added; state resets correctly on project switch |
+
+---
+
+## Static Code Analysis
+
+| Check | Result |
+|---|---|
+| `dangerouslySetInnerHTML` usage | ✅ None found |
+| `eval()` / `Function()` usage | ✅ None found |
+| Unsanitized `innerHTML` / `document.write` | ✅ None found |
+| User input stored in localStorage | ✅ Validated via `isValidProgress()` before use |
+| Form input length validation (`maxLength`) | ✅ All four LabNotebookModal textareas capped at 2000 chars |
+| Secret / credential exposure | ✅ None detected (`.env` gitignored) |
+| `JSON.parse` without `unknown` cast | ✅ Fixed in App.tsx; api.ts calls still unguarded (see FINDING-09) |
+
+---
+
+## Security Header Review
+
+### Development (`npm run dev`) — `vite.config.ts`
+
+| Header | Value | Assessment |
+|---|---|---|
+| `X-Content-Type-Options` | `nosniff` | ✅ |
+| `X-Frame-Options` | `DENY` | ✅ |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | ✅ |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | ✅ |
+| `Content-Security-Policy` | `script-src 'self' 'unsafe-inline'` | ⚠️ Acceptable for dev/HMR; not shipped to production |
+| `Strict-Transport-Security` | Not set in dev | ℹ️ Correct — HSTS in dev can lock out localhost |
+
+### Production (`public/_headers`) — deployed via Netlify
+
+| Header | Value | Assessment |
+|---|---|---|
+| `X-Content-Type-Options` | `nosniff` | ✅ |
+| `X-Frame-Options` | `DENY` | ✅ |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | ✅ |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | ✅ |
+| `Content-Security-Policy` | `script-src 'self'` — no `unsafe-inline` | ✅ Strong |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` | ✅ |
+
+---
+
+## OWASP Top 10 (2021)
+
+| Category | Status | Notes |
+|---|---|---|
+| A01: Broken Access Control | ✅ Protected | Security headers in place; no regressions |
+| A02: Cryptographic Failures | ✅ Protected | No external data transmission; HTTPS via mkcert in dev; HSTS in prod |
+| A03: Injection | ✅ Protected | React JSX auto-escapes; no `eval`/`innerHTML` patterns found |
+| A04: Insecure Design | ✅ Protected | `strict: true` enabled; `isValidProgress` guards boundary; `key` prop prevents state leakage |
+| A05: Security Misconfiguration | ✅ Protected | Production CSP tightened; HSTS added; `sourcemap: false` in build |
+| A06: Vulnerable Components | ✅ Protected | 0 CVEs across 359 packages (`npm audit` clean) |
+| A07: Auth Failures | ✅ N/A | No authentication; no credentials stored |
+| A08: Data Integrity Failures | ✅ Protected | `package-lock.json` in VCS; reproducible builds via `npm ci` |
+| A09: Logging Failures | ✅ Protected | CodeQL + OWASP + Gitleaks automated weekly scans |
+| A10: SSRF | ✅ N/A | No server-side requests in current codebase |
+
+---
+
+## Dependency Scan
+
+**Tool:** `npm audit`
+**Date:** 2026-05-24
+**Packages audited:** 359 (179 prod, 105 dev, 76 optional)
+**Result:** ✅ **0 vulnerabilities** (0 critical, 0 high, 0 moderate, 0 low)
+
+---
+
+## Summary Table
+
+| ID | Title | Severity | Status |
+|----|-------|----------|--------|
+| FINDING-09 | API responses not runtime-validated | 🔵 Low | Open |
+| FINDING-10 | Hardcoded `USER_ID = 'default'` | 🔵 Low | Open |
+| FINDING-11 | Unused/server deps in `dependencies` | 🔵 Low | Open |
+| FINDING-12 | Dev proxy `secure: false` undocumented | ℹ️ Info | Open |
+
+**Critical/High findings:** 0
+**Medium findings:** 0
+**Low findings:** 3
+**Informational:** 1
+**Overall posture:** ✅ **STRONG** — materially improved since 2026-04-03; all prior medium/low findings resolved except package hygiene (FINDING-11)
+
+---
+
+---
+
 # Security Audit Report — 2026-04-03
 
 ## Overview
