@@ -12,6 +12,17 @@ import DictionaryView from './components/DictionaryView';
 import LandingView from './components/LandingView';
 import PinoutView from './components/PinoutView';
 
+function isValidProgress(data: unknown): data is UserProgress {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'projectStatuses' in data &&
+    'badges' in data &&
+    'labNotebook' in data &&
+    Array.isArray((data as UserProgress).labNotebook)
+  );
+}
+
 const INITIAL_PROGRESS: UserProgress = {
   projectStatuses: curriculum.reduce((acc, p) => ({ ...acc, [p.id]: 'Not Started' }), {}),
   badges: [],
@@ -24,7 +35,9 @@ export default function App() {
   const [progress, setProgress] = useState<UserProgress>(() => {
     try {
       const saved = localStorage.getItem('rpi-lab-progress');
-      return saved ? JSON.parse(saved) : INITIAL_PROGRESS;
+      if (!saved) return INITIAL_PROGRESS;
+      const parsed: unknown = JSON.parse(saved);
+      return isValidProgress(parsed) ? parsed : INITIAL_PROGRESS;
     } catch {
       return INITIAL_PROGRESS;
     }
@@ -185,8 +198,9 @@ export default function App() {
             />
           )}
           {activeTab === 'curriculum' && (
-            <ProjectView 
-              project={activeProject} 
+            <ProjectView
+              key={activeProject.id}
+              project={activeProject}
               status={progress.projectStatuses[activeProject.id]}
               isLocked={isProjectLocked(activeProject.id)}
               onComplete={() => handleCompleteProjectClick(activeProject)}
