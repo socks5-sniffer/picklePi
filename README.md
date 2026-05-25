@@ -5,9 +5,9 @@
 ### A Gamified, Project-Based Electronics & Python Learning Platform for Raspberry Pi
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![React](https://img.shields.io/badge/React-19.0-blue.svg)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6.2-purple.svg)](https://vitejs.dev)
+[![React](https://img.shields.io/badge/React-19.2-blue.svg)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-8.0-purple.svg)](https://vitejs.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-cyan.svg)](https://tailwindcss.com)
 [![OWASP Security Scan](https://img.shields.io/badge/OWASP-Security%20Scan-orange.svg)](.github/workflows/owasp-security-scan.yml)
 
@@ -65,13 +65,15 @@ picklePi is designed for **kids, teens, and curious people of all ages** who wan
 | Feature | Description |
 |---------|-------------|
 | 🎮 **Gamified Progress** | Earn unique badges as you complete each project — collect them all! |
+| 🏅 **Badge Detail Modal** | Click any badge in the Progress Tracker to see its full description and unlock requirements |
 | 📓 **Lab Notebook** | Structured reflection journal for every completed project |
 | 📌 **GPIO Pinout Reference** | Interactive Raspberry Pi GPIO pin map built into the app — no more googling! |
-| 📖 **Electronics Dictionary** | Searchable glossary of 100+ Python, Raspberry Pi, and Electronics terms |
+| 📖 **Electronics Dictionary** | Searchable glossary of 100+ Python, Raspberry Pi, Electronics, Beginner, and Security terms |
 | 💡 **Interactive Term Highlighting** | Technical terms in project content are highlighted — click to see instant definitions |
 | 📱 **Mobile Responsive** | Collapsible sidebar with toggle controls works on phones and tablets |
 | 🔒 **Progress Persistence** | All progress saved to `localStorage` — survives page refreshes and accidental tab closes |
-| 🎨 **Modern Dark UI** | Clean dark-themed interface with smooth animations via Motion |
+| 🌓 **Light/Dark Theme** | Toggle between dark and light mode — preference saved to `localStorage` |
+| 🎨 **Modern UI** | Clean interface (dark by default) with smooth animations via Motion |
 | 📋 **One-Click Copy** | Copy any code example to clipboard instantly |
 | 🔐 **Local HTTPS Dev** | Development server runs over HTTPS via `mkcert` |
 
@@ -138,7 +140,7 @@ Each project is split into structured **pages** within the app:
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v18 or newer
+- [Node.js](https://nodejs.org/) v18 or newer (v22 recommended — used by CI)
 - [Git](https://git-scm.com/)
 - A Raspberry Pi with Python 3 and `gpiozero` installed (for running the code examples)
 
@@ -197,16 +199,15 @@ The production build is output to the `dist/` directory. It is a fully static si
 ```text
 picklePi/
 ├── backend/
-│   ├── app.py                   # Flask application entry point; routes and Firebase init
-│   ├── bouncer.py               # Input sanitisation (XSS, path traversal, injection)
-│   ├── middleware.py            # HTTP security headers (HSTS, CSP, X-Frame-Options, etc.)
-│   ├── logger.py                # Secure error logging — raw details to file, safe messages to client
-│   ├── requirements.txt         # Python package dependencies
+│   ├── README.md                # Backend setup and API reference
+│   ├── requirements.txt         # Python package dependencies (Flask backend)
 │   └── .env.example             # Backend environment variable template
 ├── public/
 │   └── images/                  # Static image assets
 ├── src/
 │   ├── components/
+│   │   ├── BadgeIcon.tsx         # SVG hexagon badge renderer with per-level colour themes
+│   │   ├── BadgeModal.tsx        # Detail popup for badges (earned / locked state)
 │   │   ├── DefinitionModal.tsx   # Popup modal for dictionary term definitions
 │   │   ├── DictionaryView.tsx    # Searchable electronics/Python glossary
 │   │   ├── InteractiveText.tsx   # Highlights terms and shows definitions on click
@@ -219,20 +220,29 @@ picklePi/
 │   │   └── Sidebar.tsx           # Collapsible navigation sidebar (desktop + mobile)
 │   ├── data/
 │   │   ├── curriculum.ts         # All 13 projects: content, code, walkthroughs
-│   │   └── dictionary.ts         # 100+ glossary entries (Python, RPi, Electronics)
+│   │   └── dictionary.ts         # 100+ glossary entries (Python, RPi, Electronics, Security)
 │   ├── lib/
 │   │   └── api.ts                # Fetch wrapper for all backend API endpoints
 │   ├── types.ts                  # Shared TypeScript interfaces
-│   ├── App.tsx                   # Root component; routing, state, persistence
+│   ├── App.tsx                   # Root component; routing, state, theme, persistence
 │   ├── main.tsx                  # React entry point
 │   └── index.css                 # Global styles (Tailwind base + custom)
+├── wiki/
+│   └── Components/               # GitHub Wiki source files (markdown)
+├── generate-level.ts             # CLI tool: AI-generates a new curriculum level via Gemini 2.5 Pro
+├── export-wiki.ts                # CLI tool: combines wiki/ markdown files into wiki_knowledge_base.md
+├── wiki_knowledge_base.md        # Combined wiki output (generated by export-wiki.ts)
+├── curriculum.json               # Exported curriculum data (JSON)
+├── dictionary.json               # Exported dictionary data (JSON)
+├── gemini.md                     # Gemini secure coding guidelines for AI-assisted development
 ├── index.html                    # HTML shell with meta tags
 ├── metadata.json                 # App metadata (name, description, permissions)
 ├── package.json                  # Dependencies and npm scripts
 ├── tsconfig.json                 # TypeScript compiler configuration
-├── vite.config.ts                # Vite config (plugins, aliases, HTTPS, HMR)
+├── vite.config.ts                # Vite config (plugins, aliases, HTTPS, HMR, CSP headers)
 ├── db-schema.txt                 # Relational database schema for backend migration
 ├── CONTRIBUTING.md               # Contributor guide
+├── OWASP_IMPLEMENTATION.md       # OWASP Top 10 implementation notes
 ├── SECURITY_AUDIT.md             # Security audit notes
 └── LICENSE                       # MIT License
 ```
@@ -241,18 +251,15 @@ picklePi/
 
 ## 🐍 Backend
 
-The backend is a **Flask (Python)** application that provides a secure REST API for authentication and persistent data storage. It is designed to work with the React frontend and lives in the `backend/` directory. See [`backend/README.md`](backend/README.md) for full setup instructions.
+The backend is designed as a **Flask (Python)** application that provides a secure REST API for authentication and persistent data storage. It is designed to work with the React frontend and is documented in [`backend/README.md`](backend/README.md).
 
-> **The backend is optional for local development.** The frontend runs fully standalone using `localStorage` for progress persistence. The Flask API is only required if you want server-side user accounts, token verification, or cloud-synced progress via Firestore.
+> **The backend source files are not included in this repository.** The `backend/` directory contains setup documentation, a `requirements.txt`, and a `.env.example` template. See [`backend/README.md`](backend/README.md) for the full architecture description and API reference. A Node.js/Express alternative (using `express` + `better-sqlite3`, also available in `package.json`) can be used in place of the Flask server — both expose the same `/api` routes proxied by Vite on port 3001.
 
-### Key Files
+> **The backend is optional for local development.** The frontend runs fully standalone using `localStorage` for progress persistence. The API server is only required if you want server-side user accounts or persistent cross-device progress.
 
-| File | Role |
-|------|------|
-| `app.py` | Application entry point — initialises Firebase Admin SDK, registers routes, and wires up all middleware |
-| `bouncer.py` | Input sanitisation layer — strips HTML/XSS payloads, blocks path traversal in filenames, and validates numeric inputs before any data is processed |
-| `middleware.py` | Attaches a full suite of HTTP security headers (`Strict-Transport-Security`, `X-Frame-Options`, `Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`) to every response |
-| `logger.py` | Secure error logger — writes detailed error information to `app.log`, never to the HTTP response, so stack traces and internal state are never leaked to clients |
+### Backend Documentation
+
+See [`backend/README.md`](backend/README.md) for the full architecture description covering input sanitisation, security headers, secure error logging, and API endpoints. The `db-schema.txt` in the repository root defines the full relational schema used by the backend.
 
 ### API Endpoints
 
@@ -278,14 +285,15 @@ The backend is a **Flask (Python)** application that provides a secure REST API 
 
 | Technology | Version | Role |
 |------------|---------|------|
-| **React** | 19.0 | UI framework; hooks for all state management |
-| **TypeScript** | 5.8 | Type safety across the entire codebase |
-| **Vite** | 6.2 | Dev server, HMR, and production bundler |
+| **React** | 19.2 | UI framework; hooks for all state management |
+| **TypeScript** | 6.0 | Type safety across the entire codebase |
+| **Vite** | 8.0 | Dev server, HMR, and production bundler |
 | **Tailwind CSS** | 4.1 | Utility-first styling via `@tailwindcss/vite` plugin |
 | **Motion** | 12.x | Declarative animations for UI transitions |
-| **Lucide React** | 0.546 | Consistent SVG icon library |
-| **Express** | 4.x | HTTP API server for backend persistence layer |
+| **Lucide React** | 1.14 | Consistent SVG icon library |
+| **Express** | 5.2 | HTTP API server for backend persistence layer |
 | **better-sqlite3** | 12.x | Embedded SQLite database driver |
+| **@google/genai** | 2.x | Gemini AI SDK — powers the `generate-level.ts` curriculum generator |
 | **dotenv** | 17.x | Environment variable loading for server config |
 | **tsx** | 4.x | TypeScript execution for Node.js server scripts |
 | **mkcert** | via `vite-plugin-mkcert` | Auto-generates trusted local HTTPS certificates |
@@ -298,6 +306,8 @@ The backend is a **Flask (Python)** application that provides a secure REST API 
 - **Static data.** The entire curriculum is defined as a typed TypeScript array in `src/data/curriculum.ts`, making it easy to read, edit, and extend.
 - **Database schema.** `db-schema.txt` defines a normalized relational schema (PostgreSQL-compatible, adaptable to SQLite) covering users, project progress, badges, lab notebook entries, and the dictionary. It is designed to be a drop-in replacement for the `localStorage` data model.
 - **Progressive level locking** is implemented but disabled by default (all levels unlocked). Re-enable it via the `isProjectLocked` function in `App.tsx`.
+- **Theme persistence.** The light/dark theme preference is stored in `localStorage` under `picklePi-theme` and applied via a `data-theme` attribute on the `<html>` element. Transitions are animated to avoid flashing.
+- **AI-assisted content generation.** `generate-level.ts` uses the Gemini 2.5 Pro model via `@google/genai` to scaffold new curriculum levels on demand. Output is written to `src/data/generated-level-<N>.json` and requires a `GEMINI_API_KEY` in `.env`.
 
 ---
 
@@ -338,11 +348,13 @@ The **Pinout** tab provides an interactive reference for all Raspberry Pi GPIO p
 
 ### Electronics Dictionary
 
-The **Dictionary** tab is a searchable glossary of 100+ terms organized into three categories:
+The **Dictionary** tab is a searchable glossary of 100+ terms organized into five categories:
 
 - **Python** — language concepts and gpiozero patterns
 - **Raspberry Pi** — board-specific terms (BCM, GPIO, I2C, etc.)
 - **Electronics** — hardware fundamentals (resistor, duty cycle, PIR, etc.)
+- **Beginner** — introductory concepts for learners new to electronics or programming
+- **Security** — security concepts relevant to the projects and Python code
 
 **Interactive Term Highlighting:** Throughout project content, technical terms from the dictionary are automatically highlighted. Click any highlighted term to see its definition in a popup — no need to leave the page or open a new tab.
 
@@ -430,6 +442,25 @@ If you prefer HTTP in development, remove the `mkcert()` plugin from `vite.confi
 plugins: [react(), tailwindcss()],               // without HTTPS
 ```
 
+### AI-Assisted Level Generation
+
+`generate-level.ts` uses the **Gemini 2.5 Pro** model to scaffold a complete new curriculum level from a topic and level number. It requires a `GEMINI_API_KEY` in your `.env` file (see `.env.example`).
+
+```bash
+# Generate a new level (e.g., Level 14 — RFID Reader with SPI)
+npx tsx generate-level.ts
+```
+
+The generated JSON is saved to `src/data/generated-level-<N>.json`. Review it, merge it into `src/data/curriculum.ts`, and add the corresponding entry to the curriculum table above.
+
+### Wiki Export
+
+`export-wiki.ts` concatenates all Markdown files in the `wiki/` directory into a single `wiki_knowledge_base.md` file — useful as a knowledge-base snapshot for AI tooling or offline reference.
+
+```bash
+npx tsx export-wiki.ts
+```
+
 ---
 
 ## 🤝 Contributing
@@ -467,6 +498,7 @@ This project follows secure-by-default principles and implements comprehensive O
 ### Documentation
 - 📋 [SECURITY.md](SECURITY.md) - Security policy and vulnerability reporting
 - 📋 [SECURITY_AUDIT.md](SECURITY_AUDIT.md) - Comprehensive OWASP Top 10 audit report
+- 📋 [OWASP_IMPLEMENTATION.md](OWASP_IMPLEMENTATION.md) - OWASP Top 10 implementation notes
 
 ### Reporting Vulnerabilities
 To report a security vulnerability, please open a GitHub issue tagged `[SECURITY]`. See [SECURITY.md](SECURITY.md) for details.
