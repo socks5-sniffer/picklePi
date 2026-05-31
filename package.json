@@ -39,7 +39,7 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.1",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@google/genai": "^2.6.0",
     "@typescript-eslint/parser": "^8.59.4",
