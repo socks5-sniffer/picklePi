@@ -2,6 +2,17 @@ import { UserProgress, LabEntry } from '../types';
 
 const USER_ID = 'default';
 
+function isValidProgress(data: unknown): data is UserProgress {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'projectStatuses' in data &&
+    'badges' in data &&
+    'labNotebook' in data &&
+    Array.isArray((data as UserProgress).labNotebook)
+  );
+}
+
 async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
   return fetch(`/api${path}`, {
     ...options,
@@ -18,7 +29,8 @@ export async function fetchProgress(): Promise<UserProgress | null> {
   try {
     const res = await apiFetch(`/progress/${USER_ID}`);
     if (!res.ok) return null;
-    return res.json();
+    const data: unknown = await res.json();
+    return isValidProgress(data) ? data : null;
   } catch {
     return null;
   }
