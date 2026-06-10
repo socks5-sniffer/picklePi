@@ -32,11 +32,9 @@ eslint.config.security.mjs
 # Keep docs directory structure but not necessarily all contents
 !docs/screenshots/.gitkeep
 
-# backend — sensitive implementation files and credentials
-backend/app.py
-backend/bouncer.py
-backend/middleware.py
-backend/logger.py
+# backend — credentials and local artifacts only; implementation files
+# (app.py, bouncer.py, middleware.py, logger.py) are tracked so the
+# documented security controls are auditable in version control.
 backend/firebase-secret.json
 backend/.env
 backend/__pycache__/
