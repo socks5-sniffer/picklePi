@@ -17,6 +17,9 @@ from dotenv import load_dotenv
 from firebase_admin import auth, credentials, firestore
 from flask import Flask, abort, g, jsonify, request
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from werkzeug.exceptions import HTTPException
 
 from bouncer import ValidationError, sanitize_lab_entry, sanitize_progress, validate_id
 from logger import log_exception, logger
@@ -56,6 +59,16 @@ CORS(
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 )
 
+# ── Rate limiting ───────────────────────────────────────────────────────────
+# In-memory storage is fine for a single-process deployment; point
+# RATELIMIT_STORAGE_URI at Redis/Memcached if this ever runs multi-worker.
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["120 per minute"],
+    storage_uri=os.environ.get("RATELIMIT_STORAGE_URI", "memory://"),
+)
+
 
 # ── CSRF guard ──────────────────────────────────────────────────────────────
 @app.before_request
@@ -81,7 +94,13 @@ def require_auth(fn):
         if not header.startswith("Bearer "):
             abort(401, description="missing bearer token")
         try:
-            decoded = auth.verify_id_token(header.removeprefix("Bearer "))
+            # check_revoked rejects tokens for signed-out-everywhere or
+            # disabled accounts instead of honouring them until expiry.
+            decoded = auth.verify_id_token(
+                header.removeprefix("Bearer "), check_revoked=True
+            )
+        except (auth.RevokedIdTokenError, auth.UserDisabledError):
+            abort(401, description="token revoked or account disabled")
         except Exception:
             log_exception("token verification failed")
             abort(401, description="invalid or expired token")
@@ -105,6 +124,7 @@ def status():
 
 
 @app.post("/api/verify-token")
+@limiter.limit("20 per minute")
 @require_auth
 def verify_token():
     return jsonify({"uid": g.uid})
@@ -160,7 +180,7 @@ def delete_notebook_entry(user_id, entry_id):
 
 
 def _serve_json(filename):
-    with open(os.path.join(REPO_ROOT, filename), encoding="utf-8") as f:
+    with open(os.path.join(REPO_ROOT, "data", filename), encoding="utf-8") as f:
         return jsonify(json.load(f))
 
 
@@ -180,16 +200,17 @@ def handle_validation_error(err):
     return jsonify({"error": str(err)}), 400
 
 
-@app.errorhandler(400)
-@app.errorhandler(401)
-@app.errorhandler(403)
-@app.errorhandler(404)
+@app.errorhandler(HTTPException)
 def handle_http_error(err):
     return jsonify({"error": err.description}), err.code
 
 
 @app.errorhandler(Exception)
 def handle_unexpected(err):
+    # Let deliberate HTTP errors (405, 415, 429, …) keep their status code
+    # instead of being masked as a 500.
+    if isinstance(err, HTTPException):
+        return handle_http_error(err)
     # Full trace goes to app.log; the client gets only an opaque error id.
     error_id = log_exception("unhandled exception")
     return jsonify({"error": "internal server error", "errorId": error_id}), 500

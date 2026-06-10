@@ -18,6 +18,13 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
+// initializeApp() does not validate its config — with missing env vars it
+// succeeds silently and sign-in then rejects at click time. Expose a flag so
+// the UI can explain the problem instead of failing silently.
+export const isFirebaseConfigured = Boolean(
+  firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId
+);
+
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 

@@ -69,8 +69,13 @@ The API will be available at `http://localhost:3001` by default — matching the
 
 ## Security
 
-- Firebase ID tokens are verified server-side on every authenticated request,
-  and the authenticated `uid` must match the `:userId` in the URL (IDOR guard).
+- Firebase ID tokens are verified server-side on every authenticated request
+  (with `check_revoked=True`, so revoked tokens and disabled accounts are
+  rejected immediately), and the authenticated `uid` must match the `:userId`
+  in the URL (IDOR guard).
+- Rate limiting via flask-limiter: 120 requests/minute per IP by default,
+  20/minute on `/api/verify-token`. Set `RATELIMIT_STORAGE_URI` to a Redis URL
+  when running multiple workers.
 - All user-supplied strings pass through `bouncer.py` before use: identifiers
   are allowlist-matched (blocking path traversal), free text is stripped of
   HTML via bleach and length-capped.
@@ -88,12 +93,25 @@ The API will be available at `http://localhost:3001` by default — matching the
 
 ### Wiring the frontend
 
-`src/lib/api.ts` currently uses a hardcoded `USER_ID = 'default'` and sends no
-token, so authenticated routes will return `401` and the app falls back to
-`localStorage` (its documented offline behaviour). To enable cloud sync, add
-the Firebase Auth client SDK to the frontend, register a token provider via
-`setAuthTokenProvider(() => user.getIdToken())`, and replace `USER_ID` with
-the signed-in user's `uid`.
+The frontend is already wired: `src/App.tsx` listens for Firebase auth state
+changes and registers the signed-in user's `uid` and ID-token provider with
+`src/lib/api.ts`, which then sends `Authorization: Bearer <token>` on every
+request. When signed out (or if the backend is unreachable), the app falls
+back to `localStorage` — its documented offline behaviour. The frontend needs
+the `VITE_FIREBASE_*` variables set in the root `.env` (see `.env.example`).
+
+### Firestore rules
+
+The repository root contains `firestore.rules`, which **denies all client SDK
+access** — every read/write must go through this backend (the Admin SDK
+bypasses rules). This is required because the web app's Firebase config is
+public; without deny-all rules anyone could talk to Firestore directly and
+bypass the token verification, IDOR guard, and sanitisation here. Deploy the
+rules with:
+
+```bash
+firebase deploy --only firestore:rules
+```
 
 ## Database
 

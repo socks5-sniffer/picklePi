@@ -3,7 +3,7 @@ import { Sun, Moon, LogIn, LogOut } from 'lucide-react';
 import { curriculum } from './data/curriculum';
 import { Project, UserProgress, LabEntry } from './types';
 import { fetchProgress, saveProgress, createLabEntry, setAuthTokenProvider, setUserId } from './lib/api';
-import { auth, signInWithGoogle, signOutUser, onAuthChanged } from './lib/firebase';
+import { signInWithGoogle, signOutUser, onAuthChanged, isFirebaseConfigured } from './lib/firebase';
 import type { User } from 'firebase/auth';
 import Sidebar from './components/Sidebar';
 import ProjectView from './components/ProjectView';
@@ -33,6 +33,7 @@ const INITIAL_PROGRESS: UserProgress = {
 
 export default function App() {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     return onAuthChanged((user) => {
@@ -47,6 +48,39 @@ export default function App() {
     });
   }, []);
 
+  const handleSignIn = async () => {
+    setAuthError(null);
+    if (!isFirebaseConfigured) {
+      setAuthError('Sign-in is not configured: missing VITE_FIREBASE_* values in .env (see .env.example).');
+      return;
+    }
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      console.error('Sign-in failed:', err);
+      const code = (err as { code?: string })?.code ?? '';
+      // The user closing the popup themselves isn't an error worth showing
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return;
+      if (code === 'auth/unauthorized-domain') {
+        setAuthError('This domain is not on the Firebase Authorized domains list (Authentication → Settings).');
+      } else if (code === 'auth/popup-blocked') {
+        setAuthError('The sign-in popup was blocked by the browser. Allow popups for this site and try again.');
+      } else if (code === 'auth/invalid-api-key' || code === 'auth/configuration-not-found' || code === 'auth/operation-not-allowed') {
+        setAuthError('Firebase rejected the configuration. Check the VITE_FIREBASE_* values and that Google sign-in is enabled in the Firebase console.');
+      } else {
+        setAuthError(`Sign-in failed${code ? ` (${code})` : ''}. Check the browser console for details.`);
+      }
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+    } catch (err) {
+      console.error('Sign-out failed:', err);
+    }
+  };
+
   const [activeTab, setActiveTab] = useState<'home' | 'curriculum' | 'progress' | 'notebook' | 'dictionary' | 'pinout'>('home');
   const [activeProjectId, setActiveProjectId] = useState<string>(curriculum[0].id);
   const [progress, setProgress] = useState<UserProgress>(() => {
@@ -60,12 +94,15 @@ export default function App() {
     }
   });
 
-  // Sync from backend on mount; localStorage above gives an instant baseline
+  // Sync from backend; localStorage above gives an instant baseline.
+  // Re-runs when auth state changes so cloud progress loads after sign-in
+  // (on mount the user is still null and the unauthenticated fetch is a no-op).
   useEffect(() => {
+    if (!firebaseUser) return;
     fetchProgress().then(data => {
       if (data) setProgress(data);
     });
-  }, []);
+  }, [firebaseUser]);
   const [isLabModalOpen, setIsLabModalOpen] = useState(false);
   const [projectToComplete, setProjectToComplete] = useState<Project | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -172,7 +209,7 @@ export default function App() {
       <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
         {firebaseUser ? (
           <button
-            onClick={() => signOutUser()}
+            onClick={handleSignOut}
             className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-600/60 text-slate-200 text-sm font-medium shadow-lg transition-colors"
             title={firebaseUser.displayName ?? firebaseUser.email ?? 'Signed in'}
           >
@@ -184,7 +221,7 @@ export default function App() {
           </button>
         ) : (
           <button
-            onClick={() => signInWithGoogle()}
+            onClick={handleSignIn}
             className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-600/60 text-slate-200 text-sm font-medium shadow-lg transition-colors"
           >
             <LogIn size={16} className="text-emerald-400" />
@@ -202,7 +239,24 @@ export default function App() {
           <span className="hidden sm:inline select-none">{isDark ? 'Light' : 'Dark'}</span>
         </button>
       </div>
-      <Sidebar 
+
+      {authError && (
+        <div
+          role="alert"
+          className="fixed top-16 right-4 z-50 max-w-sm px-4 py-3 rounded-lg bg-red-900/95 border border-red-700 text-red-100 text-sm shadow-lg flex items-start gap-3"
+        >
+          <span className="flex-1">{authError}</span>
+          <button
+            onClick={() => setAuthError(null)}
+            aria-label="Dismiss"
+            className="text-red-300 hover:text-red-100 font-bold leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <Sidebar
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         progress={progress}
