@@ -10,27 +10,35 @@ We release patches for security vulnerabilities in the following versions:
 
 ## Reporting a Vulnerability
 
-We take the security of picklePi seriously. If you discover a security vulnerability, please follow these steps:
+We take the security of picklePi seriously. If you discover a security vulnerability, please **do not disclose it publicly**.
 
-### How to Report
+### Private Reporting
 
-1. **Do NOT** open a public GitHub issue for security vulnerabilities
-2. **Open a GitHub issue** with the tag `[SECURITY]` and provide:
-   - A description of the vulnerability
-   - Steps to reproduce the issue
-   - Potential impact assessment
-   - Suggested fix (if available)
+Please report suspected vulnerabilities privately using one of the following channels:
+
+- **GitHub Private Vulnerability Reporting** (preferred), if enabled for this repository
+- **Repository security contact email**, if one is listed by the maintainers
+
+If neither private reporting channel is available, contact the maintainers privately before sharing details publicly.
 
 ### What to Include
 
 Please include as much of the following information as possible:
 
-- Type of vulnerability (e.g., XSS, SQL injection, authentication bypass)
-- Full paths of source file(s) related to the vulnerability
-- Location of the affected source code (tag/branch/commit/direct URL)
-- Step-by-step instructions to reproduce the issue
-- Proof-of-concept or exploit code (if available)
-- Impact of the vulnerability (who could exploit it, what they could gain)
+- A clear description of the vulnerability
+- Type of vulnerability (for example: XSS, injection, authentication bypass)
+- Full paths of affected source file(s)
+- The affected version, branch, tag, or commit
+- Step-by-step reproduction instructions
+- Proof-of-concept or exploit code, if available
+- Expected impact and potential severity
+- Any suggested remediation, if known
+
+### What Not to Do
+
+- **Do not** open a public GitHub issue for security vulnerabilities
+- **Do not** post proof-of-concept details in public discussions, issues, or pull requests
+- **Do not** publicly disclose the vulnerability until the maintainers have investigated and released a fix or advisory
 
 ### Response Timeline
 
@@ -43,11 +51,12 @@ Please include as much of the following information as possible:
 
 ### Security Update Process
 
-1. Vulnerability is confirmed and assessed
-2. Fix is developed and tested
-3. Security advisory is prepared
-4. Patch is released
-5. Security advisory is published
+1. Vulnerability is received through a private reporting channel
+2. Report is confirmed and assessed
+3. Fix is developed and tested
+4. Security advisory is prepared
+5. Patch is released
+6. Public disclosure occurs when it is safe to do so
 
 ## Security Measures
 
@@ -149,10 +158,10 @@ We appreciate security researchers who help keep picklePi secure. Contributors w
 
 ## Contact
 
-For security-related questions:
-- Open an issue tagged `[SECURITY]`
-- Visit: https://github.com/socks5-sniffer/picklePi
+For security-related reports, please use a **private disclosure channel** rather than public issues.
+
+If maintainers publish a security contact method or enable private vulnerability reporting, use that channel for all vulnerability reports.
 
 ---
 
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-06-09
