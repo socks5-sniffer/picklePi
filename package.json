@@ -41,7 +41,7 @@
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.16",
     "@types/react-dom": "^19.2.3",
-    "@google/genai": "^2.6.0",
+    "@google/genai": "^2.7.0",
     "@typescript-eslint/parser": "^8.59.4",
     "@vitejs/plugin-basic-ssl": "^2.2.0",
     "better-sqlite3": "^12.10.0",
