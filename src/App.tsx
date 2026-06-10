@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, LogIn, LogOut } from 'lucide-react';
 import { curriculum } from './data/curriculum';
 import { Project, UserProgress, LabEntry } from './types';
-import { fetchProgress, saveProgress, createLabEntry } from './lib/api';
+import { fetchProgress, saveProgress, createLabEntry, setAuthTokenProvider, setUserId } from './lib/api';
+import { auth, signInWithGoogle, signOutUser, onAuthChanged } from './lib/firebase';
+import type { User } from 'firebase/auth';
 import Sidebar from './components/Sidebar';
 import ProjectView from './components/ProjectView';
 import ProgressTracker from './components/ProgressTracker';
@@ -30,6 +32,21 @@ const INITIAL_PROGRESS: UserProgress = {
 };
 
 export default function App() {
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    return onAuthChanged((user) => {
+      setFirebaseUser(user);
+      if (user) {
+        setUserId(user.uid);
+        setAuthTokenProvider(() => user.getIdToken());
+      } else {
+        setUserId(null);
+        setAuthTokenProvider(async () => null);
+      }
+    });
+  }, []);
+
   const [activeTab, setActiveTab] = useState<'home' | 'curriculum' | 'progress' | 'notebook' | 'dictionary' | 'pinout'>('home');
   const [activeProjectId, setActiveProjectId] = useState<string>(curriculum[0].id);
   const [progress, setProgress] = useState<UserProgress>(() => {
@@ -151,17 +168,40 @@ export default function App() {
   return (
     <div className="flex h-screen bg-[var(--picklePi-bg-app)] text-slate-100 font-sans">
 
-      {/* ── Theme toggle button ── fixed top-right, visible in all views ── */}
-      <button
-        onClick={toggleTheme}
-        className="fixed top-4 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-600/60 text-slate-200 text-sm font-medium shadow-lg transition-colors"
-        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      >
-        {isDark
-          ? <Sun  size={16} className="text-amber-400" />
-          : <Moon size={16} className="text-indigo-400" />}
-        <span className="hidden sm:inline select-none">{isDark ? 'Light' : 'Dark'}</span>
-      </button>
+      {/* ── Top-right controls ── */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        {firebaseUser ? (
+          <button
+            onClick={() => signOutUser()}
+            className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-600/60 text-slate-200 text-sm font-medium shadow-lg transition-colors"
+            title={firebaseUser.displayName ?? firebaseUser.email ?? 'Signed in'}
+          >
+            {firebaseUser.photoURL && (
+              <img src={firebaseUser.photoURL} alt="" className="w-5 h-5 rounded-full" />
+            )}
+            <LogOut size={16} className="text-slate-400" />
+            <span className="hidden sm:inline select-none">Sign out</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => signInWithGoogle()}
+            className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-600/60 text-slate-200 text-sm font-medium shadow-lg transition-colors"
+          >
+            <LogIn size={16} className="text-emerald-400" />
+            <span className="hidden sm:inline select-none">Sign in</span>
+          </button>
+        )}
+        <button
+          onClick={toggleTheme}
+          className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-600/60 text-slate-200 text-sm font-medium shadow-lg transition-colors"
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark
+            ? <Sun  size={16} className="text-amber-400" />
+            : <Moon size={16} className="text-indigo-400" />}
+          <span className="hidden sm:inline select-none">{isDark ? 'Light' : 'Dark'}</span>
+        </button>
+      </div>
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 

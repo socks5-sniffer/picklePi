@@ -1,14 +1,17 @@
 import { UserProgress, LabEntry } from '../types';
 
-// Placeholder until Firebase Auth is wired into the frontend: the backend
-// rejects requests whose userId doesn't match the verified token's uid, so
-// with no token these calls 401 and the app falls back to localStorage.
-// Replace with the signed-in user's uid once auth is integrated.
-const USER_ID = 'default';
-
 type AuthTokenProvider = () => Promise<string | null>;
 
 let getAuthToken: AuthTokenProvider | null = null;
+let currentUserId: string | null = null;
+
+export function setUserId(uid: string | null): void {
+  currentUserId = uid;
+}
+
+function getUserId(): string {
+  return currentUserId ?? 'default';
+}
 
 /**
  * Register a function that returns the current Firebase ID token
@@ -46,7 +49,7 @@ async function apiFetch(path: string, options?: RequestInit): Promise<Response> 
 
 export async function fetchProgress(): Promise<UserProgress | null> {
   try {
-    const res = await apiFetch(`/progress/${USER_ID}`);
+    const res = await apiFetch(`/progress/${getUserId()}`);
     if (!res.ok) return null;
     const data: unknown = await res.json();
     return isValidProgress(data) ? data : null;
@@ -57,7 +60,7 @@ export async function fetchProgress(): Promise<UserProgress | null> {
 
 export async function saveProgress(progress: UserProgress): Promise<void> {
   try {
-    await apiFetch(`/progress/${USER_ID}`, {
+    await apiFetch(`/progress/${getUserId()}`, {
       method: 'PUT',
       body: JSON.stringify(progress),
     });
@@ -70,7 +73,7 @@ export async function createLabEntry(
   entry: Omit<LabEntry, 'id' | 'date'>
 ): Promise<LabEntry | null> {
   try {
-    const res = await apiFetch(`/progress/${USER_ID}/notebook`, {
+    const res = await apiFetch(`/progress/${getUserId()}/notebook`, {
       method: 'POST',
       body: JSON.stringify(entry),
     });
@@ -83,7 +86,7 @@ export async function createLabEntry(
 
 export async function deleteLabEntry(entryId: string): Promise<void> {
   try {
-    await apiFetch(`/progress/${USER_ID}/notebook/${encodeURIComponent(entryId)}`, {
+    await apiFetch(`/progress/${getUserId()}/notebook/${encodeURIComponent(entryId)}`, {
       method: 'DELETE',
     });
   } catch {

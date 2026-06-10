@@ -10,12 +10,13 @@ const DEV_CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  "img-src 'self' data: https://*.googleusercontent.com",
   "font-src 'self'",
-  "connect-src 'self' ws://localhost:* wss://localhost:*",
+  "connect-src 'self' ws://localhost:* wss://localhost:* https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  "frame-src https://*.firebaseapp.com https://accounts.google.com",
   "frame-ancestors 'none'",
 ].join('; ');
 
@@ -27,12 +28,13 @@ const PROD_CSP = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  "img-src 'self' data: https://*.googleusercontent.com",
   "font-src 'self'",
-  "connect-src 'self'",
+  "connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  "frame-src https://*.firebaseapp.com https://accounts.google.com",
   "frame-ancestors 'none'",
 ].join('; ');
 
