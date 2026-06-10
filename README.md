@@ -251,29 +251,28 @@ picklePi/
 
 ## 🐍 Backend
 
-The backend is designed as a **Flask (Python)** application that provides a secure REST API for authentication and persistent data storage. It is designed to work with the React frontend and is documented in [`backend/README.md`](backend/README.md).
-
-> **The backend source files are not included in this repository.** The `backend/` directory contains setup documentation, a `requirements.txt`, and a `.env.example` template. See [`backend/README.md`](backend/README.md) for the full architecture description and API reference. A Node.js/Express alternative (using `express` + `better-sqlite3`, also available in `package.json`) can be used in place of the Flask server — both expose the same `/api` routes proxied by Vite on port 3001.
+The backend is a **Flask (Python)** application that provides a secure REST API for token verification and persistent data storage. It lives in [`backend/`](backend/) and is documented in [`backend/README.md`](backend/README.md).
 
 > **The backend is optional for local development.** The frontend runs fully standalone using `localStorage` for progress persistence. The API server is only required if you want server-side user accounts or persistent cross-device progress.
 
 ### Backend Documentation
 
-See [`backend/README.md`](backend/README.md) for the full architecture description covering input sanitisation, security headers, secure error logging, and API endpoints. The `db-schema.txt` in the repository root defines the full relational schema used by the backend.
+See [`backend/README.md`](backend/README.md) for the full architecture description covering authentication, input sanitisation, security headers, secure error logging, and API endpoints. The `db-schema.txt` in the repository root defines the full relational schema used by the backend.
 
 ### API Endpoints
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| `GET` | `/api/status` | Health check — returns `{"status": "online", "secure": true}` |
-| `POST` | `/api/login` | Accepts a username, sanitises input via `bouncer.py`, and authenticates the user |
-| `POST` | `/api/verify-token` | Validates a Firebase ID token and returns user identity |
-| `GET` | `/api/progress/:userId` | Fetches a user's full progress object |
-| `PUT` | `/api/progress/:userId` | Persists a user's progress object |
-| `POST` | `/api/progress/:userId/notebook` | Creates a new lab notebook entry |
-| `DELETE` | `/api/progress/:userId/notebook/:entryId` | Deletes a lab notebook entry |
-| `GET` | `/api/curriculum` | Serves the full curriculum JSON |
-| `GET` | `/api/dictionary` | Serves the full dictionary JSON |
+Sign-in happens client-side via the Firebase Auth SDK; the API verifies the resulting ID token on every authenticated (🔒) request and rejects any request whose `:userId` does not match the token's `uid`.
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| `GET` | `/api/status` | — | Health check — returns `{"status": "online", "secure": true}` |
+| `POST` | `/api/verify-token` | 🔒 | Validates a Firebase ID token and returns user identity |
+| `GET` | `/api/progress/:userId` | 🔒 | Fetches the caller's full progress object |
+| `PUT` | `/api/progress/:userId` | 🔒 | Persists the caller's progress object |
+| `POST` | `/api/progress/:userId/notebook` | 🔒 | Creates a new lab notebook entry |
+| `DELETE` | `/api/progress/:userId/notebook/:entryId` | 🔒 | Deletes a lab notebook entry |
+| `GET` | `/api/curriculum` | — | Serves the full curriculum JSON |
+| `GET` | `/api/dictionary` | — | Serves the full dictionary JSON |
 
 ### Frontend API Client
 

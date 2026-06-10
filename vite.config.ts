@@ -13,9 +13,16 @@ const DEV_CSP = [
   "img-src 'self' data:",
   "font-src 'self'",
   "connect-src 'self' ws://localhost:* wss://localhost:*",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
 ].join('; ');
 
 // Production CSP: no inline scripts, connections restricted to same-origin only.
+// CANONICAL POLICY — must stay byte-identical with the Content-Security-Policy
+// values in vercel.json and public/_headers. Browsers enforce the intersection
+// of all delivered policies, so any drift silently tightens or breaks the app.
 const PROD_CSP = [
   "default-src 'self'",
   "script-src 'self'",
@@ -23,6 +30,10 @@ const PROD_CSP = [
   "img-src 'self' data:",
   "font-src 'self'",
   "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
 ].join('; ');
 
 const baseHeaders = (csp: string) => ({

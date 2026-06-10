@@ -1,6 +1,23 @@
 import { UserProgress, LabEntry } from '../types';
 
+// Placeholder until Firebase Auth is wired into the frontend: the backend
+// rejects requests whose userId doesn't match the verified token's uid, so
+// with no token these calls 401 and the app falls back to localStorage.
+// Replace with the signed-in user's uid once auth is integrated.
 const USER_ID = 'default';
+
+type AuthTokenProvider = () => Promise<string | null>;
+
+let getAuthToken: AuthTokenProvider | null = null;
+
+/**
+ * Register a function that returns the current Firebase ID token
+ * (e.g. `setAuthTokenProvider(() => user.getIdToken())`). Once registered,
+ * every API call carries an Authorization header.
+ */
+export function setAuthTokenProvider(provider: AuthTokenProvider): void {
+  getAuthToken = provider;
+}
 
 function isValidProgress(data: unknown): data is UserProgress {
   return (
@@ -14,12 +31,14 @@ function isValidProgress(data: unknown): data is UserProgress {
 }
 
 async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
+  const token = getAuthToken ? await getAuthToken() : null;
   return fetch(`/api${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       // Forces a CORS preflight for cross-origin requests, blocking CSRF from other origins.
       'X-Requested-With': 'XMLHttpRequest',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
   });
