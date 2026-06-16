@@ -53,7 +53,7 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.22.4",
     "typescript": "~6.0.3",
-    "vite": "^8.0.14",
+    "vite": "^8.0.16",
     "vite-plugin-mkcert": "^2.1.0"
   }
 }
