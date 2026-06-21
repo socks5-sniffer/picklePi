@@ -1,6 +1,6 @@
 import { Key, ReactNode, useId, useRef, useState } from 'react';
 import { Project, ProjectStatus } from '../types';
-import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wrench, Award, Copy, Check, BookOpen, ChevronLeft, ChevronRight, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wrench, Award, Copy, Check, BookOpen, ChevronLeft, ChevronRight, HelpCircle, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import InteractiveText from './InteractiveText';
 import { dictionary } from '../data/dictionary';
 
@@ -268,6 +268,34 @@ function HardwareStepsList({ steps }: HardwareStepsListProps) {
   );
 }
 
+// ── From-scratch section ─────────────────────────────────────────────────────
+
+function FromScratchSection({ steps }: { steps: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-6 rounded-xl border border-slate-600 bg-slate-900/40 overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-700/30 transition-colors"
+      >
+        <RotateCcw size={16} className="shrink-0 text-amber-400" />
+        <span className="flex-1 text-sm font-medium text-amber-300">
+          Starting from scratch? Show full wiring guide
+        </span>
+        {open ? <ChevronUp size={16} className="shrink-0 text-slate-500" /> : <ChevronDown size={16} className="shrink-0 text-slate-500" />}
+      </button>
+      {open && (
+        <div className="px-4 pb-4 pt-2 border-t border-slate-700/40">
+          <p className="text-xs text-slate-500 mb-4">
+            Complete wiring instructions — no prior levels needed.
+          </p>
+          <HardwareStepsList steps={steps} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Collapsible item (code walkthrough + troubleshooting) ─────────────────────
 
 interface CollapsibleItemProps {
@@ -477,6 +505,9 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
                   <InteractiveText text={currentContent.hardwareSetup.explanation} dictionary={dictionary} />
                 </p>
               </div>
+            )}
+            {currentContent.hardwareSetup.fromScratchSteps && currentContent.hardwareSetup.fromScratchSteps.length > 0 && (
+              <FromScratchSection steps={currentContent.hardwareSetup.fromScratchSteps} />
             )}
           </div>
         </section>

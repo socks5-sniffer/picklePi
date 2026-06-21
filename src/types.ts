@@ -11,6 +11,7 @@ export interface PageContent {
     warnings: string[];
     steps: string[];
     explanation: string;
+    fromScratchSteps?: string[];
   };
   code: string;
   codeWalkthrough: { section: string; explanation: string }[];
@@ -36,6 +37,7 @@ export interface ProjectContent {
     warnings: string[];
     steps: string[];
     explanation: string;
+    fromScratchSteps?: string[];
   };
   code: string;
   codeWalkthrough: { section: string; explanation: string }[];

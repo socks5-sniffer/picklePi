@@ -348,6 +348,18 @@ except KeyboardInterrupt:
                 'Connect the button module VCC pin to Raspberry Pi Physical Pin 1 (3.3V).',
                 'Connect the button module S (Signal) pin to Raspberry Pi Physical Pin 15 (GPIO 22).'
               ],
+              fromScratchSteps: [
+                'Identify the 4 pins on your RGB LED module: the longest pin is Ground (GND/cathode, marked -).',
+                'Place the RGB LED module in your breadboard.',
+                'Connect the GND pin (longest leg, marked -) to the negative (-) rail on your breadboard.',
+                'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the negative rail.',
+                'Connect the R (Red) pin of the LED module to Physical Pin 11 (GPIO 17).',
+                'Connect the G (Green) pin of the LED module to Physical Pin 13 (GPIO 27).',
+                'Connect the B (Blue) pin of the LED module to Physical Pin 29 (GPIO 5).',
+                'Connect the button module GND pin to the ground rail.',
+                'Connect the button module VCC pin to Raspberry Pi Physical Pin 1 (3.3V).',
+                'Connect the button module S (Signal) pin to Raspberry Pi Physical Pin 15 (GPIO 22).',
+              ],
               explanation: 'The button module has a built-in pull-up resistor. When NOT pressed, Signal is HIGH (3.3V). When pressed, Signal goes LOW (0V) because it connects to GND internally.'
             },
             code: '',
@@ -534,6 +546,15 @@ except KeyboardInterrupt:
               ],
               steps: [
                 'Ensure your RGB LED module is connected just like in Level 1 (Red pin to GPIO 17, longest pin to GND).'
+              ],
+              fromScratchSteps: [
+                'Identify the 4 pins on your RGB LED module: the longest pin is Ground (GND/cathode, marked -).',
+                'Place the RGB LED module in your breadboard.',
+                'Connect the GND pin (longest leg, marked -) to the negative (-) rail on your breadboard.',
+                'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the negative rail.',
+                'Connect the R (Red) pin of the LED module to Physical Pin 11 (GPIO 17).',
+                'Connect the G (Green) pin of the LED module to Physical Pin 13 (GPIO 27).',
+                'Connect the B (Blue) pin of the LED module to Physical Pin 29 (GPIO 5).',
               ],
               explanation: 'We are changing how we control the pin in software. Instead of a steady 3.3V, we will turn the pin on and off very fast to simulate a lower voltage.'
             },
@@ -934,6 +955,18 @@ except KeyboardInterrupt:
                 'Connect the OUT (or DATA) pin of the PIR sensor to Raspberry Pi Physical Pin 16 (GPIO 23).',
                 'Keep your LED connected to GPIO 17 as an indicator.'
               ],
+              fromScratchSteps: [
+                'Identify the 4 pins on your RGB LED module: the longest pin is Ground (GND/cathode, marked -).',
+                'Place the RGB LED module in your breadboard.',
+                'Connect the GND pin (longest leg, marked -) to the negative (-) rail on your breadboard.',
+                'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the negative rail.',
+                'Connect the R (Red) pin of the LED module to Physical Pin 11 (GPIO 17).',
+                'Connect the G (Green) pin of the LED module to Physical Pin 13 (GPIO 27).',
+                'Connect the B (Blue) pin of the LED module to Physical Pin 29 (GPIO 5).',
+                'Connect the VCC pin of the PIR sensor to Raspberry Pi Physical Pin 2 (5V).',
+                'Connect the GND pin of the PIR sensor to a Ground pin.',
+                'Connect the OUT (or DATA) pin of the PIR sensor to Raspberry Pi Physical Pin 16 (GPIO 23).',
+              ],
               explanation: 'The PIR sensor detects changes in infrared radiation (body heat). When a person moves, it sends a 3.3V HIGH signal on its OUT pin.'
             },
             code: '',
@@ -1142,6 +1175,14 @@ except KeyboardInterrupt:
                 'Connect ADXL345 SCL → Raspberry Pi Physical Pin 5 (GPIO 3 / SCL1).',
                 'Leave the ADXL345 CS pin unconnected (or tie HIGH to 3.3V) — this selects I2C mode.',
                 'Optionally connect the LED from Level 1: long leg (anode) → GPIO 17 through a 330Ω resistor → GND.'
+              ],
+              fromScratchSteps: [
+                'Connect ADXL345 GND → GND rail on your breadboard.',
+                'Connect ADXL345 VCC → Raspberry Pi Physical Pin 1 (3.3V) — NOT 5V!',
+                'Connect ADXL345 SDA → Raspberry Pi Physical Pin 3 (GPIO 2 / SDA1).',
+                'Connect ADXL345 SCL → Raspberry Pi Physical Pin 5 (GPIO 3 / SCL1).',
+                'Leave the ADXL345 CS pin unconnected (or tie HIGH to 3.3V) — this selects I2C mode.',
+                'Optional RGB LED indicator: identify the 4 pins on your module (longest pin = GND). Connect GND to the negative rail, connect Pi Physical Pin 6 (GND) to the negative rail, then connect R (Red) → GPIO 17, G (Green) → GPIO 27, B (Blue) → GPIO 5.',
               ],
               explanation: "I2C uses just two wires (SDA for data and SCL for clock) to talk to many different sensors. The Pi is the I2C \"Master\" — it drives the clock and addresses each device by a unique 7-bit number. The ADXL345's default I2C address is 0x53. Inside the chip, a tiny suspended mass shifts position under acceleration; bridge circuits measure that shift and produce a voltage that the chip's internal ADC converts to a digital reading."
             },
@@ -1362,6 +1403,23 @@ except KeyboardInterrupt:
                 'Button on GPIO 22 (to 3.3V).',
                 'Passive Buzzer on GPIO 18.',
                 'PIR Sensor on GPIO 23 (VCC to 5V).'
+              ],
+              fromScratchSteps: [
+                'Identify the 4 pins on your RGB LED module: the longest pin is Ground (GND/cathode, marked -).',
+                'Place the RGB LED module in your breadboard.',
+                'Connect the GND pin (longest leg, marked -) to the negative (-) rail on your breadboard.',
+                'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the negative rail.',
+                'Connect the R (Red) pin of the LED module to Physical Pin 11 (GPIO 17).',
+                'Connect the G (Green) pin of the LED module to Physical Pin 13 (GPIO 27).',
+                'Connect the B (Blue) pin of the LED module to Physical Pin 29 (GPIO 5).',
+                'Connect the button module GND pin to the ground rail.',
+                'Connect the button module VCC pin to Raspberry Pi Physical Pin 1 (3.3V).',
+                'Connect the button module S (Signal) pin to Raspberry Pi Physical Pin 15 (GPIO 22).',
+                'Connect the longer leg (positive) of the passive buzzer to Raspberry Pi Physical Pin 12 (GPIO 18).',
+                'Connect the shorter leg (negative) of the buzzer to a Ground (GND) pin.',
+                'Connect the VCC pin of the PIR sensor to Raspberry Pi Physical Pin 2 (5V).',
+                'Connect the GND pin of the PIR sensor to a Ground pin.',
+                'Connect the OUT (or DATA) pin of the PIR sensor to Raspberry Pi Physical Pin 16 (GPIO 23).',
               ],
               explanation: 'We are building a complete system. The PIR acts as the trigger, the LED and Buzzer act as the alarm outputs, and the Button acts as the disarm switch.'
             },
@@ -1642,6 +1700,21 @@ except KeyboardInterrupt:
                 'Rotation sensor: connect one outer leg to GND, the other outer leg to 3.3V, and the middle wiper pin to MCP3008 CH0 (pin 1).',
                 'Keep your RGB LED connected exactly as in Level 1 (Red to GPIO 17, GND to ground rail).'
               ],
+              fromScratchSteps: [
+                'Place the MCP3008 chip in the center of your breadboard straddling the gap.',
+                'MCP3008 VDD (pin 16) → 3.3V rail. MCP3008 AGND (pin 14) and DGND (pin 9) → GND rail.',
+                'MCP3008 VREF (pin 15) → 3.3V rail (same as VDD).',
+                'MCP3008 CLK (pin 13) → Raspberry Pi Physical Pin 23 (GPIO 11 / SCLK).',
+                'MCP3008 DOUT/MISO (pin 12) → Raspberry Pi Physical Pin 21 (GPIO 9 / MISO).',
+                'MCP3008 DIN/MOSI (pin 11) → Raspberry Pi Physical Pin 19 (GPIO 10 / MOSI).',
+                'MCP3008 CS/SHDN (pin 10) → Raspberry Pi Physical Pin 24 (GPIO 8 / CE0).',
+                'Rotation sensor: connect one outer leg to GND, the other outer leg to 3.3V, and the middle wiper pin to MCP3008 CH0 (pin 1).',
+                'Identify the 4 pins on your RGB LED module: the longest pin is Ground (GND/cathode, marked -).',
+                'Connect the GND pin (longest leg) to the negative (-) rail. Connect Pi Physical Pin 6 (GND) to the negative rail.',
+                'Connect the R (Red) pin of the LED module to Physical Pin 11 (GPIO 17).',
+                'Connect the G (Green) pin of the LED module to Physical Pin 13 (GPIO 27).',
+                'Connect the B (Blue) pin of the LED module to Physical Pin 29 (GPIO 5).',
+              ],
               explanation: 'The rotation sensor is a potentiometer — a variable voltage divider. Turning the knob sweeps the wiper between 0V and 3.3V. The MCP3008 reads this voltage over SPI and sends a digital number (0.0–1.0) to the Pi, which we pipe directly into the PWMLED brightness.'
             },
             code: '',
@@ -1842,6 +1915,18 @@ except KeyboardInterrupt:
                 'Build the ECHO voltage divider: HC-SR04 ECHO → 1kΩ resistor → junction node → 2kΩ resistor → GND rail.',
                 'Connect the junction node (between the two resistors) to Raspberry Pi Physical Pin 22 (GPIO 25).',
                 'Keep the RGB LED module connected as in Level 1: Red pin → GPIO 17, Green → GPIO 27, Blue → GPIO 5, GND → ground rail.'
+              ],
+              fromScratchSteps: [
+                'Connect HC-SR04 VCC to Raspberry Pi Physical Pin 2 (5V).',
+                'Connect HC-SR04 GND to the ground rail on the breadboard.',
+                'Connect HC-SR04 TRIG directly to Raspberry Pi Physical Pin 18 (GPIO 24).',
+                'Build the ECHO voltage divider: HC-SR04 ECHO → 1kΩ resistor → junction node → 2kΩ resistor → GND rail.',
+                'Connect the junction node (between the two resistors) to Raspberry Pi Physical Pin 22 (GPIO 25).',
+                'Identify the 4 pins on your RGB LED module: the longest pin is Ground (GND/cathode, marked -).',
+                'Connect the GND pin (longest leg) to the negative (-) rail. Connect Pi Physical Pin 6 (GND) to the negative rail.',
+                'Connect the R (Red) pin of the LED module to Physical Pin 11 (GPIO 17).',
+                'Connect the G (Green) pin of the LED module to Physical Pin 13 (GPIO 27).',
+                'Connect the B (Blue) pin of the LED module to Physical Pin 29 (GPIO 5).',
               ],
               explanation: 'The voltage divider reduces the 5V ECHO signal to a safe 3.3V before it reaches the Pi. Using Ohm\'s law: 5V × (2kΩ ÷ (1kΩ + 2kΩ)) = 3.33V — just safe enough. The sensor fires a 40kHz ultrasonic burst from TRIG and measures how long ECHO stays HIGH to calculate distance.'
             },
@@ -2070,6 +2155,22 @@ except KeyboardInterrupt:
                 'Double Color LED status indicator: Red pin → GPIO 16 through a 330Ω resistor → GND; Green pin → GPIO 20 through a 330Ω resistor → GND. This gives a live red/green signal: Red = relay ON (hot!), Green = relay OFF (normal).',
                 'Retain the RGB LED from Level 1: Red → GPIO 17, Green → GPIO 27, Blue → GPIO 5, GND → GND.',
                 'Retain the passive buzzer from Level 4: positive leg → GPIO 18, negative → GND.'
+              ],
+              fromScratchSteps: [
+                'DS18B20 sensor: flat face forward — left leg is GND, middle leg is DATA, right leg is VCC.',
+                'Connect DS18B20 VCC (right leg) → 3.3V rail.',
+                'Connect DS18B20 GND (left leg) → GND rail.',
+                'Connect DS18B20 DATA (middle leg) → Raspberry Pi Physical Pin 7 (GPIO 4).',
+                'Connect a 4.7kΩ resistor between the DS18B20 DATA wire and the 3.3V rail (required 1-Wire pull-up).',
+                'Relay module: Connect VCC → Raspberry Pi Physical Pin 4 (5V), GND → GND rail, IN → Raspberry Pi Physical Pin 37 (GPIO 26).',
+                'Double Color LED status indicator: Red pin → GPIO 16 through a 330Ω resistor → GND. Green pin → GPIO 20 through a 330Ω resistor → GND.',
+                'Identify the 4 pins on your RGB LED module: the longest pin is Ground (GND/cathode, marked -).',
+                'Connect the GND pin (longest leg) to the negative (-) rail. Connect Pi Physical Pin 6 (GND) to the negative rail.',
+                'Connect the R (Red) pin of the LED module to Physical Pin 11 (GPIO 17).',
+                'Connect the G (Green) pin of the LED module to Physical Pin 13 (GPIO 27).',
+                'Connect the B (Blue) pin of the LED module to Physical Pin 29 (GPIO 5).',
+                'Connect the longer leg (positive) of the passive buzzer to Raspberry Pi Physical Pin 12 (GPIO 18).',
+                'Connect the shorter leg (negative) of the buzzer to a Ground (GND) pin.',
               ],
               explanation: 'The DS18B20 uses the 1-Wire protocol — a single data line carries both power signaling and data. Linux automatically detects it and creates a virtual text file you read like any other file. The relay coil is energized by GPIO 26 (5V logic from the module) and mechanically snaps a heavy-duty contact closed, switching whatever load you connect to the NO (Normally Open) screw terminal.'
             },
@@ -2402,6 +2503,19 @@ except KeyboardInterrupt:
                 'Position the laser so its beam lands directly on the photoresistor\'s sensor window.',
                 'Secure both modules so the beam alignment stays consistent.'
               ],
+              fromScratchSteps: [
+                'Laser Sensor Module: Connect VCC → 5V rail, GND → GND rail, S (signal) → GPIO 23.',
+                'Photoresistor Module: Connect VCC → 3.3V rail, GND → GND rail, AO (analog out) → MCP3008 CH0.',
+                'Place the MCP3008 chip in the center of your breadboard straddling the gap.',
+                'MCP3008 VDD (pin 16) → 3.3V rail. MCP3008 AGND (pin 14) and DGND (pin 9) → GND rail.',
+                'MCP3008 VREF (pin 15) → 3.3V rail (same as VDD).',
+                'MCP3008 CLK (pin 13) → Raspberry Pi Physical Pin 23 (GPIO 11 / SCLK).',
+                'MCP3008 DOUT/MISO (pin 12) → Raspberry Pi Physical Pin 21 (GPIO 9 / MISO).',
+                'MCP3008 DIN/MOSI (pin 11) → Raspberry Pi Physical Pin 19 (GPIO 10 / MOSI).',
+                'MCP3008 CS/SHDN (pin 10) → Raspberry Pi Physical Pin 24 (GPIO 8 / CE0).',
+                'Active Buzzer Module: Connect VCC → 5V rail, GND → GND rail, I/O → GPIO 18.',
+                'Position the laser so its beam lands directly on the photoresistor\'s sensor window. Secure both modules so the beam alignment stays consistent.',
+              ],
               explanation: 'The laser emits a focused beam of coherent light. The photoresistor\'s resistance drops dramatically when bright light hits it. By reading the analog voltage through the MCP3008 ADC, we can detect the exact light level. When the beam is blocked, the resistance rises and our reading changes — triggering the alarm.'
             },
             code: '',
@@ -2679,6 +2793,20 @@ except KeyboardInterrupt:
                 'MCP3008 ADC: Same wiring as Level 11 — CLK → GPIO 11, DOUT → GPIO 9, DIN → GPIO 10, CS → GPIO 8.',
                 'Mount the sensors on a door frame. Attach a small magnet to the door so it aligns with both sensors when the door is closed.',
                 'Test alignment: when the magnet is near, the reed switch should close and the Hall sensor should register a strong field.'
+              ],
+              fromScratchSteps: [
+                'Reed Switch Module: Connect VCC → 3.3V, GND → GND, DO (digital out) → GPIO 17. The module has a built-in pull-up resistor.',
+                'Hall Effect Sensor Module: Connect VCC → 3.3V, GND → GND, AO (analog out) → MCP3008 CH1, DO (digital out) → GPIO 27.',
+                'Double Color LED: Red → GPIO 16 through 330Ω → GND. Green → GPIO 20 through 330Ω → GND.',
+                'Place the MCP3008 chip in the center of your breadboard straddling the gap.',
+                'MCP3008 VDD (pin 16) → 3.3V rail. MCP3008 AGND (pin 14) and DGND (pin 9) → GND rail.',
+                'MCP3008 VREF (pin 15) → 3.3V rail (same as VDD).',
+                'MCP3008 CLK (pin 13) → Raspberry Pi Physical Pin 23 (GPIO 11 / SCLK).',
+                'MCP3008 DOUT/MISO (pin 12) → Raspberry Pi Physical Pin 21 (GPIO 9 / MISO).',
+                'MCP3008 DIN/MOSI (pin 11) → Raspberry Pi Physical Pin 19 (GPIO 10 / MOSI).',
+                'MCP3008 CS/SHDN (pin 10) → Raspberry Pi Physical Pin 24 (GPIO 8 / CE0).',
+                'Mount the sensors on a door frame. Attach a small magnet to the door so it aligns with both sensors when the door is closed.',
+                'Test alignment: when the magnet is near, the reed switch should close and the Hall sensor should register a strong field.',
               ],
               explanation: 'The reed switch contains two metal reeds in a glass tube — a nearby magnetic field pulls them together, closing the circuit. The Hall Effect sensor detects magnetic field strength as an analog voltage proportional to the field intensity. Using BOTH sensors lets us detect tampering: if someone holds a magnet near the reed switch to fool it, the Hall sensor will see an abnormally STRONG field — stronger than the door\'s actual magnet.'
             },
@@ -2976,6 +3104,18 @@ except KeyboardInterrupt:
                 'RGB LED (from Level 1): Red → GPIO 17, Green → GPIO 27, Blue → GPIO 5, GND → GND. We\'ll use this for status.',
                 'Active Buzzer: VCC → 5V, GND → GND, I/O → GPIO 18.',
                 'Mount the vibration sensor and accelerometer on a small box or book — this is your "protected asset."'
+              ],
+              fromScratchSteps: [
+                'Spring Vibration Sensor Module: Connect VCC → 3.3V, GND → GND, DO (digital out) → GPIO 24.',
+                'ADXL345 Accelerometer Module: Connect VCC → 3.3V, GND → GND, SDA → GPIO 2 (Physical Pin 3), SCL → GPIO 3 (Physical Pin 5).',
+                'Run `sudo i2cdetect -y 1` — you should see address 0x53 (default ADXL345 address).',
+                'Identify the 4 pins on your RGB LED module: the longest pin is Ground (GND/cathode, marked -).',
+                'Connect the GND pin (longest leg) to the negative (-) rail. Connect Pi Physical Pin 6 (GND) to the negative rail.',
+                'Connect the R (Red) pin of the LED module to Physical Pin 11 (GPIO 17).',
+                'Connect the G (Green) pin of the LED module to Physical Pin 13 (GPIO 27).',
+                'Connect the B (Blue) pin of the LED module to Physical Pin 29 (GPIO 5).',
+                'Active Buzzer: VCC → 5V, GND → GND, I/O → GPIO 18.',
+                'Mount the vibration sensor and accelerometer on a small box or book — this is your "protected asset."',
               ],
               explanation: 'The spring vibration sensor is a simple switch with a metal spring inside. Any shock or vibration causes the spring to touch the case, briefly closing the circuit. The ADXL345 uses MEMS (Micro-Electro-Mechanical Systems) — a tiny silicon mass suspended by springs. When the chip accelerates, the mass moves and changes capacitance, which is measured and converted to a digital G-force reading on each axis.'
             },
