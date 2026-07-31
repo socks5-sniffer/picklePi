@@ -24,6 +24,7 @@ from middleware import apply_security_headers
 
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(BACKEND_DIR)
+DATA_DIR = os.path.join(REPO_ROOT, "data")
 
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
 
@@ -160,7 +161,7 @@ def delete_notebook_entry(user_id, entry_id):
 
 
 def _serve_json(filename):
-    with open(os.path.join(REPO_ROOT, filename), encoding="utf-8") as f:
+    with open(os.path.join(DATA_DIR, filename), encoding="utf-8") as f:
         return jsonify(json.load(f))
 
 
