@@ -116,11 +116,13 @@ export default function PinoutView() {
           <span>Raspberry Pi 40-pin GPIO header — click to open full size</span>
         </div>
         <div className="p-4 flex justify-center">
-          <a href="/pi pinout.png" target="_blank" rel="noopener noreferrer">
+          <a href="/pi-pinout.webp" target="_blank" rel="noopener noreferrer">
             <img
-              src="/pi pinout.png"
+              src="/pi-pinout.webp"
+              width={1472}
+              height={2816}
               alt="Raspberry Pi GPIO pinout diagram showing all 40 pins with their functions and labels"
-              className="max-w-full rounded-lg border border-slate-700/40 hover:border-emerald-500/50 transition-colors shadow-lg"
+              className="max-w-full h-auto rounded-lg border border-slate-700/40 hover:border-emerald-500/50 transition-colors shadow-lg"
             />
           </a>
         </div>
