@@ -6,6 +6,8 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// This script lives in data/, but writes generated levels under the repo root.
+const REPO_ROOT = path.resolve(__dirname, '..');
 
 // Load environment variables from .env file (needs to be above GoogleGenAI init)
 dotenv.config();
@@ -115,7 +117,7 @@ async function generateNewLevel(topic: string, levelNumber: number) {
     }
   });
 
-  const outputFilename = path.join(__dirname, `src/data/generated-level-${levelNumber}.json`);
+  const outputFilename = path.join(REPO_ROOT, `src/data/generated-level-${levelNumber}.json`);
   fs.writeFileSync(outputFilename, response.text || "");
   console.log(`✅ Successfully generated level data and saved to ${outputFilename}!`);
 }

@@ -4,9 +4,11 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// This script lives in data/, but reads and writes at the repo root.
+const REPO_ROOT = path.resolve(__dirname, '..');
 
-const WIKI_DIR = path.join(__dirname, 'wiki');
-const OUTPUT_FILE = path.join(__dirname, 'wiki_knowledge_base.md');
+const WIKI_DIR = path.join(REPO_ROOT, 'wiki');
+const OUTPUT_FILE = path.join(REPO_ROOT, 'wiki_knowledge_base.md');
 
 function getAllMarkdownFiles(dirPath: string, arrayOfFiles: string[] = []) {
   const files = fs.readdirSync(dirPath);
