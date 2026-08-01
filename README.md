@@ -7,8 +7,8 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![React](https://img.shields.io/badge/React-19.2-blue.svg)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-8.0-purple.svg)](https://vitejs.dev)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-cyan.svg)](https://tailwindcss.com)
+[![Vite](https://img.shields.io/badge/Vite-8.2-purple.svg)](https://vitejs.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.3-cyan.svg)](https://tailwindcss.com)
 [![OWASP Security Scan](https://img.shields.io/badge/OWASP-Security%20Scan-orange.svg)](.github/workflows/owasp-security-scan.yml)
 
 **Learn electronics and Python programming through hands-on Raspberry Pi projects — one circuit at a time.**
@@ -215,7 +215,7 @@ picklePi/
 ├── public/
 │   ├── .well-known/security.txt # Vulnerability disclosure contact
 │   ├── theme-init.js            # Pre-paint theme restore (avoids light/dark flash)
-│   └── pi pinout.png            # GPIO pinout reference image
+│   └── pi-pinout.webp           # GPIO pinout reference image
 ├── src/
 │   ├── components/
 │   │   ├── BadgeIcon.tsx         # SVG hexagon badge renderer with per-level colour themes
@@ -293,7 +293,7 @@ Sign-in happens client-side via the Firebase Auth SDK; the API verifies the resu
 |------------|---------|------|
 | **React** | 19.2 | UI framework; hooks for all state management |
 | **TypeScript** | 6.0 | Type safety across the entire codebase |
-| **Vite** | 8.0 | Dev server, HMR, and production bundler |
+| **Vite** | 8.2 | Dev server, HMR, and production bundler |
 | **Tailwind CSS** | 4.3 | Utility-first styling via `@tailwindcss/vite` plugin |
 | **Motion** | 12.x | Declarative animations for UI transitions |
 | **Lucide React** | 1.x | Consistent SVG icon library |
