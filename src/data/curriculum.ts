@@ -103,7 +103,6 @@ Mix them to create any color: R+G=Yellow, R+B=Magenta, G+B=Cyan, R+G+B=White!
 """
 
 from gpiozero import LED
-from signal import pause
 from time import sleep
 
 # ============================================
@@ -2181,10 +2180,6 @@ def read_temperature(device_file):
 # HELPERS
 # ============================================
 
-def set_color(r, g, b):
-    red_led.value   = r
-    green_led.value = g
-
 def set_status(relay_on):
     """Drive the Double Color LED: Red when relay is ON, Green when OFF."""
     if relay_on:
@@ -2209,7 +2204,7 @@ device = find_sensor()
 print(f"   Sensor found: {device}")
 print(f"   Relay ON  above: {TEMP_ON_THRESHOLD_C}°C")
 print(f"   Relay OFF below: {TEMP_OFF_THRESHOLD_C}°C")
-print(f"   Press Ctrl+C to exit.\\n")
+print("   Press Ctrl+C to exit.\\n")
 
 relay_active = False  # Track relay state for hysteresis logic
 
@@ -2435,7 +2430,7 @@ We use the MCP3008 ADC to read this analog voltage as a 10-bit value (0-1023).
 
 import time
 from datetime import datetime
-from gpiozero import LED, OutputDevice, MCP3008
+from gpiozero import OutputDevice, MCP3008
 
 # ============================================
 # HARDWARE ABSTRACTION
@@ -2756,10 +2751,10 @@ def calibrate_door():
     min_val = min(samples)
     max_val = max(samples)
     
-    print(f"\\n📊 Door Closed Readings:")
+    print("\\n📊 Door Closed Readings:")
     print(f"   Average: {avg:.3f}")
     print(f"   Range:   {min_val:.3f} - {max_val:.3f}")
-    print(f"\\n   Use these to set HALL_CLOSED_MIN and HALL_CLOSED_MAX in the code.")
+    print("\\n   Use these to set HALL_CLOSED_MIN and HALL_CLOSED_MAX in the code.")
     return avg
 
 # ============================================
@@ -2768,7 +2763,8 @@ def calibrate_door():
 
 def get_door_state():
     """
-    Returns: 'secure', 'open', or 'tamper'
+    Returns a tuple: (state, hall_value, reed_closed)
+    where state is 'secure', 'open', or 'tamper'.
     """
     reed_closed = reed_switch.is_pressed  # True when magnet closes the switch
     hall_value = hall_analog.value
@@ -2823,7 +2819,7 @@ try:
                 print(f"🟢 SECURE — Door closed (Hall: {hall_value:.3f})")
             elif state == 'tamper':
                 print(f"🔴 TAMPER DETECTED! Abnormally strong magnetic field: {hall_value:.3f}")
-                print(f"   Someone may be spoofing the sensor with an external magnet!")
+                print("   Someone may be spoofing the sensor with an external magnet!")
             else:
                 print(f"🟡 OPEN — Door opened (Hall: {hall_value:.3f}, Reed: {'closed' if reed_closed else 'open'})")
             
@@ -3190,24 +3186,27 @@ try:
         x, y, z = read_accel()
         mag = magnitude(x, y, z)
         
-        # Check for tilt (slow movement)
+        # Deviation of each axis from the calibrated baseline
         dx = abs(x - baseline_x)
         dy = abs(y - baseline_y)
         dz = abs(z - baseline_z)
-        
-        if dx > TILT_THRESHOLD or dy > TILT_THRESHOLD or dz > TILT_THRESHOLD:
-            print(f"\\n📐 TILT DETECTED! ΔX:{dx:.2f} ΔY:{dy:.2f} ΔZ:{dz:.2f}")
-            log_event("TILT", x, y, z, mag)
-            set_status('alert')
-            sound_alarm(1)
-        
-        # Check for impact (sudden acceleration)
-        elif mag > IMPACT_THRESHOLD:
+
+        # Check for impact FIRST: a sudden hit spikes the total magnitude,
+        # but it also throws the axes off baseline — so if we tested tilt
+        # first, every impact would be misreported as a tilt.
+        if mag > IMPACT_THRESHOLD:
             print(f"\\n💥 IMPACT DETECTED! Magnitude: {mag:.2f}G")
             log_event("IMPACT", x, y, z, mag)
             set_status('alarm')
             sound_alarm(3)
-        
+
+        # Then check for a slow tilt (gravity vector shifting across axes)
+        elif dx > TILT_THRESHOLD or dy > TILT_THRESHOLD or dz > TILT_THRESHOLD:
+            print(f"\\n📐 TILT DETECTED! ΔX:{dx:.2f} ΔY:{dy:.2f} ΔZ:{dz:.2f}")
+            log_event("TILT", x, y, z, mag)
+            set_status('alert')
+            sound_alarm(1)
+
         else:
             set_status('secure')
         
