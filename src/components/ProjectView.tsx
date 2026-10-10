@@ -105,7 +105,7 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
         <button
           onClick={onToggleDone}
           aria-label="Toggle step done"
-          aria-pressed="false"
+          aria-pressed={isDone}
           className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
             isDone
               ? 'border-emerald-500 bg-emerald-500 text-white'
@@ -120,7 +120,7 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
           id={toggleId}
           className="flex-1 text-left min-w-0"
           onClick={onToggleOpen}
-          aria-expanded="false"
+          aria-expanded={isOpen}
           aria-controls={panelId}
         >
           <span className={`text-xs font-bold uppercase tracking-wider ${isDone ? 'text-emerald-500' : 'text-amber-400'}`}>
@@ -136,7 +136,7 @@ function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleD
         {/* Expand chevron */}
         <button
           onClick={onToggleOpen}
-          aria-expanded="false"
+          aria-expanded={isOpen}
           aria-controls={panelId}
           aria-label="Toggle step details"
           className="shrink-0 ml-2 text-slate-500 hover:text-slate-300 transition-colors"
@@ -286,7 +286,7 @@ function CollapsibleItem({ header, children, defaultOpen = false, accentColor = 
       <button
         className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-700/30 transition-colors"
         onClick={() => setOpen(o => !o)}
-        aria-expanded="false"
+        aria-expanded={open}
         aria-controls={panelId}
       >
         <span className={`font-medium text-sm sm:text-base ${accentColor}`}>{header}</span>
@@ -303,6 +303,7 @@ function CollapsibleItem({ header, children, defaultOpen = false, accentColor = 
 
 export default function ProjectView({ project, status, isLocked, onComplete }: ProjectViewProps) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -335,10 +336,11 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(currentContent.code);
+      setCopyError(false);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard access denied — do not show false confirmation
+      setCopyError(true);
     }
   };
 
@@ -490,6 +492,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             The Code
           </h2>
           
+          {copyError && <p role="status" className="text-amber-300">Clipboard access is unavailable. Select the code below and copy it manually.</p>}
           <div className="relative group">
             <div className="absolute right-4 top-4 z-10">
               <button 

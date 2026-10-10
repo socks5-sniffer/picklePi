@@ -15,24 +15,34 @@ picklePi's curriculum and dictionary are completely driven by static TypeScript 
 To add a new project, you'll need to modify the `curriculum` array in `src/data/curriculum.ts`.
 
 1. Open `src/data/curriculum.ts`.
-2. Append a new object conforming to the `Project` interface.
+2. Create an object conforming to the `Project` interface and add it to the `curriculum` array.
 3. Ensure you provide all required sections (`overview`, `hardwareSetup`, `code`, `codeWalkthrough`, `conceptDeepDive`, `experimentMode`, `troubleshooting`).
 
-### Example Project Stub:
+### Example Project Shape
+
+`ProjectContent` requires the overview, hardware, code, walkthrough, deep dive, experiment, and troubleshooting fields even when you also add optional pages. Each page's `content` must provide the same fields as `PageContent`.
 
 ```typescript
-{
-  id: 'p11-new-project',
-  level: 11,
+const newProject: Project = {
+  id: 'p14-new-project',
+  level: 14,
   levelName: 'Advanced Topics',
   title: 'My New Project',
-  skillsLearned: ['New Skill 1', 'New Skill 2'],
+  skillsLearned: ['New Skill 1'],
   badgeEarned: 'Advanced Maker',
   content: {
-    // ... populate the content pages following the structure of previous levels
+    overview: { description: 'Project summary.', concepts: ['GPIO'], difficulty: 1, estimatedTime: '20 mins' },
+    hardwareSetup: { warnings: [], steps: ['Connect the component.'], explanation: 'Explain the circuit.' },
+    code: 'from gpiozero import LED; led = LED(17); led.on()',
+    codeWalkthrough: [{ section: 'LED setup', explanation: 'Create and blink the LED.' }],
+    conceptDeepDive: { hardware: 'Hardware notes.', software: 'Software notes.', connection: 'How they work together.' },
+    experimentMode: { tweak: 'Change the blink rate.', logic: 'Add a button.', creative: 'Build a signal pattern.' },
+    troubleshooting: [{ issue: 'LED stays off.', solution: 'Check the wiring and GPIO number.' }]
   }
-}
+};
 ```
+
+Import `Project` from `src/types.ts`. For a multi-page project, add a `pages` array and give every page a complete `PageContent` object; use an existing project as the page template.
 
 ## Adding Dictionary Entries
 
@@ -44,13 +54,14 @@ The electronics and programming dictionary is located in `src/data/dictionary.ts
 ```typescript
 {
   term: 'New Term',
-  category: 'Electronics', // Must be 'Python', 'Raspberry Pi', or 'Electronics'
+  category: 'Electronics', // 'Python' | 'Raspberry Pi' | 'Electronics' | 'Beginner' | 'Security'
   definition: 'A clear, beginner-friendly explanation of the term.',
   example: 'An example of how it is used in code or hardware.'
 }
 ```
 
-*Note: The dictionary automatically sorts terms alphabetically on the frontend, so you can append your new term anywhere in the array!*
+*Note: The dictionary view sorts terms alphabetically, so you can append your new term anywhere in the source array.*
+
 
 ---
 
@@ -64,24 +75,24 @@ picklePi is built with modern web technologies, focusing on performance, type sa
 
 | Technology | Version | Role |
 |------------|---------|------|
-| **React** | 19.0 | UI framework; hooks for all state management |
-| **TypeScript** | 5.8 | Type safety across the entire codebase |
-| **Vite** | 6.2 | Dev server, HMR, and production bundler |
-| **Tailwind CSS** | 4.1 | Utility-first styling via `@tailwindcss/vite` plugin |
+| **React** | 19.x | UI framework; hooks for all state management |
+| **TypeScript** | 6.x | Type safety across the entire codebase |
+| **Vite** | 8.x | Dev server, HMR, and production bundler |
+| **Tailwind CSS** | 4.x | Utility-first styling via `@tailwindcss/vite` plugin |
 | **Motion** | 12.x | Declarative animations for UI transitions |
-| **Lucide React** | 0.546 | Consistent SVG icon library |
-| **Express** | 4.x | HTTP API server (optional backend persistence layer) |
-| **better-sqlite3** | 12.x | Embedded SQLite database driver (optional) |
+| **Lucide React** | 1.x | Consistent SVG icon library |
+| **Flask** | 3.x | Optional HTTP API server in `backend/` |
+| **Firebase Admin** | 6.x | Firebase token verification and Firestore access in the backend |
 | **dotenv** | 17.x | Environment variable loading for server config |
 | **mkcert** | via `vite-plugin-mkcert` | Auto-generates trusted local HTTPS certificates |
 | **localStorage** | Browser native | Client-side progress persistence (current default) |
 
 ## 🏗️ Architecture Decisions
 
-### 1. Client-first, Backend-ready
+### 1. Client-first, optional backend scaffold
 By default, all user state (progress, badges, lab notebook entries) lives in the browser via `localStorage`. This means no server is required to run or host the app — it deploys as a fully static site.
 
-A full relational database schema (`db-schema.txt`) and backend dependencies (Express, better-sqlite3) are included for teams that want to migrate to server-side user accounts.
+A Flask backend and Firebase integration are included as an optional server-side persistence scaffold. The relational schema in `data/db-schema.txt` describes a separate database design.
 
 ### 2. Single-Page Application (SPA)
 Navigation is handled via tab-based state (`activeTab`) in `App.tsx`. There is no router library — this keeps the application lightweight, fast, and simple to understand for contributors.
@@ -130,6 +141,7 @@ picklePi/
 ├── SECURITY_AUDIT.md             # Security audit notes
 └── LICENSE                       # MIT License
 ```
+
 
 ---
 
@@ -239,7 +251,7 @@ The **Dictionary** tab is a searchable glossary of **100+ terms** organized into
 ### How to use it
 1. Click the **Dictionary** tab in the sidebar.
 2. Use the search box to filter terms by keyword — results update in real-time.
-3. Click a category button to filter by Python, Raspberry Pi, or Electronics only.
+3. Click a category button to filter by Python, Raspberry Pi, Electronics, Beginner, or Security.
 
 ### Interactive Term Highlighting
 Throughout every project page, technical terms that exist in the dictionary are **automatically highlighted** in the content. Click any highlighted term to see its definition in a pop-up modal — without leaving the page or opening a new tab.
@@ -312,7 +324,7 @@ The development server runs over **HTTPS** by default via `mkcert`. This enables
 
 picklePi was developed and piloted on the **Raspberry Pi 3B+**. All 13 projects have been validated against the 3B+'s 40-pin GPIO header, power envelope, and supported communication interfaces (I2C on GPIO 2/3, SPI on GPIO 10/11, hardware PWM on GPIO 12/13/18/19, 1-Wire on GPIO 4).
 
-The app itself can be run directly on the Pi 3B+ as a local web server (see [Getting Started](Getting-Started) for setup instructions), making it a fully self-contained learning environment — the learner builds circuits on the Pi while the curriculum runs on the same device.
+The browser app can run on the Pi 3B+ as a local development server (see [Getting Started](Getting-Started)). Project Python examples run separately on the Pi with Python 3 and their required hardware libraries.
 
 
 ---
@@ -332,12 +344,12 @@ This guide covers everything you need to run picklePi — whether you're a learn
 | Item | Required? | Notes |
 |------|-----------|-------|
 | A modern web browser | ✅ Yes | Chrome, Firefox, Edge, or Safari |
-| Node.js v18+ | ✅ Yes | [Download from nodejs.org](https://nodejs.org/) |
+| Node.js 22.19+ | ✅ Yes | [Download from nodejs.org](https://nodejs.org/) |
 | Git | ✅ Yes | [Download from git-scm.com](https://git-scm.com/) |
 | Raspberry Pi (any 40-pin model) | For running code | Not needed just to browse content |
-| Python 3 + gpiozero on your Pi | For running code | Pre-installed on Raspberry Pi OS |
+| Python 3 and the libraries used by a lesson | For running code | `gpiozero` is commonly available on Raspberry Pi OS; some lessons need extra packages |
 
-> 🖥️ **Just exploring?** You only need Node.js and Git — no Raspberry Pi required to read the curriculum, browse the dictionary, or check the GPIO pinout reference. You'll just need a Pi handy when you're ready to run the Python code.
+> 🖥️ **Just exploring?** You only need Node.js and Git — no Raspberry Pi required to read the curriculum, browse the dictionary, or check the GPIO pinout reference. You'll need a Pi and each lesson's listed Python libraries to run the hardware examples.
 
 ### Installation
 
@@ -360,7 +372,7 @@ This guide covers everything you need to run picklePi — whether you're a learn
    npm run dev
    ```
 
-   The server starts on `https://localhost:3000`. HTTPS is enabled automatically via `mkcert`. On first run, your browser may ask you to trust the locally generated certificate — click **Accept** or **Trust**.
+   The server starts on `https://localhost:3000`. HTTPS is enabled automatically via `vite-plugin-mkcert`; follow its terminal prompts if it needs to install or trust a local certificate.
 
 4. **Open in your browser**
 
@@ -370,24 +382,26 @@ This guide covers everything you need to run picklePi — whether you're a learn
 
 ## Running picklePi on Your Raspberry Pi 3B+
 
-picklePi was piloted on the Raspberry Pi 3B+. You can run the full app directly on your Pi so the curriculum is right in front of you while you build circuits on the same device.
+picklePi was piloted on the Raspberry Pi 3B+. The easiest setup is to run the web app on your regular computer and use the Pi for Python examples and circuits; the Pi does not need Node.js for that. These notes also cover running the app directly on a Pi 3B+ with Debian 13 (Trixie).
 
 ### Requirements on the Pi
 
-- **Raspberry Pi OS** (Bookworm or Bullseye recommended)
-- **Node.js v18+** — install via [NodeSource](https://github.com/nodesource/distributions):
+- **Only if running the web app on the Pi:** Debian 13's standard `nodejs` package is Node 20 and does not meet this repo's Node.js 22.19 minimum. Check the Pi's architecture with `dpkg --print-architecture` (`armhf` for 32-bit or `arm64` for 64-bit), then use an installation source that explicitly provides Node 22.19+ for that architecture. Verify with `node --version` before `npm install`. [NodeSource lists supported Debian architectures here](https://github.com/nodesource/distributions#debian-and-ubuntu-based-distributions).
+- **Python 3 and lesson libraries**. Debian 13 uses Python 3.13. Install the system Python/venv support and GPIO package, then install the version used by the curriculum checks inside a virtual environment:
   ```bash
-  curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-  sudo apt-get install -y nodejs
+  sudo apt update
+  sudo apt install -y git python3-full python3-gpiozero
+  python3 -m venv --system-site-packages ~/picklepi-venv
+  source ~/picklepi-venv/bin/activate
+  python -m pip install gpiozero==2.0.1
   ```
-- **Git**: `sudo apt install git`
-- **Python 3 + gpiozero**: pre-installed on Raspberry Pi OS
+  Debian's packaged `gpiozero` is older than the curriculum check's pinned version. The virtual environment keeps the pip-installed version separate from Debian's managed Python packages, while `--system-site-packages` makes apt-installed GPIO drivers available. Install any extra Python library listed by a lesson into this environment too. Keep it activated when running lesson examples.
 
 ### Setup on the Pi
 
-Run the same steps as the standard installation above. After `npm run dev`, open the browser on your Pi and go to `https://localhost:3000`.
+For the recommended setup, open the web app on the computer where you ran `npm run dev`; run each lesson's Python example in the activated virtual environment on the Pi. If you installed compatible Node.js on the Pi, you can instead clone the repo and follow the standard installation above, then browse to `https://localhost:3000` on the Pi.
 
-> 💡 **Tip:** You can also access the app from another device on the same network. The dev server binds to `0.0.0.0`, so navigate to `https://<your-pi-ip>:3000` from your laptop or phone.
+> **LAN access:** `npm run dev` listens on all network interfaces, but the development setup is intended for a browser on the Pi at `https://localhost:3000`. A different device may reject the locally generated certificate, and the development Content Security Policy currently limits HMR WebSocket connections to localhost. LAN access is therefore not a supported ready-to-use setup.
 
 ---
 
@@ -396,10 +410,14 @@ Run the same steps as the standard installation above. After `npm run dev`, open
 | Script | Description |
 |--------|-------------|
 | `npm run dev` | Start HTTPS dev server on port 3000 |
-| `npm run build` | Compile TypeScript and create an optimised production build in `dist/` |
-| `npm run preview` | Serve the production build locally for testing |
-| `npm run lint` | Run TypeScript type checking (`tsc --noEmit`) |
+| `npm run build` | Create an optimised production build in `dist/` |
+| `npm run preview` | Serve the production build over HTTP at `http://localhost:4173` |
+| `npm run lint` | Run TypeScript type checking (`tsc --noEmit`); this script does not run ESLint |
 | `npm run clean` | Delete the `dist/` build output directory |
+| `npm test` | Run unit tests |
+| `npm run test:e2e` | Run browser tests; install Chromium first with `npx playwright install chromium` |
+| `npm run test:curriculum` | Check the Python examples against simulated hardware; requires Python 3 and `gpiozero==2.0.1` |
+| `npm run export:data` | Refresh backend JSON snapshots after changing curriculum or dictionary data |
 
 ---
 
@@ -423,10 +441,10 @@ The output in `dist/` can be deployed to any static host:
 
 | Problem | Solution |
 |---------|----------|
-| Browser says "Your connection is not private" | The local HTTPS certificate from `mkcert` is not yet trusted. Click **Advanced → Proceed** or import the `mkcert` root CA. |
-| `npm run dev` fails with certificate error | Run `npx mkcert -install` once to install the local CA. |
-| Port 3000 already in use | Change the port in `vite.config.ts` (`server.port`). |
-| Node.js version too old | Run `node -v` to check. Upgrade to v18+ from [nodejs.org](https://nodejs.org/). |
+| Browser says "Your connection is not private" | The local HTTPS certificate may not be trusted yet. Follow the `vite-plugin-mkcert` terminal instructions to trust its local CA, then reload the page. |
+| `npm run dev` fails to start HTTPS | Check `vite-plugin-mkcert` terminal output; install or trust its local CA as prompted, then restart. |
+| Port 3000 already in use | Start the dev server on another port with `npm run dev -- --port 3002`. |
+| Node.js version too old | Run `node -v` to check. Upgrade to 22.19+ from [nodejs.org](https://nodejs.org/). |
 
 
 ---

@@ -19,3 +19,13 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
+
+  # Keep the optional Flask API and its transitive dependencies monitored.
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"

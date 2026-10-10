@@ -6,24 +6,24 @@ picklePi is built with modern web technologies, focusing on performance, type sa
 
 | Technology | Version | Role |
 |------------|---------|------|
-| **React** | 19.0 | UI framework; hooks for all state management |
-| **TypeScript** | 5.8 | Type safety across the entire codebase |
-| **Vite** | 6.2 | Dev server, HMR, and production bundler |
-| **Tailwind CSS** | 4.1 | Utility-first styling via `@tailwindcss/vite` plugin |
+| **React** | 19.x | UI framework; hooks for all state management |
+| **TypeScript** | 6.x | Type safety across the entire codebase |
+| **Vite** | 8.x | Dev server, HMR, and production bundler |
+| **Tailwind CSS** | 4.x | Utility-first styling via `@tailwindcss/vite` plugin |
 | **Motion** | 12.x | Declarative animations for UI transitions |
-| **Lucide React** | 0.546 | Consistent SVG icon library |
-| **Express** | 4.x | HTTP API server (optional backend persistence layer) |
-| **better-sqlite3** | 12.x | Embedded SQLite database driver (optional) |
+| **Lucide React** | 1.x | Consistent SVG icon library |
+| **Flask** | 3.x | Optional HTTP API server in `backend/` |
+| **Firebase Admin** | 6.x | Firebase token verification and Firestore access in the backend |
 | **dotenv** | 17.x | Environment variable loading for server config |
 | **mkcert** | via `vite-plugin-mkcert` | Auto-generates trusted local HTTPS certificates |
 | **localStorage** | Browser native | Client-side progress persistence (current default) |
 
 ## 🏗️ Architecture Decisions
 
-### 1. Client-first, Backend-ready
+### 1. Client-first, optional backend scaffold
 By default, all user state (progress, badges, lab notebook entries) lives in the browser via `localStorage`. This means no server is required to run or host the app — it deploys as a fully static site.
 
-A full relational database schema (`db-schema.txt`) and backend dependencies (Express, better-sqlite3) are included for teams that want to migrate to server-side user accounts.
+A Flask backend and Firebase integration are included as an optional server-side persistence scaffold. The relational schema in `data/db-schema.txt` describes a separate database design.
 
 ### 2. Single-Page Application (SPA)
 Navigation is handled via tab-based state (`activeTab`) in `App.tsx`. There is no router library — this keeps the application lightweight, fast, and simple to understand for contributors.

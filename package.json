@@ -24,8 +24,12 @@
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "lint": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:e2e": "playwright test",
+    "test:curriculum": "tsx scripts/check-curriculum.ts",
+    "export:data": "tsx scripts/export-data.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -51,6 +55,10 @@
     "tsx": "^4.23.11",
     "typescript": "~6.0.3",
     "vite": "^8.2.0",
-    "vite-plugin-mkcert": "^2.1.0"
+    "vite-plugin-mkcert": "^2.1.0",
+    "@playwright/test": "^1.64.0"
+  },
+  "engines": {
+    "node": ">=22.19.0"
   }
 }

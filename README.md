@@ -140,11 +140,11 @@ Each project is split into structured **pages** within the app:
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v18 or newer (v22 recommended — used by CI)
+- [Node.js](https://nodejs.org/) 22.19 or newer (Node 22 is used by CI)
 - [Git](https://git-scm.com/)
-- A Raspberry Pi with Python 3 and `gpiozero` installed (for running the code examples)
+- A Raspberry Pi 3B+ running Debian 13 (Trixie) or Raspberry Pi OS is recommended for the hardware examples; install Python 3 and each lesson's listed libraries
 
-> 🖥️ **Just want to explore the app?** You only need Node.js and Git — no Raspberry Pi required to browse projects, read the curriculum, or check out the GPIO pinout reference. You just won't be able to run the Python code until you have a Pi handy.
+> 🖥️ **Just want to explore the app?** You only need Node.js and Git — no Raspberry Pi required to browse projects, read the curriculum, or check out the GPIO pinout reference. You just won't be able to run the Python code until you have a Pi handy. For a Pi 3B+ on Debian 13, the easiest arrangement is to run the web app on your computer and run the hardware examples on the Pi; Debian's standard Node.js package is too old for this project.
 
 ### Installation
 
@@ -167,7 +167,7 @@ Each project is split into structured **pages** within the app:
    npm run dev
    ```
 
-   The server starts on `https://localhost:3000` (HTTPS is enabled automatically via `mkcert`). On first run, `mkcert` will generate a local certificate; your browser may ask you to trust it.
+   The server starts on `https://localhost:3000` (HTTPS is enabled by `vite-plugin-mkcert`). Follow its terminal prompts if it needs to install or trust a local certificate. Although Vite listens on all interfaces, opening the dev server from another device is not supported by the current local certificate and HMR Content Security Policy setup.
 
 4. **Open in browser**
 
@@ -177,11 +177,15 @@ Each project is split into structured **pages** within the app:
 
 | Script | Description |
 |--------|-------------|
-| `npm run dev` | Start HTTPS dev server on port 3000 (accessible on your local network) |
-| `npm run build` | Compile TypeScript and create an optimized production build in `dist/` |
-| `npm run preview` | Serve the production build locally for testing |
-| `npm run lint` | Run TypeScript type checking (`tsc --noEmit`) |
+| `npm run dev` | Start HTTPS dev server on port 3000 (binds to all network interfaces) |
+| `npm run build` | Create an optimized production build in `dist/` |
+| `npm run preview` | Serve the production build over HTTP at `http://localhost:4173` |
+| `npm run lint` | Run TypeScript type checking (`tsc --noEmit`); this script does not run ESLint |
 | `npm run clean` | Delete the `dist/` build output directory |
+| `npm test` | Run TypeScript unit tests with `tsx` |
+| `npm run test:e2e` | Run browser tests with Playwright (install Chromium first with `npx playwright install chromium`) |
+| `npm run test:curriculum` | Check lesson Python snippets against simulated hardware (requires Python 3 and `gpiozero==2.0.1`) |
+| `npm run export:data` | Refresh backend JSON snapshots after curriculum or dictionary changes |
 
 ### Building for Production
 
@@ -258,9 +262,9 @@ picklePi/
 
 ## 🐍 Backend
 
-The backend is a **Flask (Python)** application that provides a secure REST API for token verification and persistent data storage. It lives in [`backend/`](backend/) and is documented in [`backend/README.md`](backend/README.md).
+The repository includes a **Flask (Python)** REST API and Firebase integration scaffold in [`backend/`](backend/), documented in [`backend/README.md`](backend/README.md). The app's default progress storage is browser `localStorage`; server-backed accounts and cross-device sync are not configured as a ready-to-use feature.
 
-> **The backend is optional for local development.** The frontend runs fully standalone using `localStorage` for progress persistence. The API server is only required if you want server-side user accounts or persistent cross-device progress.
+> **The backend is optional for local development.** The frontend runs standalone using `localStorage` for progress persistence. The backend routes and schema are integration scaffolding that require additional configuration to provide server-side accounts or cross-device progress.
 
 ### Backend Documentation
 
@@ -268,7 +272,7 @@ See [`backend/README.md`](backend/README.md) for the full architecture descripti
 
 ### API Endpoints
 
-Sign-in happens client-side via the Firebase Auth SDK; the API verifies the resulting ID token on every authenticated (🔒) request and rejects any request whose `:userId` does not match the token's `uid`.
+The backend defines routes for Firebase ID-token verification and progress storage. Connecting sign-in and progress sync in a deployed frontend requires additional configuration; these routes do not make accounts available in the default app.
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
@@ -441,7 +445,7 @@ const isProjectLocked = (projectId: string) => {
 
 ### Disabling HTTPS in Development
 
-If you prefer HTTP in development, remove the `mkcert()` plugin from `vite.config.ts`:
+If you prefer HTTP in development, remove both the `mkcert` import and the `mkcert()` plugin from `vite.config.ts`:
 
 ```typescript
 // plugins: [react(), tailwindcss(), mkcert()],  // with HTTPS
@@ -450,14 +454,14 @@ plugins: [react(), tailwindcss()],               // without HTTPS
 
 ### AI-Assisted Level Generation
 
-`data/generate-level.ts` uses the **Gemini 2.5 Pro** model to scaffold a complete new curriculum level from a topic and level number. It requires a `GEMINI_API_KEY` in your `.env` file (see `.env.example`). Run it from the repository root:
+`data/generate-level.ts` uses **Gemini 2.5 Pro** to generate a draft curriculum level. It requires `GEMINI_API_KEY` in the environment (for local use, set it in a root `.env` file). The topic and level number are currently hard-coded near the bottom of the script. Run it from the repository root:
 
 ```bash
 # Generate a new level (e.g., Level 14 — RFID Reader with SPI)
 npx tsx data/generate-level.ts
 ```
 
-The generated JSON is saved to `src/data/generated-level-<N>.json`. Review it, merge it into `src/data/curriculum.ts`, and add the corresponding entry to the curriculum table above.
+The generated JSON is saved to `src/data/generated-level-<N>.json`. Review and integrate it into `src/data/curriculum.ts` manually; generated output is not loaded by the app automatically and should be checked against the `Project` and `PageContent` types.
 
 ### Wiki Export
 

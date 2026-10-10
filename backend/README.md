@@ -1,6 +1,6 @@
 # picklePi Backend
 
-A lightweight **Flask (Python)** API that provides server-side user accounts, token verification, and cloud-synced progress via Firestore.
+A lightweight **Flask (Python)** API that verifies Firebase ID tokens and stores cloud-synced progress in Firestore.
 
 > **The backend is optional.** The React frontend runs fully standalone using `localStorage`. The Flask API is only needed for persistent user accounts and cross-device progress sync.
 
@@ -43,7 +43,7 @@ reading or overwriting another user's progress (IDOR).
 
 ```bash
 cd backend
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ### 2. Add Firebase credentials
@@ -55,7 +55,7 @@ Place your `firebase-secret.json` service-account key inside `backend/`. This fi
 Copy `.env.example` to `.env` and fill in your values:
 
 ```bash
-cp backend/.env.example backend/.env
+cp .env.example .env
 ```
 
 ### 4. Start the server
@@ -66,6 +66,8 @@ python app.py
 ```
 
 The API will be available at `http://localhost:3001` by default — matching the `/api` proxy already configured in `vite.config.ts`.
+
+Run the credential-free smoke tests from `backend/` with `python -m unittest test_backend.py -v`. They mock Firebase initialization and Firestore, so they do not require a service-account key.
 
 ## Security
 
@@ -80,6 +82,8 @@ The API will be available at `http://localhost:3001` by default — matching the
   `src/lib/api.ts`).
 - CORS origins come from the `CORS_ORIGINS` environment variable — no
   wildcard.
+- Progress request bodies are limited to 512 KiB; notebook writes also check
+  the document size and entry count inside a Firestore transaction.
 - Detailed error information is written to `app.log` only — clients receive a
   generic message plus an opaque `errorId` for log correlation.
 - Every response includes a full set of security headers (see `middleware.py`).

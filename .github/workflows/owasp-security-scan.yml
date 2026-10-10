@@ -35,11 +35,10 @@ jobs:
 
       - name: Run npm audit
         run: npm audit --audit-level=moderate
-        continue-on-error: true
 
       - name: Run npm audit with JSON output
+        if: always()
         run: npm audit --json > npm-audit-report.json
-        continue-on-error: true
 
       - name: Upload npm audit report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -142,10 +141,11 @@ jobs:
           EOF
 
       - name: Run ESLint security scan
-        run: npx eslint --config eslint.config.security.mjs src/ --format json --output-file eslint-security-report.json || true
+        run: npx eslint --config eslint.config.security.mjs src/ --format json --output-file eslint-security-report.json
 
       - name: Display ESLint results
-        run: npx eslint --config eslint.config.security.mjs src/ || true
+        if: always()
+        run: npx eslint --config eslint.config.security.mjs src/
 
       - name: Upload ESLint security report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

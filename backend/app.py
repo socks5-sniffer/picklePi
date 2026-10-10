@@ -17,14 +17,22 @@ from dotenv import load_dotenv
 from firebase_admin import auth, credentials, firestore
 from flask import Flask, abort, g, jsonify, request
 from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 
-from bouncer import ValidationError, sanitize_lab_entry, sanitize_progress, validate_id
+from bouncer import (
+    MAX_NOTEBOOK_ENTRIES,
+    ValidationError,
+    sanitize_lab_entry,
+    sanitize_progress,
+    validate_id,
+)
 from logger import log_exception, logger
 from middleware import apply_security_headers
 
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(BACKEND_DIR)
 DATA_DIR = os.path.join(REPO_ROOT, "data")
+MAX_PROGRESS_BYTES = 512 * 1024
 
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
 
@@ -43,6 +51,9 @@ db = firestore.client()
 
 # ── Flask ───────────────────────────────────────────────────────────────────
 app = Flask(__name__)
+# Firestore documents are limited to 1 MiB. Bound request bodies well below
+# that limit so a single update cannot exhaust memory or exceed document size.
+app.config["MAX_CONTENT_LENGTH"] = MAX_PROGRESS_BYTES
 apply_security_headers(app)
 
 _origins = [
@@ -127,7 +138,9 @@ def get_progress(user_id):
 def put_progress(user_id):
     validate_id(user_id, "userId")
     require_same_user(user_id)
-    progress = sanitize_progress(request.get_json(silent=True))
+    progress = sanitize_progress(request.get_json())
+    if len(json.dumps(progress, ensure_ascii=False).encode("utf-8")) > MAX_PROGRESS_BYTES:
+        raise ValidationError("progress is too large")
     db.collection("progress").document(g.uid).set(progress)
     return jsonify(progress)
 
@@ -137,12 +150,24 @@ def put_progress(user_id):
 def create_notebook_entry(user_id):
     validate_id(user_id, "userId")
     require_same_user(user_id)
-    entry = sanitize_lab_entry(request.get_json(silent=True))
+    entry = sanitize_lab_entry(request.get_json())
     entry["id"] = uuid.uuid4().hex
     entry["date"] = datetime.now(timezone.utc).isoformat()
-    db.collection("progress").document(g.uid).set(
-        {"labNotebook": firestore.ArrayUnion([entry])}, merge=True
-    )
+    ref = db.collection("progress").document(g.uid)
+
+    @firestore.transactional
+    def append_entry(transaction):
+        snapshot = ref.get(transaction=transaction)
+        progress = (snapshot.to_dict() or {}) if snapshot.exists else {}
+        notebook = progress.get("labNotebook", [])
+        if len(notebook) >= MAX_NOTEBOOK_ENTRIES:
+            raise ValidationError("labNotebook is full")
+        progress["labNotebook"] = [*notebook, entry]
+        if len(json.dumps(progress, ensure_ascii=False).encode("utf-8")) > MAX_PROGRESS_BYTES:
+            raise ValidationError("progress is too large")
+        transaction.set(ref, {"labNotebook": firestore.ArrayUnion([entry])}, merge=True)
+
+    append_entry(db.transaction())
     return jsonify(entry), 201
 
 
@@ -153,10 +178,17 @@ def delete_notebook_entry(user_id, entry_id):
     validate_id(entry_id, "entryId")
     require_same_user(user_id)
     ref = db.collection("progress").document(g.uid)
-    doc = ref.get()
-    if doc.exists:
-        notebook = doc.to_dict().get("labNotebook", [])
-        ref.update({"labNotebook": [e for e in notebook if e.get("id") != entry_id]})
+
+    @firestore.transactional
+    def remove_entry(transaction):
+        snapshot = ref.get(transaction=transaction)
+        if snapshot.exists:
+            notebook = (snapshot.to_dict() or {}).get("labNotebook", [])
+            remaining = [e for e in notebook if e.get("id") != entry_id]
+            if len(remaining) != len(notebook):
+                transaction.update(ref, {"labNotebook": remaining})
+
+    remove_entry(db.transaction())
     return "", 204
 
 
@@ -191,6 +223,8 @@ def handle_http_error(err):
 
 @app.errorhandler(Exception)
 def handle_unexpected(err):
+    if isinstance(err, HTTPException):
+        return jsonify({"error": err.description}), err.code
     # Full trace goes to app.log; the client gets only an opaque error id.
     error_id = log_exception("unhandled exception")
     return jsonify({"error": "internal server error", "errorId": error_id}), 500
