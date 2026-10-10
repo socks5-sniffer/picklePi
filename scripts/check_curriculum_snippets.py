@@ -107,12 +107,18 @@ def run_worker(name: str, snippet: str) -> None:
     clock = 0.0
     ticks = 0
     input_count = 0
+    vibration_callback_calls = 0
 
     class FakeTime:
         def sleep(self, seconds: float) -> None:
-            nonlocal clock, ticks
+            nonlocal clock, ticks, vibration_callback_calls
             clock += seconds
             ticks += 1
+            if name == "p13-code" and ticks in (20, 25, 45):
+                # After calibration: first event, bounce inside cooldown, then
+                # a fresh event after cooldown. Exercise the registered callback.
+                scope["vibration_sensor"].when_pressed()
+                vibration_callback_calls += 1
             if name == "p10-code":
                 # Start hot, hold inside hysteresis, then simulate CRC failure.
                 reading = "aa bb cc : crc=00 YES\naa bb cc t=28000\n"
@@ -121,7 +127,7 @@ def run_worker(name: str, snippet: str) -> None:
                 (Path("28-mock") / "w1_slave").write_text(reading, encoding="ascii")
             limits = {"p1-code": 2, "p6-code": 2, "p9-code": 2,
                       "p10-code": 6, "p11-code": 44, "p12-code": 22,
-                      "p13-code": 23}
+                      "p13-code": 50}
             if ticks >= limits.get(name, 1000):
                 raise KeyboardInterrupt
 
@@ -204,7 +210,7 @@ def run_worker(name: str, snippet: str) -> None:
                 self.reads += 1
                 if name == "p11-code":
                     return 0.8 if 21 <= self.reads <= 41 else 0.2
-                return 0.5
+                return 0.5 if self.reads <= 20 else 0.8
             def close(self):
                 pass
         scope["__test_analog"] = FakeAnalog()
@@ -235,6 +241,14 @@ def run_worker(name: str, snippet: str) -> None:
         assert not scope["relay"].is_active
     if name == "p12-code":
         assert "Monitoring" in transcript
+        assert "SENSOR MISMATCH" in transcript
+        assert "State: MISMATCH" in transcript
+        log = Path("deadbolt.log").read_text()
+        assert "MISMATCH" in log and "TAMPER" not in log
+    if name == "p13-code":
+        assert vibration_callback_calls == 3
+        assert transcript.count("VIBRATION DETECTED!") == 2, "Cooldown must suppress bounce and allow later events"
+        assert Path("guardian.log").read_text().count("VIBRATION") == 2
     factory.close()
 
 

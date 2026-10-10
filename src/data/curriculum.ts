@@ -57,11 +57,11 @@ export const curriculum: Project[] = [
               steps: [
                 'Identify R, G, B and the common cathode (-/GND) from the module labels or datasheet.',
                 'Place the RGB LED module in your breadboard.',
-                'Connect the GND pin (longest leg, marked -) to the blue negative (-) rail on your breadboard.',
+                'Connect the common GND pin (marked - or GND) to the blue negative (-) rail on your breadboard.',
                 'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the blue negative rail.',
-                'Connect the R (Red) pin of the LED module to Physical Pin 11 (GPIO 17).',
-                'Connect the G (Green) pin of the LED module to Physical Pin 13 (GPIO 27).',
-                'Connect the B (Blue) pin of the LED module to Physical Pin 29 (GPIO 5).'
+                'Connect Physical Pin 11 (GPIO 17) to the module\'s R (Red) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire.',
+                'Connect Physical Pin 13 (GPIO 27) to the module\'s G (Green) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire.',
+                'Connect Physical Pin 29 (GPIO 5) to the module\'s B (Blue) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire.'
               ],
               explanation: 'The RGB LED contains three LEDs (red, green, and blue) sharing a common ground (cathode). By controlling GPIO 17, 27, and 5 independently, you can mix colors - Red + Green = Yellow, Red + Blue = Magenta, Green + Blue = Cyan, All three = White!'
             },
@@ -2687,7 +2687,7 @@ finally:
               steps: [
                 'Reed Switch Module: Connect VCC → 3.3V, GND → GND, DO (digital out) → GPIO 17. The module has a built-in pull-up resistor.',
                 'Hall Effect Sensor Module: Connect VCC → 3.3V, GND → GND, AO (analog out) → MCP3008 CH1. The DO pin is unused in this lesson.',
-                'Double Color LED: GPIO 16 → 330Ω resistor → Red anode; GPIO 20 → 330Ω resistor → Green anode; common cathode → GND. Green = door closed (secure), Red = door open or tamper detected.',
+                'Double Color LED: GPIO 16 → 330Ω resistor → Red anode; GPIO 20 → 330Ω resistor → Green anode; common cathode → GND. Green = door closed (secure), Red = door open or sensor mismatch.',
                 'MCP3008 ADC: Same wiring as Level 11 — CLK → GPIO 11, DOUT → GPIO 9, DIN → GPIO 10, CS → GPIO 8.',
                 'Mount the sensors on a door frame. Attach a small magnet to the door so it aligns with both sensors when the door is closed.',
                 'Test alignment: when the magnet is near, the reed switch should close and the Hall sensor should register a strong field.'
@@ -2712,17 +2712,17 @@ finally:
 Level 12: The Magnetic Deadbolt — Redundant door security
 
 🔒 SECURITY HARDENING:
-- Using TWO sensor types defeats simple magnet spoofing attacks.
-- If the Hall sensor sees a field STRONGER than expected, someone may be
-  holding a powerful magnet to trick the reed switch while opening the door.
+- Two sensor types can reveal disagreement; they cannot prove tampering.
+- A Hall reading outside the calibrated range can result from drift,
+  misalignment, wiring problems, or magnetic interference.
 - Log all state changes with timestamps.
 
 📚 EDUCATIONAL MOMENT:
 The reed switch is BINARY — closed or open, 1 or 0.
 The Hall Effect sensor is ANALOG — it measures field STRENGTH.
 A real door magnet produces a known field strength at a known distance.
-An attacker's spoofing magnet would likely be much stronger (easier to hold
-from a distance) — and the Hall sensor will detect this anomaly!
+Readings outside the calibrated range are logged as SENSOR MISMATCH.
+Inspect the setup before drawing conclusions about the cause.
 """
 
 import time
@@ -2737,7 +2737,7 @@ reed_switch = Button(17, pull_up=True)   # Reed switch — closed when magnet is
 hall_analog = MCP3008(channel=1)         # Hall sensor analog output
 
 status_green = LED(20)  # Green = secure
-status_red = LED(16)    # Red = open or tamper
+status_red = LED(16)    # Red = open or sensor mismatch
 
 # ============================================
 # CONFIGURATION
@@ -2782,7 +2782,7 @@ def calibrate_door():
 def get_door_state():
     """
     Returns a tuple: (state, hall_value, reed_closed)
-    where state is 'secure', 'open', or 'tamper'.
+    where state is 'secure', 'open', or 'mismatch'.
     """
     reed_closed = reed_switch.is_pressed  # True when magnet closes the switch
     hall_value = hall_analog.value
@@ -2791,7 +2791,7 @@ def get_door_state():
     if reed_closed and HALL_CLOSED_MIN <= hall_value <= HALL_CLOSED_MAX:
         return 'secure', hall_value, reed_closed
     if reed_closed:
-        return 'tamper', hall_value, reed_closed  # Sensor disagreement
+        return 'mismatch', hall_value, reed_closed  # Sensor disagreement
     # OPEN: Reed says open. A Hall reading alone cannot prove why.
     return 'open', hall_value, reed_closed
 
@@ -2832,7 +2832,7 @@ try:
             
             if state == 'secure':
                 print(f"🟢 SECURE — Door closed (Hall: {hall_value:.3f})")
-            elif state == 'tamper':
+            elif state == 'mismatch':
                 print(f"🔴 SENSOR MISMATCH! Unexpected Hall reading: {hall_value:.3f}")
                 print("   Check alignment or investigate possible magnetic interference.")
             else:
@@ -2868,7 +2868,7 @@ except KeyboardInterrupt:
               { section: 'Hall Analog Output', explanation: 'The Hall module provides an analog output (AO). Its voltage changes with magnetic field, but direction and scale depend on the sensor and magnet polarity. The digital output (DO) is unused here.' },
               { section: 'Closed-Door Calibration', explanation: 'At startup, close the door and press Enter. The script measures the Hall baseline and accepts readings within a tolerance around it.' },
               { section: 'Sensor Mismatch', explanation: 'If the reed reports closed while the Hall reading leaves the calibrated range, the system flags a mismatch. Check alignment and noise before interpreting it as tampering.' },
-              { section: 'Three-State Logic', explanation: 'The states are SECURE (both sensors agree), OPEN (reed open), and TAMPER (reed closed, Hall outside the expected range). A sensor mismatch is a warning, not proof of an attack.' }
+              { section: 'Three-State Logic', explanation: 'The states are SECURE (both sensors agree), OPEN (reed open), and MISMATCH (reed closed, Hall outside the expected range). A sensor mismatch is a warning, not proof of an attack.' }
             ],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -2904,7 +2904,7 @@ except KeyboardInterrupt:
             experimentMode: {
               tweak: 'Adjust the potentiometer on the Hall sensor module — it controls the digital output threshold. Watch how it changes when DO triggers compared to your analog readings.',
               logic: 'Add a "sensor mismatch" check: if the reed switch says closed but the Hall analog is near zero (no magnetic field at all), the wire to the reed switch may have been bypassed with a jumper!',
-              creative: 'Act out an attack scenario with your child: they try to open the "door" while holding a magnet near the sensors. Can they find a magnet strong enough to fool the reed switch but weak enough to not trigger the tamper threshold? (Spoiler: it\'s very hard!)'
+              creative: 'Act out an attack scenario with your child: they try to open the "door" while holding a magnet near the sensors. Can they keep the reed switch closed while the Hall reading stays inside the calibrated range? Observe what happens and remember that a mismatch alone does not identify its cause.'
             },
             troubleshooting: []
           }
