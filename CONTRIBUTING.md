@@ -55,7 +55,7 @@ Have an idea? Open an issue with:
    # or
    git checkout -b fix/bug-description
    ```
-4. **Install dependencies**:
+4. **Install dependencies** (requires Node.js 22.19 or newer):
    ```bash
    npm install
    ```
@@ -63,7 +63,7 @@ Have an idea? Open an issue with:
    ```bash
    npm run dev
    ```
-   > **Note:** The dev server defaults to `--host=0.0.0.0` (all interfaces). If you don't need LAN access, you can run `npx vite --port=3000` instead to bind to localhost only.
+   > **Note:** The dev server binds to `0.0.0.0` (all interfaces) and uses HTTPS. For localhost-only access, run `npx vite --host=localhost --port=3000`.
 
 ---
 
@@ -119,8 +119,21 @@ Each entry must include:
 - Keep definitions concise but complete — they appear in a modal popup
 - The `example` field should ideally relate to Raspberry Pi or the project kit hardware
 
-> **Note:** After updating `dictionary.ts`, you can regenerate the companion JSON files for cloud use by running:
-> `npx tsx _export.ts` (or the equivalent export script if one is added to `package.json`)
+> **Note:** The app imports `dictionary.ts` directly. After changing curriculum or dictionary data, refresh the backend JSON snapshots with `npm run export:data`.
+
+### Checking Curriculum Python Examples
+
+Run the examples against simulated hardware with `npm run test:curriculum`. This requires Python 3 and `gpiozero==2.0.1`; use an isolated virtual environment for the Python dependency:
+
+```bash
+python -m venv .venv
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+python -m pip install gpiozero==2.0.1
+npm run test:curriculum
+```
+
+The simulation checks the code text and expected behavior without connecting to physical components, so still verify wiring and hardware behavior on a Raspberry Pi before teaching from a lesson.
 
 ### Commit Messages
 
@@ -143,8 +156,11 @@ Conventional commit prefixes: `feat`, `fix`, `docs`, `style`, `refactor`, `test`
 
 ### Before Submitting
 
-- [ ] Code compiles without TypeScript errors (`npm run build`)
-- [ ] Lint passes (`npm run lint`)
+- [ ] Production build succeeds (`npm run build`)
+- [ ] TypeScript check passes (`npm run lint`)
+- [ ] Relevant unit tests pass (`npm test`)
+- [ ] Curriculum Python examples pass the simulation check (`npm run test:curriculum`) when curriculum content changes
+- [ ] Browser tests pass when the UI changes (`npx playwright install chromium`, then `npm run test:e2e`)
 - [ ] Test your changes in the browser at multiple viewport sizes
 - [ ] For curriculum content: tested on actual Raspberry Pi hardware
 - [ ] For dictionary additions: verify the term is highlighted correctly in the relevant project pages
@@ -175,7 +191,12 @@ This project includes a [pull request template](./.github/PULL_REQUEST_TEMPLATE.
 
 4. **Automated checks** — the following CI checks run on every PR and must pass:
    - **Build** — `npm run build` must succeed
-   - **Lint** — ESLint (including security plugin) must pass
+   - **TypeScript check** — `npm run lint` runs `tsc --noEmit`
+   - **Unit tests** — `npm test`
+   - **Browser playthrough** — `npm run test:e2e` (Playwright Chromium)
+   - **Curriculum checks** — `npm run test:curriculum` with Python 3 and `gpiozero==2.0.1`
+   - **Backend smoke tests** — `python -m unittest backend/test_backend.py -v`
+   - **ESLint security scan** — runs separately in the OWASP security workflow
    - **CodeQL** — semantic code analysis for security issues
    - **OWASP Dependency Check** — known CVE scan across all dependencies
    - **Gitleaks** — secret scanning across the commit history
@@ -199,8 +220,12 @@ picklePi/
 │   │   └── dictionary.ts   # All 258+ dictionary term definitions
 │   └── types.ts            # TypeScript type definitions
 ├── wiki/Components/        # Wiki documentation pages
-├── curriculum.json         # Auto-generated JSON export of curriculum.ts
-├── dictionary.json         # Auto-generated JSON export of dictionary.ts
+├── data/
+│   ├── curriculum.json     # JSON export of the curriculum
+│   ├── dictionary.json     # JSON export of the dictionary
+│   ├── export-wiki.ts      # Rebuilds wiki_knowledge_base.md
+│   └── generate-level.ts   # Gemini curriculum draft generator
+├── wiki_knowledge_base.md  # Combined wiki snapshot
 ├── SECURITY_AUDIT.md       # Ongoing security audit log
 ├── SECURITY.md             # Vulnerability disclosure policy
 └── CONTRIBUTING.md         # This file

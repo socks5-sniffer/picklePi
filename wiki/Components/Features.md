@@ -17,7 +17,7 @@ The **Dictionary** tab is a searchable glossary of **100+ terms** organized into
 ### How to use it
 1. Click the **Dictionary** tab in the sidebar.
 2. Use the search box to filter terms by keyword — results update in real-time.
-3. Click a category button to filter by Python, Raspberry Pi, or Electronics only.
+3. Click a category button to filter by Python, Raspberry Pi, Electronics, Beginner, or Security.
 
 ### Interactive Term Highlighting
 Throughout every project page, technical terms that exist in the dictionary are **automatically highlighted** in the content. Click any highlighted term to see its definition in a pop-up modal — without leaving the page or opening a new tab.
@@ -90,4 +90,4 @@ The development server runs over **HTTPS** by default via `mkcert`. This enables
 
 picklePi was developed and piloted on the **Raspberry Pi 3B+**. All 13 projects have been validated against the 3B+'s 40-pin GPIO header, power envelope, and supported communication interfaces (I2C on GPIO 2/3, SPI on GPIO 10/11, hardware PWM on GPIO 12/13/18/19, 1-Wire on GPIO 4).
 
-The app itself can be run directly on the Pi 3B+ as a local web server (see [Getting Started](Getting-Started) for setup instructions), making it a fully self-contained learning environment — the learner builds circuits on the Pi while the curriculum runs on the same device.
+The browser app can run on the Pi 3B+ as a local development server (see [Getting Started](Getting-Started)). Project Python examples run separately on the Pi with Python 3 and their required hardware libraries.

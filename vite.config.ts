@@ -1,4 +1,4 @@
-﻿﻿import tailwindcss from '@tailwindcss/vite';
+﻿import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
@@ -44,11 +44,11 @@ const baseHeaders = (csp: string) => ({
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
 });
 
-export default defineConfig(({ command }) => ({
-  plugins: [react(), tailwindcss(), ...(command === 'serve' ? [mkcert()] : [])],
+export default defineConfig(({ command, isPreview }) => ({
+  plugins: [react(), tailwindcss(), ...(command === 'serve' && !isPreview ? [mkcert()] : [])],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, '.'),
+      '@': path.resolve(import.meta.dirname, '.'),
     },
   },
   server: {

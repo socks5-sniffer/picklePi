@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { curriculum } from './data/curriculum';
 import { Project, UserProgress, LabEntry } from './types';
+import { isValidProgress } from './lib/progress';
 import { fetchProgress, saveProgress, createLabEntry } from './lib/api';
 import Sidebar from './components/Sidebar';
 import ProjectView from './components/ProjectView';
@@ -11,17 +12,6 @@ import LabNotebookView from './components/LabNotebookView';
 import DictionaryView from './components/DictionaryView';
 import LandingView from './components/LandingView';
 import PinoutView from './components/PinoutView';
-
-function isValidProgress(data: unknown): data is UserProgress {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'projectStatuses' in data &&
-    'badges' in data &&
-    'labNotebook' in data &&
-    Array.isArray((data as UserProgress).labNotebook)
-  );
-}
 
 const INITIAL_PROGRESS: UserProgress = {
   projectStatuses: curriculum.reduce((acc, p) => ({ ...acc, [p.id]: 'Not Started' }), {}),
@@ -37,7 +27,7 @@ export default function App() {
       const saved = localStorage.getItem('rpi-lab-progress');
       if (!saved) return INITIAL_PROGRESS;
       const parsed: unknown = JSON.parse(saved);
-      return isValidProgress(parsed) ? parsed : INITIAL_PROGRESS;
+      return isValidProgress(parsed) ? { ...parsed, projectStatuses: { ...INITIAL_PROGRESS.projectStatuses, ...parsed.projectStatuses } } : INITIAL_PROGRESS;
     } catch {
       return INITIAL_PROGRESS;
     }
@@ -46,9 +36,10 @@ export default function App() {
   // Sync from backend on mount; localStorage above gives an instant baseline
   useEffect(() => {
     fetchProgress().then(data => {
-      if (data) setProgress(data);
+      if (data) setProgress({ ...data, projectStatuses: { ...INITIAL_PROGRESS.projectStatuses, ...data.projectStatuses } });
     });
   }, []);
+  const [storageWarning, setStorageWarning] = useState(false);
   const [isLabModalOpen, setIsLabModalOpen] = useState(false);
   const [projectToComplete, setProjectToComplete] = useState<Project | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -74,7 +65,12 @@ export default function App() {
   };
 
   useEffect(() => {
-    localStorage.setItem('rpi-lab-progress', JSON.stringify(progress));
+    try {
+      localStorage.setItem('rpi-lab-progress', JSON.stringify(progress));
+      setStorageWarning(false);
+    } catch {
+      setStorageWarning(true);
+    }
     saveProgress(progress);
   }, [progress]);
 
@@ -188,6 +184,7 @@ export default function App() {
         </button>
 
         <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+          {storageWarning && <p role="status" className="mb-4 rounded-lg bg-amber-900 p-4 text-amber-100">Your browser cannot save progress. Keep this tab open; progress will be lost when you close or reload it.</p>}
           {activeTab === 'home' && (
             <LandingView
               progress={progress}

@@ -50,18 +50,18 @@ export const curriculum: Project[] = [
             },
             hardwareSetup: {
               warnings: [
-                'The RGB LED module has built-in resistors - no external resistors needed!',
-                'The RGB LED has 4 pins: Red, Ground (-, longest leg), Green, and Blue.',
+                'Check the RGB module labels and resistors before wiring. If no series resistors are fitted, add 330Ω in series with EACH color GPIO wire.',
+                'Use a common-cathode RGB module and identify R, G, B and common GND from its labels or datasheet. Leg length alone is not reliable; bare RGB LEDs can be common-anode.',
                 'Default to 3.3V logic. Never connect the module directly to 5V.'
               ],
               steps: [
-                'Identify the 4 pins on your RGB LED module: the longest pin is Ground (GND/cathode, marked with -).',
+                'Identify R, G, B and the common cathode (-/GND) from the module labels or datasheet.',
                 'Place the RGB LED module in your breadboard.',
-                'Connect the GND pin (longest leg, marked -) to the blue negative (-) rail on your breadboard.',
+                'Connect the common GND pin (marked - or GND) to the blue negative (-) rail on your breadboard.',
                 'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the blue negative rail.',
-                'Connect the R (Red) pin of the LED module to Physical Pin 11 (GPIO 17).',
-                'Connect the G (Green) pin of the LED module to Physical Pin 13 (GPIO 27).',
-                'Connect the B (Blue) pin of the LED module to Physical Pin 29 (GPIO 5).'
+                'Connect Physical Pin 11 (GPIO 17) to the module\'s R (Red) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire.',
+                'Connect Physical Pin 13 (GPIO 27) to the module\'s G (Green) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire.',
+                'Connect Physical Pin 29 (GPIO 5) to the module\'s B (Blue) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire.'
               ],
               explanation: 'The RGB LED contains three LEDs (red, green, and blue) sharing a common ground (cathode). By controlling GPIO 17, 27, and 5 independently, you can mix colors - Red + Green = Yellow, Red + Blue = Magenta, Green + Blue = Cyan, All three = White!'
             },
@@ -92,7 +92,7 @@ export const curriculum: Project[] = [
 Level 1: Hello, RGB LED - Color mixing with gpiozero
 
 🔒 SECURITY HARDENING:
-- The RGB LED module has built-in resistors (no external resistor needed)
+- Verify series resistors are fitted; otherwise add 330 ohms to each color GPIO wire
 - Disable unused interfaces: sudo raspi-config -> Interface Options
 - Keep your Pi's OS updated: sudo apt update && sudo apt upgrade
 
@@ -194,7 +194,7 @@ except KeyboardInterrupt:
             code: '',
             codeWalkthrough: [
               { section: 'Imports', explanation: '`from gpiozero import LED` gives us the LED class. We also import `sleep` from time for delays between colors.' },
-              { section: 'Three LED Objects', explanation: '`LED(17)`, `LED(27)`, and `LED(18)` create separate control for each color. The RGB LED is really three LEDs in one package!' },
+              { section: 'Three LED Objects', explanation: '`LED(17)`, `LED(27)`, and `LED(5)` create separate control for each color. The RGB LED is really three LEDs in one package!' },
               { section: 'set_color() Helper', explanation: 'This function makes it easy to set all three colors at once. Pass 1 for on, 0 for off for each color channel.' },
               { section: 'Additive Color Mixing', explanation: 'Unlike paint, light colors ADD together. Red + Green = Yellow, Red + Blue = Magenta, Green + Blue = Cyan, All three = White!' },
               { section: 'The Loop', explanation: 'A `while True` loop cycles through all 7 color combinations plus off. Each color displays for 1 second.' },
@@ -278,8 +278,8 @@ except KeyboardInterrupt:
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: [
               { issue: "Only one or two colors work", solution: 'Check that all three color pins are connected to the correct GPIO pins (R=GPIO 17, G=GPIO 27, B=GPIO 5).' },
-              { issue: "LED doesn't light up at all", solution: 'The longest pin (marked -) must go to GND. Double-check polarity and GPIO connections.' },
-              { issue: 'Colors are very dim', solution: 'Ensure you are using 3.3V GPIO pins. The module has built-in resistors sized for 3.3V operation.' },
+              { issue: "LED doesn't light up at all", solution: 'Identify the common cathode (-/GND) using the module labels or datasheet, then check each color connection. Do not infer polarity from leg length; a common-anode LED needs different wiring and code.' },
+              { issue: 'Colors are very dim', solution: 'Ensure you are using 3.3V GPIO pins. Check the module resistor values and polarity; blue and green LEDs can be dimmer at 3.3V.' },
               { issue: 'White looks pinkish or off-color', solution: 'This is normal! The three LEDs have different brightness levels. In Level 3, we will use PWM to balance them.' },
               { issue: 'Blue seems much brighter', solution: 'Blue LEDs are often brighter than red/green. PWM in Level 3 will let you adjust individual brightness.' }
             ]
@@ -532,7 +532,7 @@ except KeyboardInterrupt:
                 'No new hardware needed! We will use the exact same LED setup from Level 1.'
               ],
               steps: [
-                'Ensure your RGB LED module is connected just like in Level 1 (Red pin to GPIO 17, longest pin to GND).'
+                'Ensure your RGB LED module is connected just like in Level 1 (Red input to GPIO 17, labeled common cathode (-/GND) to GND).'
               ],
               explanation: 'We are changing how we control the pin in software. Instead of a steady 3.3V, we will turn the pin on and off very fast to simulate a lower voltage.'
             },
@@ -559,7 +559,7 @@ Level 3: PWM Brightness - Smooth LED fading with PWMLED
 - Consider running as non-root user with gpio group membership
 
 📚 EDUCATIONAL MOMENT:
-PWMLED.pulse() uses a background thread with sinusoidal easing,
+PWMLED.pulse() uses a background thread to fade brightness,
 creating smooth fades without blocking your main program.
 """
 
@@ -610,7 +610,7 @@ except KeyboardInterrupt:
             code: '',
             codeWalkthrough: [
               { section: 'PWMLED Class', explanation: '`PWMLED(17)` creates an LED with PWM capability. Unlike `LED`, it supports fractional brightness values from 0.0 to 1.0.' },
-              { section: 'The pulse() Method', explanation: '`pulse()` creates a smooth breathing effect using sinusoidal easing. It runs in a background thread automatically.' },
+              { section: 'The pulse() Method', explanation: '`pulse()` repeatedly fades the LED in and out. It runs in a background thread automatically.' },
               { section: 'Value Property', explanation: '`fading_led.value = 0.5` sets brightness to 50%. This is more intuitive than raw duty cycle percentages.' },
               { section: 'Background Threading', explanation: 'gpiozero runs animations in separate threads, so your main code can do other things while the LED pulses.' }
             ],
@@ -648,7 +648,7 @@ except KeyboardInterrupt:
             experimentMode: {
               tweak: 'Change `fade_in_time=1` to `fade_in_time=3`. How does the animation feel?',
               logic: 'Instead of `pulse()`, use a loop with `fading_led.value = x/100` to manually control brightness.',
-              creative: 'Combine with the button: `led.source = lambda: button.value * 0.5 + 0.5` to show half-brightness when released, full when pressed.'
+              creative: 'Combine with the button: `led.source = (value * 0.5 + 0.5 for value in button.values)` to show half-brightness when released, full when pressed.'
             },
             troubleshooting: []
           }
@@ -665,7 +665,7 @@ except KeyboardInterrupt:
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: [
               { issue: 'LED flickers visibly', solution: 'Your PWM frequency is too low. Ensure it is set to at least 50Hz or 100Hz.' },
-              { issue: 'Error: "A PWM object already exists"', solution: 'This happens if the script crashed previously without running `GPIO.cleanup()`. Just run the script again.' }
+              { issue: 'Error: "A PWM object already exists"', solution: 'Another running script may already be using this GPIO pin. Stop that script, then try again.' }
             ]
           }
         }
@@ -1132,15 +1132,15 @@ except KeyboardInterrupt:
               warnings: [
                 'You MUST enable I2C on your Raspberry Pi first: `sudo raspi-config` → Interface Options → I2C → Enable.',
                 'The ADXL345 runs on 3.3V — do NOT connect VCC to 5V or you will damage the chip.',
-                'Install the Adafruit library before running the code: `pip3 install adafruit-circuitpython-adxl34x`'
+                'On Raspberry Pi OS Bookworm, run `sudo apt install python3-venv python3-gpiozero python3-lgpio python3-spidev`, then `python3 -m venv --system-site-packages ~/picklepi-env` and `source ~/picklepi-env/bin/activate`. Inside that environment run `python -m pip install adafruit-circuitpython-adxl34x` before starting this lesson.'
               ],
               steps: [
                 'Connect ADXL345 GND → Raspberry Pi GND rail.',
                 'Connect ADXL345 VCC → Raspberry Pi Physical Pin 1 (3.3V) — NOT 5V!',
                 'Connect ADXL345 SDA → Raspberry Pi Physical Pin 3 (GPIO 2 / SDA1).',
                 'Connect ADXL345 SCL → Raspberry Pi Physical Pin 5 (GPIO 3 / SCL1).',
-                'Leave the ADXL345 CS pin unconnected (or tie HIGH to 3.3V) — this selects I2C mode.',
-                'Optionally connect the LED from Level 1: long leg (anode) → GPIO 17 through a 330Ω resistor → GND.'
+                'Tie ADXL345 CS to 3.3V for I2C mode and SDO/ALT ADDRESS to GND for address 0x53, unless the breakout already provides those connections.',
+                'Optionally connect the LED from Level 1: GPIO 17 → 330Ω resistor → LED anode (long leg); LED cathode (short leg) → GND.'
               ],
               explanation: "I2C uses just two wires (SDA for data and SCL for clock) to talk to many different sensors. The Pi is the I2C \"Master\" — it drives the clock and addresses each device by a unique 7-bit number. The ADXL345's default I2C address is 0x53. Inside the chip, a tiny suspended mass shifts position under acceleration; bridge circuits measure that shift and produce a voltage that the chip's internal ADC converts to a digital reading."
             },
@@ -1162,7 +1162,8 @@ except KeyboardInterrupt:
 Level 6: Tilt & Shake Detector using the ADXL345 accelerometer over I2C.
 
 Setup:
-  pip3 install adafruit-circuitpython-adxl34x
+  source ~/picklepi-env/bin/activate
+  python -m pip install adafruit-circuitpython-adxl34x
   sudo raspi-config -> Interface Options -> I2C -> Enable
 
 Wiring (3.3V only!):
@@ -1182,7 +1183,7 @@ from gpiozero import LED
 i2c  = busio.I2C(board.SCL, board.SDA)
 accel = adafruit_adxl34x.ADXL345(i2c)           # default address 0x53
 
-# Enable the built-in tap/double-tap and freefall detection engines
+# Enable the built-in motion detection engine
 accel.enable_motion_detection(threshold=18)      # shake sensitivity (1–255)
 
 # Optional status LED wired to GPIO 17
@@ -1299,7 +1300,7 @@ except KeyboardInterrupt:
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: [
               { issue: 'ValueError: No I2C device at address 0x53', solution: 'Check that I2C is enabled (`sudo raspi-config` → Interface Options → I2C). Verify SDA is on Physical Pin 3 and SCL on Physical Pin 5. Run `sudo i2cdetect -y 1` — you should see 0x53 in the grid.' },
-              { issue: 'ModuleNotFoundError: No module named adafruit_adxl34x', solution: 'Install the library: `pip3 install adafruit-circuitpython-adxl34x`. If you get a permissions error, add `--user` to the command.' },
+              { issue: 'ModuleNotFoundError: No module named adafruit_adxl34x', solution: 'Activate the lesson environment with `source ~/picklepi-env/bin/activate`, then run `python -m pip install adafruit-circuitpython-adxl34x`. Use the same environment to launch the script.' },
               { issue: 'All readings are exactly 0.0, 0.0, 0.0', solution: 'The sensor likely needs the CS pin tied HIGH to select I2C mode. Connect CS to the 3.3V pin. Also confirm VCC is on the 3.3V rail — connecting to 5V can damage or lock up the chip.' },
               { issue: 'Motion detection never triggers', solution: 'Increase sensitivity by lowering the threshold: `accel.enable_motion_detection(threshold=8)`. The chip must see an acceleration change above the threshold within a short time window.' }
             ]
@@ -1357,8 +1358,8 @@ except KeyboardInterrupt:
                 'Double-check all wiring before powering on. You have many components connected now.'
               ],
               steps: [
-                'RGB LED module: Red pin to GPIO 17, longest pin (-) to GND.',
-                'Button on GPIO 22 (to 3.3V).',
+                'RGB LED module: Red input to GPIO 17, labeled common cathode (-/GND) to GND.',
+                'Button module: VCC to 3.3V, GND to GND, S to GPIO 22, as in Level 2. A bare button connects GPIO 22 to GND when pressed.',
                 'Passive Buzzer on GPIO 18.',
                 'PIR Sensor on GPIO 23 (VCC to 5V).'
               ],
@@ -1395,8 +1396,7 @@ its current state (ARMED, ALARM, DISARMED), not just raw sensor input.
 from gpiozero import LED, Button, TonalBuzzer, MotionSensor
 from gpiozero.tones import Tone
 from enum import Enum
-from signal import pause
-from time import sleep
+from time import monotonic, sleep
 from threading import Event
 
 # ============================================
@@ -1405,6 +1405,7 @@ from threading import Event
 
 class AlarmState(Enum):
     DISARMED = "DISARMED"
+    ARMING = "ARMING"
     ARMED = "ARMED"
     TRIGGERED = "TRIGGERED"
 
@@ -1422,72 +1423,30 @@ motion_sensor = MotionSensor(23)
 # ============================================
 
 current_state = AlarmState.DISARMED
-alarm_stop_event = Event()
+button_pressed = Event()
+motion_detected = Event()
+arm_at = 0.0
+next_tone_at = 0.0
+high_tone = True
 
 # ============================================
 # EVENT HANDLERS
 # ============================================
 
-def trigger_alarm():
-    """Called when motion detected while armed."""
-    global current_state
-    if current_state == AlarmState.ARMED:
-        current_state = AlarmState.TRIGGERED
-        print("🚨 ALARM TRIGGERED!")
-        alarm_stop_event.clear()
-        
-        # Sound alarm pattern until stopped
-        while current_state == AlarmState.TRIGGERED:
-            alert_led.on()
-            alarm_buzzer.play(Tone("A5"))
-            sleep(0.15)
-            alert_led.off()
-            alarm_buzzer.play(Tone("E5"))
-            sleep(0.15)
-            
-            if alarm_stop_event.is_set():
-                break
-        
-        alarm_buzzer.stop()
-        alert_led.off()
+def request_arm_toggle():
+    """Let the main loop handle a press without blocking a GPIO callback."""
+    button_pressed.set()
 
-def toggle_arm_state():
-    """Called when arm/disarm button is pressed."""
-    global current_state
-    
-    if current_state == AlarmState.TRIGGERED:
-        # Disarm the alarm
-        current_state = AlarmState.DISARMED
-        alarm_stop_event.set()
-        print("✅ Alarm DISARMED")
-        alert_led.blink(on_time=0.1, off_time=0.1, n=3)
-        sleep(2)  # Cooldown before re-arming
-        
-    elif current_state == AlarmState.DISARMED:
-        # Arm the system with countdown
-        print("🔒 Arming in 5 seconds...")
-        for i in range(5, 0, -1):
-            print(f"   {i}...")
-            alert_led.blink(on_time=0.1, off_time=0.4, n=1)
-            sleep(1)
-        current_state = AlarmState.ARMED
-        alert_led.on()
-        print("🛡️ System ARMED")
-        sleep(0.5)
-        alert_led.off()
-        
-    elif current_state == AlarmState.ARMED:
-        # Disarm without triggering
-        current_state = AlarmState.DISARMED
-        print("🔓 System DISARMED")
-        alert_led.blink(on_time=0.1, off_time=0.1, n=2)
+def request_motion_alarm():
+    """Let the main loop decide whether motion should trigger an alarm."""
+    motion_detected.set()
 
 # ============================================
 # REGISTER EVENT CALLBACKS
 # ============================================
 
-motion_sensor.when_motion = trigger_alarm
-arm_button.when_pressed = toggle_arm_state
+motion_sensor.when_motion = request_motion_alarm
+arm_button.when_pressed = request_arm_toggle
 
 # ============================================
 # MAIN PROGRAM
@@ -1499,11 +1458,50 @@ print("   Press Ctrl+C to exit\\n")
 print(f"Status: {current_state.value}")
 
 try:
-    pause()
+    while True:
+        now = monotonic()
+
+        if button_pressed.is_set():
+            button_pressed.clear()
+            if current_state == AlarmState.DISARMED:
+                current_state = AlarmState.ARMING
+                arm_at = now + 5
+                motion_detected.clear()
+                print("🔒 Arming in 5 seconds; press again to cancel.")
+            else:
+                current_state = AlarmState.DISARMED
+                motion_detected.clear()
+                alarm_buzzer.stop()
+                alert_led.off()
+                print("🔓 System DISARMED")
+
+        if current_state == AlarmState.ARMING and now >= arm_at:
+            current_state = AlarmState.ARMED
+            motion_detected.clear()  # Ignore movement during the exit delay
+            alert_led.on()
+            print("🛡️ System ARMED")
+
+        if motion_detected.is_set() or (current_state == AlarmState.ARMED and motion_sensor.motion_detected):
+            motion_detected.clear()
+            if current_state == AlarmState.ARMED:
+                current_state = AlarmState.TRIGGERED
+                next_tone_at = 0.0
+                print("🚨 ALARM TRIGGERED!")
+
+        if current_state == AlarmState.TRIGGERED and now >= next_tone_at:
+            alert_led.toggle()
+            alarm_buzzer.play(Tone("A5" if high_tone else "E5"))
+            high_tone = not high_tone
+            next_tone_at = now + 0.15
+
+        sleep(0.05)
 except KeyboardInterrupt:
+    print("\\n👋 System shutdown.")
+finally:
     alarm_buzzer.stop()
     alert_led.off()
-    print("\\n👋 System shutdown.")`,
+    arm_button.close()
+    motion_sensor.close()`,
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -1520,7 +1518,7 @@ except KeyboardInterrupt:
             codeWalkthrough: [
               { section: 'Enum State Machine', explanation: '`AlarmState(Enum)` defines named states. Using Enums prevents typos like `"ARMD"` and makes code self-documenting.' },
               { section: 'Threading Event', explanation: '`Event()` from threading safely signals between the alarm loop and the disarm callback. This prevents race conditions.' },
-              { section: 'State Transitions', explanation: 'The `toggle_arm_state()` function checks `current_state` before acting. The same button press does different things depending on state.' },
+              { section: 'State Transitions', explanation: 'The main loop checks `current_state` when the button event is set. The same button press does different things depending on state.' },
               { section: 'Arm Countdown', explanation: 'The 5-second countdown gives you time to leave the room. Real alarm systems work the same way!' }
             ],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
@@ -1538,7 +1536,7 @@ except KeyboardInterrupt:
             codeWalkthrough: [],
             conceptDeepDive: {
               hardware: "Multiple components share the Pi's power and ground rails. The Pi coordinates them, acting as the central nervous system.",
-              software: 'Managing complex systems requires tracking "State". Without the `alarm_active` variable, the alarm would only sound for the exact millisecond the PIR detected motion.',
+              software: 'Managing complex systems requires tracking "State". Without the `current_state` variable, the alarm would only sound for the exact millisecond the PIR detected motion.',
               connection: 'This project bridges the gap between simple scripts and real-world products. A commercial home alarm works on these exact same principles.'
             },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -1555,7 +1553,7 @@ except KeyboardInterrupt:
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: {
-              tweak: 'Change the buzzer tones in `trigger_alarm()` to "C6" and "G5" for a different sound.',
+              tweak: 'Change the buzzer tones in the `AlarmState.TRIGGERED` block to "C6" and "G5" for a different sound.',
               logic: 'Add an "entry delay" - when motion is detected, give 5 seconds to press disarm before the alarm sounds.',
               creative: 'Wire the Double Color LED to GPIO 16 (Red) and GPIO 20 (Green). Light Red while the alarm is sounding and Green while the system is armed and idle — instant visual state feedback!'
             },
@@ -1573,8 +1571,8 @@ except KeyboardInterrupt:
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: [
-              { issue: "Alarm won't turn off", solution: 'Ensure you are holding the button down during the 0.2 second window when the code checks it, or use an event detect for the button too.' },
-              { issue: 'Code crashes with global variable error', solution: 'Ensure you declare `global alarm_active` inside the function before trying to change its value.' }
+              { issue: "Alarm won't turn off", solution: 'Check the button signal is on GPIO 22 with ground connected. Each press sets an event; pressing during arming, armed, or triggered mode disarms the system.' },
+              { issue: 'Code crashes with global variable error', solution: 'Use the complete script: callbacks only set events, and the main loop owns current_state. No global declaration is needed.' }
             ]
           }
         }
@@ -1774,8 +1772,8 @@ except KeyboardInterrupt:
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: [
-              { issue: 'ImportError: No module named spidev', solution: 'Run `pip3 install spidev` in the terminal. gpiozero\'s MCP3008 class requires the spidev backend.' },
-              { issue: 'knob.value is always 0.0 or 1.0, never in between', solution: 'The potentiometer outer pins may be swapped. Try reversing which outer leg connects to 3.3V and which to GND.' },
+              { issue: 'ImportError: No module named spidev', solution: 'Run `sudo apt install python3-spidev` and use the lesson environment created with `--system-site-packages` so gpiozero can access it.' },
+              { issue: 'knob.value is always 0.0 or 1.0, never in between', solution: 'Check that the middle wiper connects to CH0, not an outer leg or digital output. Verify both outer legs reach 3.3V and GND. Swapping the outer legs only reverses rotation direction.' },
               { issue: 'LED never changes brightness', solution: 'First verify SPI is enabled in raspi-config. Then double-check all four SPI wires: MOSI→GPIO10, MISO→GPIO9, SCLK→GPIO11, CS→GPIO8.' },
               { issue: 'Values are noisy or jumping', solution: 'Add a small 100nF capacitor between the MCP3008 VREF pin and GND to filter power supply noise. Make sure all GND connections share a common rail.' }
             ]
@@ -1910,7 +1908,7 @@ print("   Press Ctrl+C to exit.\\n")
 
 try:
     while True:
-        distance_m  = sonar.distance          # Returns metres (0.0 = 0cm, 1.0 = max_distance)
+        distance_m  = sonar.distance          # Returns metres (0.0 to max_distance)
         distance_cm = distance_m * 100        # Convert to centimetres
 
         # Overwrite the same terminal line for a live readout
@@ -1944,7 +1942,7 @@ except KeyboardInterrupt:
             code: '',
             codeWalkthrough: [
               { section: 'DistanceSensor(echo, trigger)', explanation: '`DistanceSensor(echo=25, trigger=24)` tells gpiozero which GPIO pins control the sensor. gpiozero automatically fires the 10µs TRIG pulse and times the ECHO response — no manual timing code needed.' },
-              { section: 'max_distance=3', explanation: 'This sets the scale for `.distance`. With `max_distance=3`, a reading of 1.0 = 3 metres. We multiply by 100 to get centimetres for human-readable output.' },
+              { section: 'max_distance=3', explanation: 'This caps the measured range at 3 metres. `.distance` is already in metres: 1.0 means 1 metre. Only `.value` is normalized to 0–1. Multiply `.distance` by 100 for centimetres.' },
               { section: 'The Physics', explanation: 'Sound travels at ~343 m/s. If the echo returns after 5.8ms, the sound covered 2 metres total (out and back), so the object is 1 metre away. DistanceSensor does this calculation automatically.' },
               { section: 'Threshold Logic', explanation: 'Three `if/elif/else` blocks decide the LED color based on distance. This is the simplest form of a rule-based system — the same pattern used in industrial proximity switches.' },
               { section: 'end="\\r" Trick', explanation: '`print(..., end="\\r")` moves the cursor back to the start of the line without printing a new one. This creates a live, updating readout without scrolling the terminal.' }
@@ -2055,7 +2053,7 @@ except KeyboardInterrupt:
             overview: { description: '', concepts: [], difficulty: 5, estimatedTime: '' },
             hardwareSetup: {
               warnings: [
-                'RELAY SAFETY: The relay switches MAINS VOLTAGE (120V/240V AC). NEVER touch the relay screw terminals while anything is plugged into the controlled outlet. When in doubt, only connect low-voltage DC loads (5V fans, LED strips) during testing.',
+                'RELAY SAFETY: Use only a low-voltage, current-limited DC test load for this lesson. Never wire mains power to a breadboard or exposed relay terminals.',
                 'You MUST enable 1-Wire on your Pi before the DS18B20 will be detected: sudo raspi-config → Interface Options → 1-Wire.',
                 'The DS18B20 REQUIRES a 4.7kΩ pull-up resistor between its DATA pin and 3.3V. Without it, readings will fail or return garbage.'
               ],
@@ -2065,12 +2063,12 @@ except KeyboardInterrupt:
                 'Connect DS18B20 GND (left leg) → GND rail.',
                 'Connect DS18B20 DATA (middle leg) → Raspberry Pi Physical Pin 7 (GPIO 4).',
                 'Connect a 4.7kΩ resistor between the DS18B20 DATA wire and the 3.3V rail (this is the required 1-Wire pull-up).',
-                'Relay module: Connect VCC → Raspberry Pi Physical Pin 4 (5V), GND → GND rail, IN → Raspberry Pi Physical Pin 37 (GPIO 26).',
-                'Double Color LED status indicator: Red pin → GPIO 16 through a 330Ω resistor → GND; Green pin → GPIO 20 through a 330Ω resistor → GND. This gives a live red/green signal: Red = relay ON (hot!), Green = relay OFF (normal).',
+                'Use a 3.3V-input-compatible, active-HIGH relay module with a low-voltage test load only. Connect module VCC → its rated supply, GND → Pi GND, IN → Raspberry Pi Physical Pin 37 (GPIO 26). Check the module label or datasheet before wiring: many relay boards are active-LOW or require 5V on IN and will not match this code.',
+                'Double Color LED status indicator: GPIO 16 → 330Ω resistor → Red anode; GPIO 20 → 330Ω resistor → Green anode; common cathode → GND. This gives a live red/green signal: Red = relay ON (hot!), Green = relay OFF (normal).',
                 'Retain the RGB LED from Level 1: Red → GPIO 17, Green → GPIO 27, Blue → GPIO 5, GND → GND.',
                 'Retain the passive buzzer from Level 4: positive leg → GPIO 18, negative → GND.'
               ],
-              explanation: 'The DS18B20 uses the 1-Wire protocol — a single data line carries both power signaling and data. Linux automatically detects it and creates a virtual text file you read like any other file. The relay coil is energized by GPIO 26 (5V logic from the module) and mechanically snaps a heavy-duty contact closed, switching whatever load you connect to the NO (Normally Open) screw terminal.'
+              explanation: 'The DS18B20 uses the 1-Wire protocol — a single data line carries data while the sensor has separate 3.3V and ground wires. Linux creates a virtual text file for the reading. GPIO 26 sends a 3.3V control signal to a compatible relay module; the module supplies the coil current. In this lesson, use only a low-voltage test load on the Normally Open contact.'
             },
             code: '',
             codeWalkthrough: [],
@@ -2090,8 +2088,8 @@ except KeyboardInterrupt:
 Level 10: The Smart Guardian — Temperature monitor with relay control
 
 🔒 SECURITY HARDENING:
-- Relay controls MAINS VOLTAGE. Use Normally-Open (NO) contacts for fail-safe operation.
-  If the Pi loses power, the relay opens and the load turns OFF automatically.
+- Use a compatible active-HIGH relay module and a low-voltage DC test load.
+- Normally-Open (NO) contacts open when the relay coil loses power.
 - Validate ALL temperature reads: DS18B20 range is -55°C to +125°C. Reject anything outside.
 - The CRC check in the sensor file (the 'YES' line) MUST pass before trusting any reading.
 - Log all relay state changes with timestamps for traceability.
@@ -2115,7 +2113,7 @@ from gpiozero.tones import Tone
 
 # Relay uses OutputDevice (not LED — semantically correct)
 # active_high=True: GPIO HIGH turns relay ON
-# initial_value=False: relay starts OFF (fail-safe)
+# initial_value=False: relay starts OFF
 relay = OutputDevice(26, active_high=True, initial_value=False)
 
 red_led      = LED(17)       # RGB LED red channel (Level 1)
@@ -2207,13 +2205,23 @@ print(f"   Relay OFF below: {TEMP_OFF_THRESHOLD_C}°C")
 print("   Press Ctrl+C to exit.\\n")
 
 relay_active = False  # Track relay state for hysteresis logic
+green_led.on()
+set_status(False)
 
 try:
     while True:
         temp_c = read_temperature(device)
 
         if temp_c is None:
-            print("⚠️  Invalid reading — retrying...", end="\\r")
+            # A missing/invalid sensor reading must not leave the relay ON.
+            if relay_active:
+                relay.off()
+                relay_active = False
+                red_led.off()
+                green_led.off()
+                set_status(False)
+                log_event("RELAY OFF — invalid temperature reading")
+            print("⚠️  Invalid reading — relay OFF; retrying...", end="\\r")
             time.sleep(1)
             continue
 
@@ -2245,19 +2253,22 @@ try:
             print(f"\\n🟢 RELAY OFF — {temp_c:.1f}°C back to normal.")
 
         else:
-            # Steady state — no relay change needed
-            pass
+            # Restore the indicator after a valid reading following a sensor fault.
+            green_led.value = not relay_active
+            red_led.value = relay_active
+            set_status(relay_active)
 
         time.sleep(1)   # DS18B20 needs ~750ms per conversion
 
 except KeyboardInterrupt:
-    relay.off()        # ALWAYS turn relay off on exit
+    print("\\n\\n👋 Guardian shut down safely. Relay is OFF.")
+finally:
+    relay.off()        # Also runs if logging or another operation fails
     red_led.off()
     green_led.off()
     status_red.off()
     status_green.off()
-    alarm_buzzer.stop()
-    print("\\n\\n👋 Guardian shut down safely. Relay is OFF.")`,
+    alarm_buzzer.stop()`,
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -2277,7 +2288,7 @@ except KeyboardInterrupt:
               { section: 'CRC Validity Check', explanation: 'Each DS18B20 reading includes a CRC (error check). Linux\'s driver writes "YES" on the first line if it passed, "NO" if not. We ALWAYS check for "YES" before trusting the temperature data.' },
               { section: 'Hysteresis Logic', explanation: 'Without hysteresis, a relay near the threshold would switch on and off dozens of times per minute, wearing out the contacts. Our two-threshold design (ON at 30°C, OFF at 27°C) creates a 3°C "dead zone" that prevents rapid cycling — the same technique used in real thermostats.' },
               { section: 'log_event() — Audit Trail', explanation: 'Every relay state change is logged to `guardian.log` with a timestamp. This is a minimal but real security practice: if something went wrong at 3am, you can check what the temperature was.' },
-              { section: 'Fail-Safe Shutdown', explanation: 'The `except KeyboardInterrupt` block calls `relay.off()` unconditionally. Leaving a relay ON after code exits is a fire hazard. Always shut hardware down explicitly.' }
+              { section: 'Fail-Safe Shutdown', explanation: 'The `finally` block calls `relay.off()` on Ctrl+C and on errors in the monitoring loop. Leaving a relay ON after code exits is a fire hazard. Always shut hardware down explicitly.' }
             ],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -2293,9 +2304,9 @@ except KeyboardInterrupt:
             code: '',
             codeWalkthrough: [],
             conceptDeepDive: {
-              hardware: 'The DS18B20 stores temperature as a 16-bit two\'s complement integer inside its scratchpad memory. Each bit represents 1/16 of a degree Celsius. An internal ADC converts the thermistor reading, then the 1-Wire bus clock shifts the bits out one at a time on a single wire. The 4.7kΩ pull-up resistor provides the resting voltage that powers the bus. The relay is an electromechanical amplifier: a small 5V coil current (GPIO-safe) creates a magnetic field that flips a mechanical lever, connecting or disconnecting mains-voltage terminals that can handle 10A+.',
+              hardware: 'The DS18B20 stores temperature in its scratchpad memory. The 4.7kΩ pull-up resistor holds the data line high between 1-Wire transfers. A compatible relay module drives the coil from its own supply; GPIO 26 only provides a 3.3V control signal. The relay contacts switch a separate low-voltage test circuit.',
               software: 'The Linux `w1_therm` kernel module handles all 1-Wire timing (microsecond-precision reset pulses, presence pulses, and bit reads) entirely in the kernel. Python just opens a text file. This is the power of OS-level hardware abstraction — complex hardware protocols become trivial file reads. The hysteresis pattern (`relay_active` boolean + two thresholds) is a classic control systems technique found in industrial PLCs and consumer thermostats.',
-              connection: 'Hardware connects to OS: the 1-Wire kernel driver creates `/sys/bus/w1/`. OS connects to Python: we `open()` a file. Python connects to hardware: `relay.on()` sets GPIO 26 HIGH, energizing the relay coil. The relay connects to load: NO contacts close, completing the external circuit. This is a full stack from sensor physics to physical switching — every layer is visible in this project.'
+              connection: 'The 1-Wire kernel driver creates `/sys/bus/w1/` files, which Python reads with `open()`. On a compatible active-HIGH module, `relay.on()` sets GPIO 26 HIGH and the module energizes its coil. The Normally Open contacts then close the separate low-voltage test circuit.'
             },
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: []
@@ -2354,7 +2365,7 @@ except KeyboardInterrupt:
     badgeEarned: 'Optical Guardian',
     content: {
       overview: {
-        description: 'Build a laser tripwire security system! The laser beam shines across a doorway onto a photoresistor. When someone breaks the beam, the light level drops and the alarm triggers. We will also learn ambient light calibration to prevent false alarms from clouds or flickering lights.',
+        description: 'Build a laser tripwire security system! The laser shines onto a photoresistor. When someone breaks the beam, the analog reading changes and the alarm triggers. We calibrate both beam states before arming.',
         concepts: ['Beam-Break Logic', 'Light-Dependent Resistors', 'Ambient Calibration', 'Security Bypass Attacks'],
         difficulty: 4,
         estimatedTime: '40 mins'
@@ -2365,7 +2376,7 @@ except KeyboardInterrupt:
           title: 'Project Overview',
           content: {
             overview: {
-              description: 'Build a laser tripwire security system! The laser beam shines across a doorway onto a photoresistor. When someone breaks the beam, the light level drops and the alarm triggers. We will also learn ambient light calibration to prevent false alarms from clouds or flickering lights.',
+              description: 'Build a laser tripwire security system! The laser shines onto a photoresistor. When someone breaks the beam, the analog reading changes and the alarm triggers. We calibrate both beam states before arming.',
               concepts: ['Beam-Break Logic', 'Light-Dependent Resistors', 'Ambient Calibration', 'Security Bypass Attacks'],
               difficulty: 4,
               estimatedTime: '40 mins'
@@ -2390,14 +2401,14 @@ except KeyboardInterrupt:
                 'Position the laser and photoresistor on opposite sides of a doorway or box opening for a proper "tripwire" effect.'
               ],
               steps: [
-                'Laser Sensor Module: Connect VCC → 5V rail, GND → GND rail, S (signal) → GPIO 23.',
+                'Use a laser module with a documented 3.3V-compatible enable input that draws no load current from GPIO. Connect its power and ground as specified by its datasheet, then enable input → GPIO 23. If the module has only power pins or S is the laser power pin, use a transistor driver instead; do not power it directly from GPIO.',
                 'Photoresistor Module: Connect VCC → 3.3V rail, GND → GND rail, AO (analog out) → MCP3008 CH0 (we need ADC for analog reads).',
                 'MCP3008 ADC: Wire as in previous ADC projects — VDD & VREF → 3.3V, AGND & DGND → GND, CLK → GPIO 11 (SCLK), DOUT → GPIO 9 (MISO), DIN → GPIO 10 (MOSI), CS → GPIO 8 (CE0).',
-                'Active Buzzer Module: Connect VCC → 5V rail, GND → GND rail, I/O → GPIO 18.',
+                'Use an active buzzer module with a documented 3.3V-compatible, active-HIGH control input. Connect its power and ground as specified by its datasheet, then input → GPIO 18. A bare buzzer or incompatible module needs a transistor driver.',
                 'Position the laser so its beam lands directly on the photoresistor\'s sensor window.',
                 'Secure both modules so the beam alignment stays consistent.'
               ],
-              explanation: 'The laser emits a focused beam of coherent light. The photoresistor\'s resistance drops dramatically when bright light hits it. By reading the analog voltage through the MCP3008 ADC, we can detect the exact light level. When the beam is blocked, the resistance rises and our reading changes — triggering the alarm.'
+              explanation: 'The photoresistor changes resistance when the beam hits it. The MCP3008 measures the module\'s analog voltage. Because modules can wire the voltage divider in either direction, calibration measures both the lit and blocked readings before choosing thresholds.'
             },
             code: '',
             codeWalkthrough: [],
@@ -2423,9 +2434,9 @@ Level 11: The Laser Tripwire — Optical beam-break security
 
 📚 EDUCATIONAL MOMENT:
 A photoresistor (LDR) changes resistance based on light intensity.
-Bright light = low resistance = higher voltage reading.
-Blocked beam = high resistance = lower voltage reading.
-We use the MCP3008 ADC to read this analog voltage as a 10-bit value (0-1023).
+Bright light lowers the LDR resistance, but the analog voltage's direction
+depends on the module's divider wiring. We measure both beam states first.
+The MCP3008 returns a normalized reading between 0.0 and 1.0.
 """
 
 import time
@@ -2446,34 +2457,39 @@ buzzer = OutputDevice(18, active_high=True)  # Active buzzer
 
 CALIBRATION_SAMPLES = 20       # Number of samples to average during calibration
 CALIBRATION_DELAY = 0.1        # Delay between calibration samples (seconds)
-BEAM_BREAK_THRESHOLD = 0.30    # If reading drops below 30% of calibrated value, beam is broken
-HYSTERESIS_MARGIN = 0.10       # 10% margin before resetting alarm
+MIN_BEAM_CONTRAST = 0.05       # Reject poorly aligned beam/sensor setups
 
 # ============================================
 # CALIBRATION
 # ============================================
 
-def calibrate_ambient_light():
-    """
-    Learn the 'normal' light level with the laser beam hitting the sensor.
-    Returns the average reading as a baseline.
-    """
-    print("🔦 Calibrating ambient light level...")
-    print("   Ensure the laser beam is hitting the photoresistor.")
-    
+def sample_light():
+    """Average the ADC readings while the beam is held in one state."""
     laser.on()
     time.sleep(0.5)  # Let laser stabilize
-    
-    total = 0
-    for i in range(CALIBRATION_SAMPLES):
-        reading = light_sensor.value  # 0.0 to 1.0
-        total += reading
-        print(f"   Sample {i+1}/{CALIBRATION_SAMPLES}: {reading:.3f}", end="\\r")
+    readings = []
+    for _ in range(CALIBRATION_SAMPLES):
+        readings.append(light_sensor.value)
         time.sleep(CALIBRATION_DELAY)
-    
-    baseline = total / CALIBRATION_SAMPLES
-    print(f"\\n✅ Calibration complete. Baseline: {baseline:.3f}")
-    return baseline
+    return sum(readings) / len(readings)
+
+def calibrate_beam():
+    try:
+        print("🔦 Aim the laser at the photoresistor and press Enter...")
+        input()
+        lit = sample_light()
+        print("   Block the beam completely and press Enter...")
+        input()
+        blocked = sample_light()
+        if abs(lit - blocked) < MIN_BEAM_CONTRAST:
+            raise RuntimeError("Beam contrast is too small. Check alignment and ADC wiring.")
+        print("   Unblock the beam and press Enter to arm...")
+        input()
+        print(f"✅ Calibration: lit={lit:.3f}, blocked={blocked:.3f}")
+        return lit, blocked
+    except BaseException:
+        laser.off()
+        raise
 
 # ============================================
 # ALARM FUNCTIONS
@@ -2500,12 +2516,13 @@ def log_breach(light_level, baseline):
 print("🔴 Laser Tripwire Security System")
 print("=" * 40)
 
-baseline = calibrate_ambient_light()
-breach_threshold = baseline * BEAM_BREAK_THRESHOLD
-reset_threshold = baseline * (BEAM_BREAK_THRESHOLD + HYSTERESIS_MARGIN)
+baseline, blocked_level = calibrate_beam()
+direction = 1 if blocked_level > baseline else -1
+breach_threshold = (baseline + blocked_level) / 2
+reset_threshold = baseline + (blocked_level - baseline) * 0.25
 
-print(f"   Breach triggers below: {breach_threshold:.3f}")
-print(f"   Alarm resets above:    {reset_threshold:.3f}")
+print(f"   Breach threshold: {breach_threshold:.3f} (blocked direction: {direction:+d})")
+print(f"   Reset threshold:  {reset_threshold:.3f} (towards lit baseline)")
 print("\\n🛡️  SYSTEM ARMED — Press Ctrl+C to disarm.\\n")
 
 alarm_active = False
@@ -2514,14 +2531,14 @@ try:
     while True:
         light_level = light_sensor.value
         
-        if not alarm_active and light_level < breach_threshold:
+        if not alarm_active and direction * light_level > direction * breach_threshold:
             # BEAM BROKEN!
             alarm_active = True
             trigger_alarm()
             log_breach(light_level, baseline)
-            print(f"🚨 BREACH! Light dropped to {light_level:.3f} — ALARM ACTIVE")
+            print(f"🚨 BREACH! Light changed to {light_level:.3f} — ALARM ACTIVE")
         
-        elif alarm_active and light_level > reset_threshold:
+        elif alarm_active and direction * light_level < direction * reset_threshold:
             # Beam restored
             alarm_active = False
             silence_alarm()
@@ -2534,9 +2551,11 @@ try:
         time.sleep(0.05)  # 50ms polling = responsive detection
 
 except KeyboardInterrupt:
+    print("\\n\\n🔓 System disarmed. Laser off.")
+finally:
     laser.off()
     silence_alarm()
-    print("\\n\\n🔓 System disarmed. Laser off.")`,
+    light_sensor.close()`,
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -2551,10 +2570,10 @@ except KeyboardInterrupt:
             hardwareSetup: { warnings: [], steps: [], explanation: '' },
             code: '',
             codeWalkthrough: [
-              { section: 'calibrate_ambient_light()', explanation: 'Before arming, we take multiple readings with the laser on and average them. This "learns" what normal looks like — bright laser hitting the sensor. If the room gets darker (cloud passes by), the baseline would be different. Calibrating on startup prevents false alarms.' },
+              { section: 'calibrate_beam()', explanation: 'Before arming, sample the sensor with the laser hitting it and again with the beam blocked. The script checks that the two readings differ enough to be useful.' },
               { section: 'MCP3008 for Analog Reads', explanation: 'The Raspberry Pi has no built-in ADC. The MCP3008 chip converts the photoresistor\'s analog voltage to a digital value (0-1023, normalized to 0.0-1.0 by gpiozero). Without this, we could only detect "dark" vs "bright" — not the subtle changes that distinguish a blocked beam from a shadow.' },
-              { section: 'BEAM_BREAK_THRESHOLD', explanation: 'If the light level drops below 30% of the calibrated baseline, we consider the beam broken. This percentage accounts for the dramatic difference between "laser hitting sensor" and "laser blocked by a person\'s body."' },
-              { section: 'Hysteresis (HYSTERESIS_MARGIN)', explanation: 'The alarm triggers at 30% but doesn\'t reset until 40%. This 10% gap prevents the alarm from rapidly toggling on/off if someone\'s arm is partially in the beam or the light is flickering at the boundary.' },
+              { section: 'Beam Direction', explanation: 'Some photoresistor modules output a higher voltage when dark, others a lower one. The two calibration readings determine which direction means a blocked beam.' },
+              { section: 'Hysteresis', explanation: 'The alarm triggers halfway between the lit and blocked readings, then resets only when the reading returns closer to the lit baseline. This gap reduces flicker near the boundary.' },
               { section: '50ms Polling Loop', explanation: 'A person walking through a doorway crosses the beam in about 100-300ms. Polling every 50ms ensures we never miss a breach — we\'ll catch at least 2-6 samples of the broken beam.' }
             ],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
@@ -2572,7 +2591,7 @@ except KeyboardInterrupt:
             codeWalkthrough: [],
             conceptDeepDive: {
               hardware: 'The laser module emits coherent monochromatic light at 650nm (red). Unlike an LED that spreads light in a cone, a laser produces a tight parallel beam that stays focused over distance. The photoresistor (LDR) is made of cadmium sulfide — photons hitting the material knock electrons loose, reducing resistance. More light = more free electrons = lower resistance. Combined with a fixed resistor in a voltage divider, this creates a variable voltage that the ADC can read.',
-              software: 'Calibration is a form of machine learning at its simplest: the system "learns" what normal looks like before making decisions. The threshold-based detection is a binary classifier — readings below threshold = "intruder," above = "normal." Hysteresis is a common pattern in control systems to prevent oscillation at decision boundaries.',
+              software: 'Calibration measures lit and blocked voltages so the program can choose the right direction and thresholds for this module. Hysteresis uses separate trigger and reset thresholds to prevent rapid alarm changes near the boundary.',
               connection: 'Physical security meets software logic: the laser creates a physical "fence" of light, the photoresistor detects its presence, the ADC digitizes the analog signal, Python runs the classification logic, and the buzzer creates an audible alert. Each layer transforms the signal — photons → resistance → voltage → digital value → boolean decision → sound waves.'
             },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -2589,7 +2608,7 @@ except KeyboardInterrupt:
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: {
-              tweak: 'Adjust BEAM_BREAK_THRESHOLD from 0.30 to 0.50 and see how it affects sensitivity. A higher threshold triggers on smaller light changes (more sensitive but more false alarms).',
+              tweak: 'Change MIN_BEAM_CONTRAST from 0.05 to 0.10. A larger value rejects setups where the blocked and lit readings are too similar.',
               logic: 'Add a "grace period" — if the beam is broken for less than 100ms, ignore it (might be a bug flying through). Only trigger alarm if the beam stays broken for 3+ consecutive readings.',
               creative: 'Discuss bypass attacks with your child: what if a thief brought their own laser and pointed it at the sensor while walking through? How could you detect this? (Hint: pulse your laser on/off in a secret pattern and only accept readings that match the pattern.)'
             },
@@ -2609,8 +2628,8 @@ except KeyboardInterrupt:
             troubleshooting: [
               { issue: 'Light sensor always reads 0.0 or 1.0', solution: 'Check MCP3008 wiring — especially VREF (must be 3.3V), CLK, DOUT, DIN, and CS pins. Ensure the photoresistor module AO pin is connected to CH0.' },
               { issue: 'Alarm triggers immediately after calibration', solution: 'The laser may have moved or the beam isn\'t hitting the sensor dead-center. Re-align and recalibrate. Also check that the threshold isn\'t set too high.' },
-              { issue: 'Alarm doesn\'t trigger when beam is clearly blocked', solution: 'Lower BEAM_BREAK_THRESHOLD (e.g., 0.20 instead of 0.30). Print the live readings to see what values you\'re actually getting when blocked vs unblocked.' },
-              { issue: 'Laser module doesn\'t light up', solution: 'The laser module needs 5V power on VCC, not 3.3V. Also verify the signal pin (GPIO 23) is set to HIGH by checking laser.on() is called.' }
+              { issue: 'Alarm doesn\'t trigger when beam is clearly blocked', solution: 'Recalibrate and confirm the lit and blocked readings differ by at least MIN_BEAM_CONTRAST. Check that the beam was completely blocked during the second calibration step.' },
+              { issue: 'Laser module doesn\'t light up', solution: 'Check the module datasheet for its required supply and enable logic. GPIO 23 provides only 3.3V logic and cannot directly power a laser module; use a compatible enable input or a transistor driver.' }
             ]
           }
         }
@@ -2669,13 +2688,13 @@ except KeyboardInterrupt:
               ],
               steps: [
                 'Reed Switch Module: Connect VCC → 3.3V, GND → GND, DO (digital out) → GPIO 17. The module has a built-in pull-up resistor.',
-                'Hall Effect Sensor Module: Connect VCC → 3.3V, GND → GND, AO (analog out) → MCP3008 CH1 (for analog reads), DO (digital out) → GPIO 27 (for binary threshold).',
-                'Double Color LED: Red → GPIO 16 through 330Ω → GND, Green → GPIO 20 through 330Ω → GND. Green = door closed (secure), Red = door open or tamper detected.',
+                'Hall Effect Sensor Module: Connect VCC → 3.3V, GND → GND, AO (analog out) → MCP3008 CH1. The DO pin is unused in this lesson.',
+                'Double Color LED: GPIO 16 → 330Ω resistor → Red anode; GPIO 20 → 330Ω resistor → Green anode; common cathode → GND. Green = door closed (secure), Red = door open or sensor mismatch.',
                 'MCP3008 ADC: Same wiring as Level 11 — CLK → GPIO 11, DOUT → GPIO 9, DIN → GPIO 10, CS → GPIO 8.',
                 'Mount the sensors on a door frame. Attach a small magnet to the door so it aligns with both sensors when the door is closed.',
                 'Test alignment: when the magnet is near, the reed switch should close and the Hall sensor should register a strong field.'
               ],
-              explanation: 'The reed switch contains two metal reeds in a glass tube — a nearby magnetic field pulls them together, closing the circuit. The Hall Effect sensor detects magnetic field strength as an analog voltage proportional to the field intensity. Using BOTH sensors lets us detect tampering: if someone holds a magnet near the reed switch to fool it, the Hall sensor will see an abnormally STRONG field — stronger than the door\'s actual magnet.'
+              explanation: 'The reed switch contains two metal reeds in a glass tube — a nearby magnetic field pulls them together. The Hall module provides an analog voltage that changes with magnetic field and depends on magnet polarity and module design. The program first measures the closed-door value, then flags a mismatch when the reed reports closed but the Hall reading leaves that range. This can signal misalignment, drift, or interference; it cannot prove an attack.'
             },
             code: '',
             codeWalkthrough: [],
@@ -2695,17 +2714,17 @@ except KeyboardInterrupt:
 Level 12: The Magnetic Deadbolt — Redundant door security
 
 🔒 SECURITY HARDENING:
-- Using TWO sensor types defeats simple magnet spoofing attacks.
-- If the Hall sensor sees a field STRONGER than expected, someone may be
-  holding a powerful magnet to trick the reed switch while opening the door.
+- Two sensor types can reveal disagreement; they cannot prove tampering.
+- A Hall reading outside the calibrated range can result from drift,
+  misalignment, wiring problems, or magnetic interference.
 - Log all state changes with timestamps.
 
 📚 EDUCATIONAL MOMENT:
 The reed switch is BINARY — closed or open, 1 or 0.
 The Hall Effect sensor is ANALOG — it measures field STRENGTH.
 A real door magnet produces a known field strength at a known distance.
-An attacker's spoofing magnet would likely be much stronger (easier to hold
-from a distance) — and the Hall sensor will detect this anomaly!
+Readings outside the calibrated range are logged as SENSOR MISMATCH.
+Inspect the setup before drawing conclusions about the cause.
 """
 
 import time
@@ -2717,20 +2736,18 @@ from gpiozero import LED, Button, MCP3008
 # ============================================
 
 reed_switch = Button(17, pull_up=True)   # Reed switch — closed when magnet is near
-hall_digital = Button(27, pull_up=True)  # Hall sensor digital output
 hall_analog = MCP3008(channel=1)         # Hall sensor analog output
 
 status_green = LED(20)  # Green = secure
-status_red = LED(16)    # Red = open or tamper
+status_red = LED(16)    # Red = open or sensor mismatch
 
 # ============================================
 # CONFIGURATION
 # ============================================
 
-# Calibrated values — adjust after running calibration
-HALL_CLOSED_MIN = 0.40   # Minimum Hall reading when door is legitimately closed
-HALL_CLOSED_MAX = 0.70   # Maximum Hall reading when door is legitimately closed
-HALL_TAMPER_THRESHOLD = 0.85  # If Hall reads ABOVE this, suspect a strong spoofing magnet
+# Accepted deviation from the measured closed-door Hall reading.
+# Increase only after checking the sensor's normal noise and temperature drift.
+HALL_TOLERANCE = 0.10
 
 # ============================================
 # CALIBRATION
@@ -2741,6 +2758,8 @@ def calibrate_door():
     print("🔧 Calibration Mode")
     print("   Close the door completely and press Enter...")
     input()
+    if not reed_switch.is_pressed:
+        raise RuntimeError("Reed switch is open. Check the door magnet before arming.")
     
     samples = []
     for i in range(20):
@@ -2750,12 +2769,13 @@ def calibrate_door():
     avg = sum(samples) / len(samples)
     min_val = min(samples)
     max_val = max(samples)
-    
+
     print("\\n📊 Door Closed Readings:")
     print(f"   Average: {avg:.3f}")
     print(f"   Range:   {min_val:.3f} - {max_val:.3f}")
-    print("\\n   Use these to set HALL_CLOSED_MIN and HALL_CLOSED_MAX in the code.")
-    return avg
+    if max_val - min_val > HALL_TOLERANCE:
+        raise RuntimeError("Hall readings are unstable. Check wiring and magnet alignment.")
+    return max(0.0, avg - HALL_TOLERANCE), min(1.0, avg + HALL_TOLERANCE)
 
 # ============================================
 # STATE DETECTION
@@ -2764,20 +2784,17 @@ def calibrate_door():
 def get_door_state():
     """
     Returns a tuple: (state, hall_value, reed_closed)
-    where state is 'secure', 'open', or 'tamper'.
+    where state is 'secure', 'open', or 'mismatch'.
     """
     reed_closed = reed_switch.is_pressed  # True when magnet closes the switch
     hall_value = hall_analog.value
     
-    # TAMPER CHECK: Hall reading abnormally high = strong external magnet
-    if hall_value > HALL_TAMPER_THRESHOLD:
-        return 'tamper', hall_value, reed_closed
-    
     # SECURE: Reed says closed AND Hall is in expected range
     if reed_closed and HALL_CLOSED_MIN <= hall_value <= HALL_CLOSED_MAX:
         return 'secure', hall_value, reed_closed
-    
-    # OPEN: Reed says open OR Hall is outside range
+    if reed_closed:
+        return 'mismatch', hall_value, reed_closed  # Sensor disagreement
+    # OPEN: Reed says open. A Hall reading alone cannot prove why.
     return 'open', hall_value, reed_closed
 
 def set_status(state):
@@ -2801,8 +2818,8 @@ def log_event(state, hall_value, reed_closed):
 
 print("🚪 Magnetic Deadbolt Security System")
 print("=" * 40)
+HALL_CLOSED_MIN, HALL_CLOSED_MAX = calibrate_door()
 print(f"   Hall expected range: {HALL_CLOSED_MIN:.2f} - {HALL_CLOSED_MAX:.2f}")
-print(f"   Tamper threshold:    > {HALL_TAMPER_THRESHOLD:.2f}")
 print("\\n🛡️  Monitoring... Press Ctrl+C to exit.\\n")
 
 last_state = None
@@ -2817,9 +2834,9 @@ try:
             
             if state == 'secure':
                 print(f"🟢 SECURE — Door closed (Hall: {hall_value:.3f})")
-            elif state == 'tamper':
-                print(f"🔴 TAMPER DETECTED! Abnormally strong magnetic field: {hall_value:.3f}")
-                print("   Someone may be spoofing the sensor with an external magnet!")
+            elif state == 'mismatch':
+                print(f"🔴 SENSOR MISMATCH! Unexpected Hall reading: {hall_value:.3f}")
+                print("   Check alignment or investigate possible magnetic interference.")
             else:
                 print(f"🟡 OPEN — Door opened (Hall: {hall_value:.3f}, Reed: {'closed' if reed_closed else 'open'})")
             
@@ -2850,10 +2867,10 @@ except KeyboardInterrupt:
             code: '',
             codeWalkthrough: [
               { section: 'Reed Switch as Button', explanation: 'We use gpiozero\'s Button class with `pull_up=True`. When the magnet is near, the reed switch closes, pulling the GPIO pin LOW — which Button interprets as "pressed." This is the same logic as a physical button!' },
-              { section: 'Hall Analog + Hall Digital', explanation: 'The Hall sensor module provides BOTH outputs. The digital output (DO) gives a binary yes/no based on an onboard potentiometer threshold. The analog output (AO) gives us the raw field strength — much more useful for detecting spoofing.' },
-              { section: 'HALL_CLOSED_MIN/MAX Range', explanation: 'When the door is legitimately closed, the magnet is at a fixed distance and produces a consistent Hall reading. We calibrate this range. If the reading is outside this range while the reed switch says "closed," something is wrong.' },
-              { section: 'TAMPER_THRESHOLD', explanation: 'A strong neodymium magnet held closer than the door magnet would produce a STRONGER field. If the Hall reading exceeds our tamper threshold, we know someone is trying to fool the system.' },
-              { section: 'Three-State Logic', explanation: 'Instead of binary "open/closed," we have three states: SECURE (both sensors agree), OPEN (door is open), TAMPER (sensors disagree or readings are anomalous). This defense-in-depth approach catches attacks that would fool a single sensor.' }
+              { section: 'Hall Analog Output', explanation: 'The Hall module provides an analog output (AO). Its voltage changes with magnetic field, but direction and scale depend on the sensor and magnet polarity. The digital output (DO) is unused here.' },
+              { section: 'Closed-Door Calibration', explanation: 'At startup, close the door and press Enter. The script measures the Hall baseline and accepts readings within a tolerance around it.' },
+              { section: 'Sensor Mismatch', explanation: 'If the reed reports closed while the Hall reading leaves the calibrated range, the system flags a mismatch. Check alignment and noise before interpreting it as tampering.' },
+              { section: 'Three-State Logic', explanation: 'The states are SECURE (both sensors agree), OPEN (reed open), and MISMATCH (reed closed, Hall outside the expected range). A sensor mismatch is a warning, not proof of an attack.' }
             ],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -2887,9 +2904,9 @@ except KeyboardInterrupt:
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: {
-              tweak: 'Adjust the potentiometer on the Hall sensor module — it controls the digital output threshold. Watch how it changes when DO triggers compared to your analog readings.',
+              tweak: 'Move the magnet slightly closer to and farther from the Hall sensor while watching the AO reading in the terminal. Observe when it leaves the calibrated range and reports MISMATCH; return the magnet to its original position.',
               logic: 'Add a "sensor mismatch" check: if the reed switch says closed but the Hall analog is near zero (no magnetic field at all), the wire to the reed switch may have been bypassed with a jumper!',
-              creative: 'Act out an attack scenario with your child: they try to open the "door" while holding a magnet near the sensors. Can they find a magnet strong enough to fool the reed switch but weak enough to not trigger the tamper threshold? (Spoiler: it\'s very hard!)'
+              creative: 'Act out an attack scenario with your child: they try to open the "door" while holding a magnet near the sensors. Can they keep the reed switch closed while the Hall reading stays inside the calibrated range? Observe what happens and remember that a mismatch alone does not identify its cause.'
             },
             troubleshooting: []
           }
@@ -2907,7 +2924,7 @@ except KeyboardInterrupt:
             troubleshooting: [
               { issue: 'Reed switch always reads as open', solution: 'The magnet may not be close enough or strong enough. Reed switches typically need the magnet within 10-15mm. Also check that pull_up=True is set.' },
               { issue: 'Hall sensor analog always reads ~0.5', solution: 'With no magnetic field, the Hall sensor outputs roughly VCC/2 (center of its range). This is normal! The reading should shift up or down when a magnet is near.' },
-              { issue: 'Tamper triggers with the door actually closed', solution: 'Your door magnet may be stronger than expected. Recalibrate and increase HALL_TAMPER_THRESHOLD, or use a weaker magnet on the door.' },
+              { issue: 'Sensor mismatch with the door closed', solution: 'Check magnet alignment and noise, then restart with the door closed to recalibrate. Increase HALL_TOLERANCE only after observing the sensor\'s normal variation.' },
               { issue: 'State flickers between secure and open', solution: 'Add hysteresis or a debounce timer. Require 3+ consecutive readings in a new state before changing — this filters out noise and vibration.' }
             ]
           }
@@ -2962,6 +2979,7 @@ except KeyboardInterrupt:
             hardwareSetup: {
               warnings: [
                 'Enable I2C on your Pi before using the ADXL345: sudo raspi-config → Interface Options → I2C.',
+                'Use the shared lesson environment (`source ~/picklepi-env/bin/activate`), then run `python -m pip install smbus2` before starting this script.',
                 'The ADXL345 is a 3.3V device. Never connect VCC to 5V!',
                 'Mount both sensors firmly on the object you\'re protecting — loose mounting creates false positives.'
               ],
@@ -2970,7 +2988,7 @@ except KeyboardInterrupt:
                 'ADXL345 Accelerometer Module: Connect VCC → 3.3V, GND → GND, SDA → GPIO 2 (Physical Pin 3), SCL → GPIO 3 (Physical Pin 5).',
                 'Run `sudo i2cdetect -y 1` — you should see address 0x53 (default ADXL345 address).',
                 'RGB LED (from Level 1): Red → GPIO 17, Green → GPIO 27, Blue → GPIO 5, GND → GND. We\'ll use this for status.',
-                'Active Buzzer: VCC → 5V, GND → GND, I/O → GPIO 18.',
+                'Active Buzzer Module: use one with a documented 3.3V-compatible, active-HIGH input; connect its rated supply and ground, then input → GPIO 18. Use a transistor driver for a bare buzzer or incompatible module.',
                 'Mount the vibration sensor and accelerometer on a small box or book — this is your "protected asset."'
               ],
               explanation: 'The spring vibration sensor is a simple switch with a metal spring inside. Any shock or vibration causes the spring to touch the case, briefly closing the circuit. The ADXL345 uses MEMS (Micro-Electro-Mechanical Systems) — a tiny silicon mass suspended by springs. When the chip accelerates, the mass moves and changes capacitance, which is measured and converted to a digital G-force reading on each axis.'
@@ -3008,9 +3026,12 @@ import time
 import math
 from datetime import datetime
 from gpiozero import LED, Button, OutputDevice
+from threading import Event
 
 # For ADXL345 I2C communication
 import smbus2
+
+# Setup: source ~/picklepi-env/bin/activate; python -m pip install smbus2
 
 # ============================================
 # HARDWARE ABSTRACTION
@@ -3116,28 +3137,9 @@ def log_event(event_type, x, y, z, mag):
 # VIBRATION CALLBACK
 # ============================================
 
-last_vibration_time = 0
-
-def on_vibration():
-    """Called when the spring vibration sensor triggers."""
-    global last_vibration_time
-    now = time.time()
-    
-    if now - last_vibration_time < VIBRATION_COOLDOWN:
-        return  # Still in cooldown
-    
-    last_vibration_time = now
-    x, y, z = read_accel()
-    mag = magnitude(x, y, z)
-    
-    print(f"\\n⚡ VIBRATION DETECTED! (Mag: {mag:.2f}G)")
-    log_event("VIBRATION", x, y, z, mag)
-    set_status('alarm')
-    sound_alarm(2)
-    time.sleep(1)
-    set_status('secure')
-
-vibration_sensor.when_pressed = on_vibration
+last_vibration_time = -VIBRATION_COOLDOWN
+vibration_event = Event()
+vibration_sensor.when_pressed = vibration_event.set
 
 # ============================================
 # CALIBRATION
@@ -3190,6 +3192,16 @@ try:
         dx = abs(x - baseline_x)
         dy = abs(y - baseline_y)
         dz = abs(z - baseline_z)
+
+        # Handle the GPIO callback request here so I2C is read by one thread.
+        vibration = vibration_event.is_set()
+        vibration_event.clear()
+        if vibration and time.monotonic() - last_vibration_time >= VIBRATION_COOLDOWN:
+            last_vibration_time = time.monotonic()
+            print(f"\\n⚡ VIBRATION DETECTED! (Mag: {mag:.2f}G)")
+            log_event("VIBRATION", x, y, z, mag)
+            set_status('alarm')
+            sound_alarm(2)
 
         # Check for impact FIRST: a sudden hit spikes the total magnitude,
         # but it also throws the axes off baseline — so if we tested tilt
@@ -3293,7 +3305,7 @@ except KeyboardInterrupt:
             troubleshooting: [
               { issue: 'i2cdetect shows no device at 0x53', solution: 'Enable I2C via raspi-config and reboot. Check SDA→GPIO2, SCL→GPIO3 wiring. Ensure VCC is 3.3V, not 5V. Some modules have an address jumper — check if it\'s set to alternate address 0x1D.' },
               { issue: 'Readings are always 0,0,0', solution: 'The ADXL345 may not be in measurement mode. Verify init_adxl345() is called before any reads. Check that REG_POWER_CTL is set to 0x08.' },
-              { issue: 'Z-axis doesn\'t read ~1G at rest', solution: 'The sensor may not be level, or the scale factor is wrong. At +/-2G range, scale should be 0.004 (4mg/LSB). If using +/-4G range, scale is 0.008.' },
+              { issue: 'Z-axis doesn\'t read ~1G at rest', solution: 'The sensor may not be level, or the scale factor is wrong. At +/-2G range, scale should be 0.004 (4mg/LSB). With full-resolution mode enabled (0x08), the scale stays about 0.004 across ranges.' },
               { issue: 'Vibration sensor triggers constantly', solution: 'The spring is too sensitive for your surface. Add foam padding under the sensor, or increase bounce_time to 0.2 or higher. Ensure the module is firmly mounted — loose wires cause false triggers.' }
             ]
           }

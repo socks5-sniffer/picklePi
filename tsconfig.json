@@ -28,5 +28,13 @@
     "backend",
     "node_modules",
     "dist"
+  ],
+  "include": [
+    "src",
+    "tests",
+    "scripts",
+    "vite.config.ts",
+    "playwright.config.ts",
+    "data"
   ]
 }

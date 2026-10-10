@@ -42,3 +42,9 @@ backend/*.pyc
 
 NOTES.md
 SESSION_JOURNAL.md
+
+# Local test environments and browser reports
+.venv*/
+__pycache__/
+test-results/
+playwright-report/
