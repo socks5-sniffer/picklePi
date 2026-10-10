@@ -82,7 +82,7 @@ picklePi is built with modern web technologies, focusing on performance, type sa
 | **Motion** | 12.x | Declarative animations for UI transitions |
 | **Lucide React** | 1.x | Consistent SVG icon library |
 | **Flask** | 3.x | Optional HTTP API server in `backend/` |
-| **Firebase Admin** | 6.x | Firebase token verification and Firestore access in the backend |
+| **Firebase Admin** | 7.x | Firebase token verification and Firestore access in the backend |
 | **dotenv** | 17.x | Environment variable loading for server config |
 | **mkcert** | via `vite-plugin-mkcert` | Auto-generates trusted local HTTPS certificates |
 | **localStorage** | Browser native | Client-side progress persistence (current default) |

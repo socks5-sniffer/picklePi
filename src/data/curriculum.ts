@@ -278,7 +278,7 @@ except KeyboardInterrupt:
             experimentMode: { tweak: '', logic: '', creative: '' },
             troubleshooting: [
               { issue: "Only one or two colors work", solution: 'Check that all three color pins are connected to the correct GPIO pins (R=GPIO 17, G=GPIO 27, B=GPIO 5).' },
-              { issue: "LED doesn't light up at all", solution: 'The longest pin (marked -) must go to GND. Double-check polarity and GPIO connections.' },
+              { issue: "LED doesn't light up at all", solution: 'Identify the common cathode (-/GND) using the module labels or datasheet, then check each color connection. Do not infer polarity from leg length; a common-anode LED needs different wiring and code.' },
               { issue: 'Colors are very dim', solution: 'Ensure you are using 3.3V GPIO pins. Check the module resistor values and polarity; blue and green LEDs can be dimmer at 3.3V.' },
               { issue: 'White looks pinkish or off-color', solution: 'This is normal! The three LEDs have different brightness levels. In Level 3, we will use PWM to balance them.' },
               { issue: 'Blue seems much brighter', solution: 'Blue LEDs are often brighter than red/green. PWM in Level 3 will let you adjust individual brightness.' }
@@ -532,7 +532,7 @@ except KeyboardInterrupt:
                 'No new hardware needed! We will use the exact same LED setup from Level 1.'
               ],
               steps: [
-                'Ensure your RGB LED module is connected just like in Level 1 (Red pin to GPIO 17, longest pin to GND).'
+                'Ensure your RGB LED module is connected just like in Level 1 (Red input to GPIO 17, labeled common cathode (-/GND) to GND).'
               ],
               explanation: 'We are changing how we control the pin in software. Instead of a steady 3.3V, we will turn the pin on and off very fast to simulate a lower voltage.'
             },
@@ -1358,7 +1358,7 @@ except KeyboardInterrupt:
                 'Double-check all wiring before powering on. You have many components connected now.'
               ],
               steps: [
-                'RGB LED module: Red pin to GPIO 17, longest pin (-) to GND.',
+                'RGB LED module: Red input to GPIO 17, labeled common cathode (-/GND) to GND.',
                 'Button module: VCC to 3.3V, GND to GND, S to GPIO 22, as in Level 2. A bare button connects GPIO 22 to GND when pressed.',
                 'Passive Buzzer on GPIO 18.',
                 'PIR Sensor on GPIO 23 (VCC to 5V).'
@@ -2253,8 +2253,10 @@ try:
             print(f"\\n🟢 RELAY OFF — {temp_c:.1f}°C back to normal.")
 
         else:
-            # Steady state — no relay change needed
-            pass
+            # Restore the indicator after a valid reading following a sensor fault.
+            green_led.value = not relay_active
+            red_led.value = relay_active
+            set_status(relay_active)
 
         time.sleep(1)   # DS18B20 needs ~750ms per conversion
 
@@ -2902,7 +2904,7 @@ except KeyboardInterrupt:
             codeWalkthrough: [],
             conceptDeepDive: { hardware: '', software: '', connection: '' },
             experimentMode: {
-              tweak: 'Adjust the potentiometer on the Hall sensor module — it controls the digital output threshold. Watch how it changes when DO triggers compared to your analog readings.',
+              tweak: 'Move the magnet slightly closer to and farther from the Hall sensor while watching the AO reading in the terminal. Observe when it leaves the calibrated range and reports MISMATCH; return the magnet to its original position.',
               logic: 'Add a "sensor mismatch" check: if the reed switch says closed but the Hall analog is near zero (no magnetic field at all), the wire to the reed switch may have been bypassed with a jumper!',
               creative: 'Act out an attack scenario with your child: they try to open the "door" while holding a magnet near the sensors. Can they keep the reed switch closed while the Hall reading stays inside the calibrated range? Observe what happens and remember that a mismatch alone does not identify its cause.'
             },

@@ -122,8 +122,13 @@ def run_worker(name: str, snippet: str) -> None:
             if name == "p10-code":
                 # Start hot, hold inside hysteresis, then simulate CRC failure.
                 reading = "aa bb cc : crc=00 YES\naa bb cc t=28000\n"
-                if ticks >= 3:
+                if 3 <= ticks < 5:
                     reading = "aa bb cc : crc=00 NO\naa bb cc t=28000\n"
+                if ticks >= 5:
+                    reading = "aa bb cc : crc=00 YES\naa bb cc t=26000\n"
+                if ticks == 6:
+                    assert scope["green_led"].value == 1, "Valid recovery must restore the green indicator"
+                    assert not scope["relay"].is_active
                 (Path("28-mock") / "w1_slave").write_text(reading, encoding="ascii")
             limits = {"p1-code": 2, "p6-code": 2, "p9-code": 2,
                       "p10-code": 6, "p11-code": 44, "p12-code": 22,

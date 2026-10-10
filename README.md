@@ -302,7 +302,7 @@ The backend defines routes for Firebase ID-token verification and progress stora
 | **Motion** | 12.x | Declarative animations for UI transitions |
 | **Lucide React** | 1.x | Consistent SVG icon library |
 | **Flask** | 3.1+ | Optional Python API server (`backend/`) for cross-device persistence |
-| **Firebase Admin** | 6.7+ | ID-token verification and Firestore storage for the Flask backend |
+| **Firebase Admin** | 7.x | ID-token verification and Firestore storage for the Flask backend |
 | **@google/genai** | 2.x | Gemini AI SDK — powers the `data/generate-level.ts` curriculum generator |
 | **dotenv** | 17.x | Environment variable loading for server config |
 | **tsx** | 4.x | TypeScript execution for the Node.js CLI scripts in `data/` |
