@@ -13,7 +13,7 @@
     "badgeEarned": "GPIO Initiate",
     "content": {
       "overview": {
-        "description": "We are building the \"Hello World\" of electronics using an RGB LED from your Inland kit! This LED has three colors in one package - Red, Green, and Blue - which can be mixed to create any color.",
+        "description": "We are building the electronics version of \"Hello, World!\" with a common-cathode RGB LED. Its red, green, and blue channels make seven on/off color combinations; PWM can vary their brightness to make many more shades.",
         "concepts": [
           "Digital Output",
           "gpiozero LED class",
@@ -29,7 +29,7 @@
           "title": "Project Overview",
           "content": {
             "overview": {
-              "description": "We are building the \"Hello World\" of electronics using an RGB LED from your Inland kit! This LED has three colors in one package - Red, Green, and Blue - which can be mixed to create any color.",
+              "description": "We are building the electronics version of \"Hello, World!\" with a common-cathode RGB LED. Its red, green, and blue channels make seven on/off color combinations; PWM can vary their brightness to make many more shades.",
               "concepts": [
                 "Digital Output",
                 "gpiozero LED class",
@@ -80,9 +80,9 @@
                 "Place the RGB LED module in your breadboard.",
                 "Connect the common GND pin (marked - or GND) to the blue negative (-) rail on your breadboard.",
                 "Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the blue negative rail.",
-                "Connect Physical Pin 11 (GPIO 17) to the module's R (Red) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire.",
-                "Connect Physical Pin 13 (GPIO 27) to the module's G (Green) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire.",
-                "Connect Physical Pin 29 (GPIO 5) to the module's B (Blue) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire."
+                "Connect Physical Pin 11 (GPIO 17) to the module's R (Red) input. Check your module documentation to confirm whether this channel has a current-limiting resistor. If it does, use a jumper; otherwise, add a suitable resistor in series.",
+                "Connect Physical Pin 13 (GPIO 27) to the module's G (Green) input. Check your module documentation to confirm whether this channel has a current-limiting resistor. If it does, use a jumper; otherwise, add a suitable resistor in series.",
+                "Connect Physical Pin 29 (GPIO 5) to the module's B (Blue) input. Check your module documentation to confirm whether this channel has a current-limiting resistor. If it does, use a jumper; otherwise, add a suitable resistor in series."
               ],
               "explanation": "The RGB LED contains three LEDs (red, green, and blue) sharing a common ground (cathode). By controlling GPIO 17, 27, and 5 independently, you can mix colors - Red + Green = Yellow, Red + Blue = Magenta, Green + Blue = Cyan, All three = White!"
             },
@@ -116,7 +116,7 @@
               "steps": [],
               "explanation": ""
             },
-            "code": "#!/usr/bin/env python3\n\"\"\"\nLevel 1: Hello, RGB LED - Color mixing with gpiozero\n\n🔒 SECURITY HARDENING:\n- Verify series resistors are fitted; otherwise add 330 ohms to each color GPIO wire\n- Disable unused interfaces: sudo raspi-config -> Interface Options\n- Keep your Pi's OS updated: sudo apt update && sudo apt upgrade\n\n📚 EDUCATIONAL MOMENT:\nThe RGB LED from your Inland 37-in-1 kit has THREE LEDs inside!\nRed, Green, and Blue share a common cathode (ground).\nMix them to create any color: R+G=Yellow, R+B=Magenta, G+B=Cyan, R+G+B=White!\n\"\"\"\n\nfrom gpiozero import LED\nfrom time import sleep\n\n# ============================================\n# HARDWARE ABSTRACTION\n# Three separate LED objects for R, G, B\n# ============================================\n\nred_led = LED(17)    # Red pin on GPIO 17\ngreen_led = LED(27)  # Green pin on GPIO 27\nblue_led = LED(5)    # Blue pin on GPIO 5\n\n# Helper function to set all colors at once\ndef set_color(r, g, b):\n    red_led.value = r\n    green_led.value = g\n    blue_led.value = b\n\n# ============================================\n# HIGH-LEVEL LOGIC\n# Cycle through primary and secondary colors\n# ============================================\n\nprint(\"🌈 RGB LED Color Demo - Press Ctrl+C to exit.\")\n\ntry:\n    while True:\n        # Primary colors\n        print(\"🔴 Red\")\n        set_color(1, 0, 0)\n        sleep(1)\n        \n        print(\"🟢 Green\")\n        set_color(0, 1, 0)\n        sleep(1)\n        \n        print(\"🔵 Blue\")\n        set_color(0, 0, 1)\n        sleep(1)\n        \n        # Secondary colors (mixing two)\n        print(\"🟡 Yellow (Red + Green)\")\n        set_color(1, 1, 0)\n        sleep(1)\n        \n        print(\"🟣 Magenta (Red + Blue)\")\n        set_color(1, 0, 1)\n        sleep(1)\n        \n        print(\"🩵 Cyan (Green + Blue)\")\n        set_color(0, 1, 1)\n        sleep(1)\n        \n        # All three = White!\n        print(\"⚪ White (Red + Green + Blue)\")\n        set_color(1, 1, 1)\n        sleep(1)\n        \n        # Off\n        print(\"⚫ Off\")\n        set_color(0, 0, 0)\n        sleep(1)\n\nexcept KeyboardInterrupt:\n    print(\"\\n👋 Exiting... LEDs turned off.\")\n    set_color(0, 0, 0)\n\n# Note: gpiozero automatically cleans up GPIO pins on exit!",
+            "code": "#!/usr/bin/env python3\n\"\"\"\nLevel 1: Hello, RGB LED - Color mixing with gpiozero\n\n🔒 SECURITY HARDENING:\n- Verify series resistors are fitted; otherwise add 330 ohms to each color GPIO wire\n- Disable unused interfaces: sudo raspi-config -> Interface Options\n- Keep your Pi's OS updated: sudo apt update && sudo apt upgrade\n\n📚 EDUCATIONAL MOMENT:\nAn RGB LED contains three color channels: red, green, and blue. Check your module documentation for its pin type and resistor details.\nRed, Green, and Blue share a common cathode (ground).\nWith on/off control, the channels make seven color combinations: R+G=Yellow, R+B=Magenta, G+B=Cyan, and R+G+B=White. PWM can vary brightness for many more shades.\n\"\"\"\n\nfrom gpiozero import LED\nfrom time import sleep\n\n# ============================================\n# HARDWARE ABSTRACTION\n# Three separate LED objects for R, G, B\n# ============================================\n\nred_led = LED(17)    # Red pin on GPIO 17\ngreen_led = LED(27)  # Green pin on GPIO 27\nblue_led = LED(5)    # Blue pin on GPIO 5\n\n# Helper function to set all colors at once\ndef set_color(r, g, b):\n    red_led.value = r\n    green_led.value = g\n    blue_led.value = b\n\n# ============================================\n# HIGH-LEVEL LOGIC\n# Cycle through primary and secondary colors\n# ============================================\n\nprint(\"🌈 RGB LED Color Demo - Press Ctrl+C to exit.\")\n\ntry:\n    while True:\n        # Primary colors\n        print(\"🔴 Red\")\n        set_color(1, 0, 0)\n        sleep(1)\n        \n        print(\"🟢 Green\")\n        set_color(0, 1, 0)\n        sleep(1)\n        \n        print(\"🔵 Blue\")\n        set_color(0, 0, 1)\n        sleep(1)\n        \n        # Secondary colors (mixing two)\n        print(\"🟡 Yellow (Red + Green)\")\n        set_color(1, 1, 0)\n        sleep(1)\n        \n        print(\"🟣 Magenta (Red + Blue)\")\n        set_color(1, 0, 1)\n        sleep(1)\n        \n        print(\"🩵 Cyan (Green + Blue)\")\n        set_color(0, 1, 1)\n        sleep(1)\n        \n        # All three = White!\n        print(\"⚪ White (Red + Green + Blue)\")\n        set_color(1, 1, 1)\n        sleep(1)\n        \n        # Off\n        print(\"⚫ Off\")\n        set_color(0, 0, 0)\n        sleep(1)\n\nexcept KeyboardInterrupt:\n    print(\"\\n👋 Exiting... LEDs turned off.\")\n    set_color(0, 0, 0)\n\n# Note: gpiozero automatically cleans up GPIO pins on exit!",
             "codeWalkthrough": [],
             "conceptDeepDive": {
               "hardware": "",
@@ -205,7 +205,7 @@
             "codeWalkthrough": [],
             "conceptDeepDive": {
               "hardware": "The RGB LED contains three separate LED dies (red, green, and blue) in one package, sharing a common cathode (ground). Each color has its own anode that you control independently via GPIO pins.",
-              "software": "Three separate LED objects let us control each color. By turning them on/off in combinations, we can create 7 different colors plus off - the building blocks for any color with PWM!",
+              "software": "Three separate LED objects let us control each color. On/off combinations make seven colors plus off. PWM can vary each channel's brightness to make many more shades.",
               "connection": "Each GPIO pin controls one color. HIGH (3.3V) = color on, LOW (0V) = color off. Combinations create secondary colors through additive mixing."
             },
             "experimentMode": {
@@ -1260,15 +1260,15 @@
             },
             "hardwareSetup": {
               "warnings": [
-                "PIR sensors require 5V to operate properly, but their output data pin is 3.3V safe. Connect VCC to 5V, but NEVER connect 5V directly to a GPIO pin."
+                "PIR modules differ. Check the documentation for your exact module to confirm its supply voltage and that its OUT signal is compatible with the Pi’s 3.3V GPIO before connecting it. Never connect a 5V signal directly to a GPIO pin."
               ],
               "steps": [
-                "Connect the VCC pin of the PIR sensor to Raspberry Pi Physical Pin 2 (5V).",
+                "If your module documentation specifies 5V, connect its VCC pin to Raspberry Pi Physical Pin 2 (5V); otherwise, use the specified supply voltage.",
                 "Connect the GND pin of the PIR sensor to a Ground pin.",
-                "Connect the OUT (or DATA) pin of the PIR sensor to Raspberry Pi Physical Pin 16 (GPIO 23).",
+                "Only after confirming its output is compatible with 3.3V GPIO, connect the PIR sensor OUT (or DATA) pin to Physical Pin 16 (GPIO 23).",
                 "Keep your LED connected to GPIO 17 as an indicator."
               ],
-              "explanation": "The PIR sensor detects changes in infrared radiation (body heat). When a person moves, it sends a 3.3V HIGH signal on its OUT pin."
+              "explanation": "A PIR sensor detects changes in infrared radiation. Its output voltage and behavior depend on the module; check its documentation before connecting OUT to the Pi."
             },
             "code": "",
             "codeWalkthrough": [],
@@ -1300,7 +1300,7 @@
               "steps": [],
               "explanation": ""
             },
-            "code": "#!/usr/bin/env python3\n\"\"\"\nLevel 5: Motion Sensor - Event-driven PIR detection\n\n🔒 SECURITY HARDENING:\n- PIR sensors need 5V power but output 3.3V signals (safe for GPIO)\n- Add a 1-minute warm-up delay before arming sensor (reduces false triggers)\n- Consider rate-limiting callbacks to prevent log flooding attacks\n\n📚 EDUCATIONAL MOMENT:\nMotionSensor.when_motion and .when_no_motion are \"event hooks\" -\nthey register callback functions that execute asynchronously when triggered.\n\"\"\"\n\nfrom gpiozero import MotionSensor, LED\nfrom signal import pause\nfrom time import sleep\n\n# ============================================\n# HARDWARE ABSTRACTION\n# MotionSensor wraps PIR sensor functionality\n# ============================================\n\npir_sensor = MotionSensor(23)  # PIR OUT pin on GPIO 23\nalert_led = LED(17)            # Indicator LED on GPIO 17\n\n# ============================================\n# EVENT-DRIVEN CALLBACKS\n# Functions that run automatically on motion events\n# ============================================\n\ndef on_motion_detected():\n    \"\"\"Called when PIR detects movement.\"\"\"\n    print(\"🚨 Motion Detected!\")\n    alert_led.on()\n\ndef on_motion_ended():\n    \"\"\"Called when PIR no longer detects movement.\"\"\"\n    print(\"✅ All Clear.\")\n    alert_led.off()\n\n# Register the event callbacks\npir_sensor.when_motion = on_motion_detected\npir_sensor.when_no_motion = on_motion_ended\n\n# ============================================\n# MAIN PROGRAM\n# ============================================\n\nprint(\"🔍 PIR Sensor Warming Up (10 seconds)...\")\nsleep(10)  # PIR sensors need time to calibrate\nprint(\"✅ Sensor Ready! Waiting for motion...\")\nprint(\"   Press Ctrl+C to exit.\\n\")\n\ntry:\n    pause()  # Wait efficiently for events\nexcept KeyboardInterrupt:\n    alert_led.off()\n    print(\"\\n👋 Sensor deactivated.\")",
+            "code": "#!/usr/bin/env python3\n\"\"\"\nLevel 5: Motion Sensor - Event-driven PIR detection\n\n🔒 SECURITY HARDENING:\n- Check the exact PIR module documentation for its supply and output voltage; confirm the output is compatible with 3.3V GPIO before connecting it.\n- Add a 1-minute warm-up delay before arming sensor (reduces false triggers)\n- Consider rate-limiting callbacks to prevent log flooding attacks\n\n📚 EDUCATIONAL MOMENT:\nMotionSensor.when_motion and .when_no_motion are \"event hooks\" -\nthey register callback functions that execute asynchronously when triggered.\n\"\"\"\n\nfrom gpiozero import MotionSensor, LED\nfrom signal import pause\nfrom time import sleep\n\n# ============================================\n# HARDWARE ABSTRACTION\n# MotionSensor wraps PIR sensor functionality\n# ============================================\n\npir_sensor = MotionSensor(23)  # PIR OUT pin on GPIO 23\nalert_led = LED(17)            # Indicator LED on GPIO 17\n\n# ============================================\n# EVENT-DRIVEN CALLBACKS\n# Functions that run automatically on motion events\n# ============================================\n\ndef on_motion_detected():\n    \"\"\"Called when PIR detects movement.\"\"\"\n    print(\"🚨 Motion Detected!\")\n    alert_led.on()\n\ndef on_motion_ended():\n    \"\"\"Called when PIR no longer detects movement.\"\"\"\n    print(\"✅ All Clear.\")\n    alert_led.off()\n\n# Register the event callbacks\npir_sensor.when_motion = on_motion_detected\npir_sensor.when_no_motion = on_motion_ended\n\n# ============================================\n# MAIN PROGRAM\n# ============================================\n\nprint(\"🔍 PIR Sensor Warming Up (10 seconds)...\")\nsleep(10)  # PIR sensors need time to calibrate\nprint(\"✅ Sensor Ready! Waiting for motion...\")\nprint(\"   Press Ctrl+C to exit.\\n\")\n\ntry:\n    pause()  # Wait efficiently for events\nexcept KeyboardInterrupt:\n    alert_led.off()\n    print(\"\\n👋 Sensor deactivated.\")",
             "codeWalkthrough": [],
             "conceptDeepDive": {
               "hardware": "",
@@ -1380,7 +1380,7 @@
             "code": "",
             "codeWalkthrough": [],
             "conceptDeepDive": {
-              "hardware": "The PIR sensor has its own internal logic chip. It does the hard work of analyzing infrared light. It just gives the Pi a simple \"Yes\" (3.3V) or \"No\" (0V).",
+              "hardware": "A PIR module processes changes in infrared radiation and provides a digital output. The output voltage and behavior depend on the specific module, so check its documentation before connecting it.",
               "software": "Instead of constantly asking \"Is there motion?\" in a `while` loop (polling), we use Interrupts. The Pi sleeps until the sensor interrupts it.",
               "connection": "The hardware sensor acts as a trigger. The software registers a listener for that trigger, creating an efficient, responsive system."
             },

@@ -1,4 +1,4 @@
-export type ProjectStatus = 'Not Started' | 'In Progress' | 'Completed';
+export type ProjectStatus = "Not Started" | "In Progress" | "Completed";
 
 export interface PageContent {
   overview: {
@@ -25,23 +25,7 @@ export interface Page {
   content: PageContent;
 }
 
-export interface ProjectContent {
-  overview: {
-    description: string;
-    concepts: string[];
-    difficulty: number;
-    estimatedTime: string;
-  };
-  hardwareSetup: {
-    warnings: string[];
-    steps: string[];
-    explanation: string;
-  };
-  code: string;
-  codeWalkthrough: { section: string; explanation: string }[];
-  conceptDeepDive: { hardware: string; software: string; connection: string };
-  experimentMode: { tweak: string; logic: string; creative: string };
-  troubleshooting: { issue: string; solution: string }[];
+export interface ProjectContent extends PageContent {
   pages?: Page[];
 }
 
@@ -66,11 +50,7 @@ export interface LabEntry {
 }
 
 export type DictionaryCategory =
-  | 'Python'
-  | 'Raspberry Pi'
-  | 'Electronics'
-  | 'Beginner'
-  | 'Security';
+  "Python" | "Raspberry Pi" | "Electronics" | "Beginner" | "Security";
 
 export interface DictionaryEntry {
   term: string;

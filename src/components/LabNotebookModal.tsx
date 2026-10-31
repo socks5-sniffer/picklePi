@@ -1,121 +1,137 @@
-import React, { useState } from 'react';
-import { Project, LabEntry } from '../types';
-import { X, Award, NotebookPen } from 'lucide-react';
+import { useId, useRef, useState, type FormEvent } from "react";
+import { X, NotebookPen } from "lucide-react";
+import type { Project, LabEntry } from "../types";
+import Dialog from "./Dialog";
 
 interface LabNotebookModalProps {
   project: Project;
-  onSave: (entry: Omit<LabEntry, 'id' | 'date'>) => void;
+  onSave: (entry: Omit<LabEntry, "id" | "date">) => Promise<void>;
   onClose: () => void;
 }
 
-export default function LabNotebookModal({ project, onSave, onClose }: LabNotebookModalProps) {
-  const [formData, setFormData] = useState({
-    whatWorked: '',
-    whatDidnt: '',
-    whatChanged: '',
-    oneThingLearned: ''
+const reflectionFields = [
+  {
+    name: "whatWorked",
+    label: "What worked?",
+    placeholder: "My LED lit up when I ran the code.",
+    required: true,
+  },
+  {
+    name: "whatDidnt",
+    label: "What felt tricky? (optional)",
+    placeholder: "Something didn’t work yet? That’s part of the process.",
+    required: false,
+  },
+  {
+    name: "whatChanged",
+    label: "What did you try or change? (optional)",
+    placeholder: "I tried a different color, or changed a number…",
+    required: false,
+  },
+  {
+    name: "oneThingLearned",
+    label: "One thing you learned",
+    placeholder: "One small discovery is plenty.",
+    required: true,
+  },
+] as const;
+
+export default function LabNotebookModal({
+  project,
+  onSave,
+  onClose,
+}: LabNotebookModalProps) {
+  const titleId = useId();
+  const [form, setForm] = useState({
+    whatWorked: "",
+    whatDidnt: "",
+    whatChanged: "",
+    oneThingLearned: "",
   });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const submissionPending = useRef(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({
-      projectId: project.id,
-      ...formData
-    });
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (submissionPending.current) return;
+    submissionPending.current = true;
+    setSaving(true);
+    setSaveError(false);
+    try {
+      await onSave({ projectId: project.id, ...form });
+    } catch {
+      setSaveError(true);
+    } finally {
+      submissionPending.current = false;
+      setSaving(false);
+    }
+  }
 
   return (
-    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-      <div className="bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-700">
-        <div className="bg-slate-900 p-6 text-white flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-2 text-amber-400 mb-2 font-semibold text-sm tracking-wider uppercase">
-              <Award size={18} />
-              Badge Unlocked: {project.badgeEarned}
-            </div>
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <NotebookPen className="text-emerald-400" />
-              Lab Notebook Entry
-            </h2>
-            <p className="text-slate-400 mt-1 text-sm">Record your findings for '{project.title}'</p>
+    <Dialog titleId={titleId} onClose={onClose} dismissible={!saving}>
+      <header className="dialog-header">
+        <div>
+          <p className="eyebrow flex items-center gap-2">
+            <NotebookPen size={15} /> KEEP YOUR DISCOVERY
+          </p>
+          <h2 id={titleId}>A moment for your notebook.</h2>
+          <p>
+            You explored {project.title}. Save a reflection to complete the
+            project and earn your {project.badgeEarned} badge.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="icon-button flex"
+          aria-label="Close notebook"
+          onClick={onClose}
+          disabled={saving}
+        >
+          <X size={20} />
+        </button>
+      </header>
+      <form className="reflection-form" onSubmit={handleSubmit}>
+        {reflectionFields.map((field) => (
+          <div key={field.name}>
+            <label htmlFor={`${titleId}-${field.name}`}>{field.label}</label>
+            <textarea
+              id={`${titleId}-${field.name}`}
+              name={field.name}
+              required={field.required}
+              maxLength={2000}
+              value={form[field.name]}
+              placeholder={field.placeholder}
+              disabled={saving}
+              onChange={(event) =>
+                setForm((previous) => ({
+                  ...previous,
+                  [field.name]: event.target.value,
+                }))
+              }
+            />
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors p-1 rounded-full hover:bg-slate-800">
-            <X size={24} />
+        ))}
+        {saveError && (
+          <p role="alert" className="text-rose-400 text-sm mb-4">
+            Your entry could not be saved. Your reflection is still here; please
+            try again.
+          </p>
+        )}
+        <div className="reflection-actions">
+          <button
+            type="button"
+            className="button-secondary"
+            onClick={onClose}
+            disabled={saving}
+          >
+            Keep exploring
+          </button>
+          <button type="submit" className="button-primary" disabled={saving}>
+            {saving ? "Saving…" : "Save Entry & Complete"}
           </button>
         </div>
-
-        <form onSubmit={handleSubmit} className="p-8 space-y-6 bg-slate-800">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-slate-200 mb-1">What worked?</label>
-              <textarea 
-                name="whatWorked"
-                required
-                maxLength={2000}
-                value={formData.whatWorked}
-                onChange={handleChange}
-                className="w-full p-3 rounded-xl border border-slate-600 bg-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none transition-all resize-none h-24 text-slate-200 text-sm placeholder-slate-500"
-                placeholder="The LED blinked successfully when I ran the script..."
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-200 mb-1">What didn't?</label>
-              <textarea 
-                name="whatDidnt"
-                required
-                maxLength={2000}
-                value={formData.whatDidnt}
-                onChange={handleChange}
-                className="w-full p-3 rounded-xl border border-slate-600 bg-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none transition-all resize-none h-24 text-slate-200 text-sm placeholder-slate-500"
-                placeholder="I got an error at first because I forgot sudo..."
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-200 mb-1">What did you change?</label>
-              <textarea 
-                name="whatChanged"
-                required
-                maxLength={2000}
-                value={formData.whatChanged}
-                onChange={handleChange}
-                className="w-full p-3 rounded-xl border border-slate-600 bg-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none transition-all resize-none h-24 text-slate-200 text-sm placeholder-slate-500"
-                placeholder="I changed the sleep time to 0.1 seconds to make it blink faster..."
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-200 mb-1">One thing you learned</label>
-              <textarea 
-                name="oneThingLearned"
-                required
-                maxLength={2000}
-                value={formData.oneThingLearned}
-                onChange={handleChange}
-                className="w-full p-3 rounded-xl border border-slate-600 bg-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none transition-all resize-none h-24 text-slate-200 text-sm placeholder-slate-500"
-                placeholder="I learned that the resistor is necessary to protect the LED..."
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
-            <button 
-              type="button" 
-              onClick={onClose}
-              className="px-6 py-2.5 rounded-xl font-semibold text-slate-300 hover:bg-slate-700 transition-colors">
-              Cancel
-            </button>
-            <button 
-              type="submit"
-              className="px-6 py-2.5 rounded-xl font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition-all transform hover:scale-105"
-            >
-              Save Entry & Complete
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Dialog>
   );
 }

@@ -1,15 +1,37 @@
-import React from 'react';
-import { LabEntry } from '../types';
-import { curriculum } from '../data/curriculum';
-import { NotebookPen, Calendar, FlaskConical, AlertCircle, RefreshCw, Lightbulb, Award } from 'lucide-react';
+import React from "react";
+import { LabEntry } from "../types";
+import { curriculum } from "../data/curriculum";
+import {
+  NotebookPen,
+  Calendar,
+  FlaskConical,
+  AlertCircle,
+  RefreshCw,
+  Lightbulb,
+  Award,
+} from "lucide-react";
 
-export default function LabNotebookView({ entries }: { entries: LabEntry[] }) {
+export default function LabNotebookView({
+  entries,
+  onStartProject,
+}: {
+  entries: LabEntry[];
+  onStartProject: () => void;
+}) {
   if (entries.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-slate-500 py-20 animate-in fade-in duration-500">
         <NotebookPen size={48} className="mb-4 text-slate-300" />
-        <h2 className="text-2xl font-semibold mb-2">Lab Notebook Empty</h2>
-        <p>Complete projects to unlock notebook entries.</p>
+        <h1 className="text-2xl font-semibold mb-3 text-slate-100">
+          Your discoveries belong here.
+        </h1>
+        <p className="text-center max-w-md leading-relaxed">
+          Finish a project and jot down what you tried. Every small discovery is
+          worth keeping.
+        </p>
+        <button className="button-primary mt-6" onClick={onStartProject}>
+          Try your first project
+        </button>
       </div>
     );
   }
@@ -21,26 +43,37 @@ export default function LabNotebookView({ entries }: { entries: LabEntry[] }) {
           <NotebookPen className="text-emerald-400" />
           Lab Notebook Summary
         </h1>
-        <p className="text-slate-400">A record of your experiments, failures, and learnings.</p>
+        <p className="text-slate-400">
+          A record of what you tried, what surprised you, and what you learned.
+        </p>
       </header>
 
       <div className="space-y-6">
-        {entries.map(entry => {
-          const project = curriculum.find(p => p.id === entry.projectId);
-          const date = new Date(entry.date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+        {entries.map((entry) => {
+          const project = curriculum.find((p) => p.id === entry.projectId);
+          const date = new Date(entry.date).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
           });
 
           return (
-            <div key={entry.id} className="bg-slate-800/50 rounded-2xl p-8 shadow-sm border border-slate-700">
+            <div
+              key={entry.id}
+              className="bg-slate-800/50 rounded-2xl p-8 shadow-sm border border-slate-700"
+            >
               <div className="flex justify-between items-start mb-6 border-b border-slate-700 pb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-100">{project?.title || 'Unknown Project'}</h2>
+                  <h2 className="text-xl font-bold text-slate-100">
+                    {project?.title || "Unknown Project"}
+                  </h2>
                   <div className="text-sm text-slate-400 flex items-center gap-2 mt-1">
-                    <span className="bg-slate-700 px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider">Level {project?.level}</span>
-                    <span className="flex items-center gap-1"><Calendar size={14} /> {date}</span>
+                    <span className="bg-slate-700 px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider">
+                      Level {project?.level}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Calendar size={14} /> {date}
+                    </span>
                   </div>
                 </div>
                 {project && (

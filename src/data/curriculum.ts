@@ -10,7 +10,7 @@ export const curriculum: Project[] = [
     badgeEarned: 'GPIO Initiate',
     content: {
       overview: {
-        description: 'We are building the "Hello World" of electronics using an RGB LED from your Inland kit! This LED has three colors in one package - Red, Green, and Blue - which can be mixed to create any color.',
+        description: 'We are building the electronics version of "Hello, World!" with a common-cathode RGB LED. Its red, green, and blue channels make seven on/off color combinations; PWM can vary their brightness to make many more shades.',
         concepts: ['Digital Output', 'gpiozero LED class', 'Additive Color Mixing', 'Common Cathode LEDs'],
         difficulty: 1,
         estimatedTime: '15 mins'
@@ -21,7 +21,7 @@ export const curriculum: Project[] = [
           title: 'Project Overview',
           content: {
             overview: {
-              description: 'We are building the "Hello World" of electronics using an RGB LED from your Inland kit! This LED has three colors in one package - Red, Green, and Blue - which can be mixed to create any color.',
+              description: 'We are building the electronics version of "Hello, World!" with a common-cathode RGB LED. Its red, green, and blue channels make seven on/off color combinations; PWM can vary their brightness to make many more shades.',
               concepts: ['Digital Output', 'gpiozero LED class', 'Additive Color Mixing', 'Common Cathode LEDs'],
               difficulty: 1,
               estimatedTime: '15 mins'
@@ -59,9 +59,9 @@ export const curriculum: Project[] = [
                 'Place the RGB LED module in your breadboard.',
                 'Connect the common GND pin (marked - or GND) to the blue negative (-) rail on your breadboard.',
                 'Connect a jumper wire from Raspberry Pi Physical Pin 6 (GND) to the blue negative rail.',
-                'Connect Physical Pin 11 (GPIO 17) to the module\'s R (Red) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire.',
-                'Connect Physical Pin 13 (GPIO 27) to the module\'s G (Green) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire.',
-                'Connect Physical Pin 29 (GPIO 5) to the module\'s B (Blue) input. Your Inland module has a built-in resistor on this channel, so use a jumper directly. For a bare RGB LED or a module without fitted resistors, put a 330Ω resistor in series with this wire.'
+                'Connect Physical Pin 11 (GPIO 17) to the module\'s R (Red) input. Check your module documentation to confirm whether this channel has a current-limiting resistor. If it does, use a jumper; otherwise, add a suitable resistor in series.',
+                'Connect Physical Pin 13 (GPIO 27) to the module\'s G (Green) input. Check your module documentation to confirm whether this channel has a current-limiting resistor. If it does, use a jumper; otherwise, add a suitable resistor in series.',
+                'Connect Physical Pin 29 (GPIO 5) to the module\'s B (Blue) input. Check your module documentation to confirm whether this channel has a current-limiting resistor. If it does, use a jumper; otherwise, add a suitable resistor in series.'
               ],
               explanation: 'The RGB LED contains three LEDs (red, green, and blue) sharing a common ground (cathode). By controlling GPIO 17, 27, and 5 independently, you can mix colors - Red + Green = Yellow, Red + Blue = Magenta, Green + Blue = Cyan, All three = White!'
             },
@@ -97,9 +97,9 @@ Level 1: Hello, RGB LED - Color mixing with gpiozero
 - Keep your Pi's OS updated: sudo apt update && sudo apt upgrade
 
 📚 EDUCATIONAL MOMENT:
-The RGB LED from your Inland 37-in-1 kit has THREE LEDs inside!
+An RGB LED contains three color channels: red, green, and blue. Check your module documentation for its pin type and resistor details.
 Red, Green, and Blue share a common cathode (ground).
-Mix them to create any color: R+G=Yellow, R+B=Magenta, G+B=Cyan, R+G+B=White!
+With on/off control, the channels make seven color combinations: R+G=Yellow, R+B=Magenta, G+B=Cyan, and R+G+B=White. PWM can vary brightness for many more shades.
 """
 
 from gpiozero import LED
@@ -224,7 +224,7 @@ except KeyboardInterrupt:
             codeWalkthrough: [],
             conceptDeepDive: {
               hardware: "The RGB LED contains three separate LED dies (red, green, and blue) in one package, sharing a common cathode (ground). Each color has its own anode that you control independently via GPIO pins.",
-              software: 'Three separate LED objects let us control each color. By turning them on/off in combinations, we can create 7 different colors plus off - the building blocks for any color with PWM!',
+              software: 'Three separate LED objects let us control each color. On/off combinations make seven colors plus off. PWM can vary each channel\'s brightness to make many more shades.',
               connection: 'Each GPIO pin controls one color. HIGH (3.3V) = color on, LOW (0V) = color off. Combinations create secondary colors through additive mixing.'
             },
             experimentMode: { tweak: '', logic: '', creative: '' },
@@ -925,15 +925,15 @@ except KeyboardInterrupt:
             overview: { description: '', concepts: [], difficulty: 4, estimatedTime: '' },
             hardwareSetup: {
               warnings: [
-                'PIR sensors require 5V to operate properly, but their output data pin is 3.3V safe. Connect VCC to 5V, but NEVER connect 5V directly to a GPIO pin.'
+                'PIR modules differ. Check the documentation for your exact module to confirm its supply voltage and that its OUT signal is compatible with the Pi’s 3.3V GPIO before connecting it. Never connect a 5V signal directly to a GPIO pin.'
               ],
               steps: [
-                'Connect the VCC pin of the PIR sensor to Raspberry Pi Physical Pin 2 (5V).',
+                'If your module documentation specifies 5V, connect its VCC pin to Raspberry Pi Physical Pin 2 (5V); otherwise, use the specified supply voltage.',
                 'Connect the GND pin of the PIR sensor to a Ground pin.',
-                'Connect the OUT (or DATA) pin of the PIR sensor to Raspberry Pi Physical Pin 16 (GPIO 23).',
+                'Only after confirming its output is compatible with 3.3V GPIO, connect the PIR sensor OUT (or DATA) pin to Physical Pin 16 (GPIO 23).',
                 'Keep your LED connected to GPIO 17 as an indicator.'
               ],
-              explanation: 'The PIR sensor detects changes in infrared radiation (body heat). When a person moves, it sends a 3.3V HIGH signal on its OUT pin.'
+              explanation: 'A PIR sensor detects changes in infrared radiation. Its output voltage and behavior depend on the module; check its documentation before connecting OUT to the Pi.'
             },
             code: '',
             codeWalkthrough: [],
@@ -953,7 +953,7 @@ except KeyboardInterrupt:
 Level 5: Motion Sensor - Event-driven PIR detection
 
 🔒 SECURITY HARDENING:
-- PIR sensors need 5V power but output 3.3V signals (safe for GPIO)
+- Check the exact PIR module documentation for its supply and output voltage; confirm the output is compatible with 3.3V GPIO before connecting it.
 - Add a 1-minute warm-up delay before arming sensor (reduces false triggers)
 - Consider rate-limiting callbacks to prevent log flooding attacks
 
@@ -1040,7 +1040,7 @@ except KeyboardInterrupt:
             code: '',
             codeWalkthrough: [],
             conceptDeepDive: {
-              hardware: 'The PIR sensor has its own internal logic chip. It does the hard work of analyzing infrared light. It just gives the Pi a simple "Yes" (3.3V) or "No" (0V).',
+              hardware: 'A PIR module processes changes in infrared radiation and provides a digital output. The output voltage and behavior depend on the specific module, so check its documentation before connecting it.',
               software: 'Instead of constantly asking "Is there motion?" in a `while` loop (polling), we use Interrupts. The Pi sleeps until the sensor interrupts it.',
               connection: 'The hardware sensor acts as a trigger. The software registers a listener for that trigger, creating an efficient, responsive system.'
             },

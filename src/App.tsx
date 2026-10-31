@@ -1,228 +1,194 @@
-import React, { useState, useEffect } from 'react';
-import { Sun, Moon } from 'lucide-react';
-import { curriculum } from './data/curriculum';
-import { Project, UserProgress, LabEntry } from './types';
-import { isValidProgress } from './lib/progress';
-import { fetchProgress, saveProgress, createLabEntry } from './lib/api';
-import Sidebar from './components/Sidebar';
-import ProjectView from './components/ProjectView';
-import ProgressTracker from './components/ProgressTracker';
-import LabNotebookModal from './components/LabNotebookModal';
-import LabNotebookView from './components/LabNotebookView';
-import DictionaryView from './components/DictionaryView';
-import LandingView from './components/LandingView';
-import PinoutView from './components/PinoutView';
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { Menu, Moon, Sun, ChevronRight, Sprout } from "lucide-react";
+import { curriculum } from "./data/curriculum";
+import type { LabEntry, Project } from "./types";
+import { navigationItems, type AppTab } from "./lib/navigation";
+import { useProgress } from "./hooks/useProgress";
+import { useTheme } from "./hooks/useTheme";
+import Sidebar from "./components/Sidebar";
+import LabNotebookModal from "./components/LabNotebookModal";
+import LandingView from "./components/LandingView";
 
-const INITIAL_PROGRESS: UserProgress = {
-  projectStatuses: curriculum.reduce((acc, p) => ({ ...acc, [p.id]: 'Not Started' }), {}),
-  badges: [],
-  labNotebook: []
-};
+const ProjectView = lazy(() => import("./components/ProjectView"));
+const ProgressTracker = lazy(() => import("./components/ProgressTracker"));
+const LabNotebookView = lazy(() => import("./components/LabNotebookView"));
+const DictionaryView = lazy(() => import("./components/DictionaryView"));
+const PinoutView = lazy(() => import("./components/PinoutView"));
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'curriculum' | 'progress' | 'notebook' | 'dictionary' | 'pinout'>('home');
-  const [activeProjectId, setActiveProjectId] = useState<string>(curriculum[0].id);
-  const [progress, setProgress] = useState<UserProgress>(() => {
-    try {
-      const saved = localStorage.getItem('rpi-lab-progress');
-      if (!saved) return INITIAL_PROGRESS;
-      const parsed: unknown = JSON.parse(saved);
-      return isValidProgress(parsed) ? { ...parsed, projectStatuses: { ...INITIAL_PROGRESS.projectStatuses, ...parsed.projectStatuses } } : INITIAL_PROGRESS;
-    } catch {
-      return INITIAL_PROGRESS;
-    }
-  });
-
-  // Sync from backend on mount; localStorage above gives an instant baseline
-  useEffect(() => {
-    fetchProgress().then(data => {
-      if (data) setProgress({ ...data, projectStatuses: { ...INITIAL_PROGRESS.projectStatuses, ...data.projectStatuses } });
-    });
-  }, []);
-  const [storageWarning, setStorageWarning] = useState(false);
-  const [isLabModalOpen, setIsLabModalOpen] = useState(false);
-  const [projectToComplete, setProjectToComplete] = useState<Project | null>(null);
+  const [activeTab, setActiveTab] = useState<AppTab>("home");
+  const [activeProjectId, setActiveProjectId] = useState(curriculum[0].id);
+  const [projectToComplete, setProjectToComplete] = useState<Project | null>(
+    null,
+  );
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
-  // ── Theme toggle ────────────────────────────────────────────────────────
-  const [isDark, setIsDark] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('picklePi-theme') !== 'light';
-    } catch {
-      return true;
-    }
-  });
-
-  const toggleTheme = () => {
-    const next = !isDark;
-    // Add transition class first so the swap is animated, not flashed
-    document.documentElement.classList.add('theme-transitioning');
-    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
-    try { localStorage.setItem('picklePi-theme', next ? 'dark' : 'light'); } catch { /* noop */ }
-    setIsDark(next);
-    setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 350);
-  };
+  const mainRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuWasOpen = useRef(false);
+  const { progress, storageWarning, startProject, completeProject } =
+    useProgress();
+  const { isDark, toggleTheme } = useTheme();
+  const activeProject =
+    curriculum.find((project) => project.id === activeProjectId) ??
+    curriculum[0];
+  const currentNavigation = navigationItems.find(
+    (item) => item.id === activeTab,
+  )!;
 
   useEffect(() => {
-    try {
-      localStorage.setItem('rpi-lab-progress', JSON.stringify(progress));
-      setStorageWarning(false);
-    } catch {
-      setStorageWarning(true);
-    }
-    saveProgress(progress);
-  }, [progress]);
+    mainRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [activeTab, activeProjectId]);
 
-  const activeProject = curriculum.find(p => p.id === activeProjectId) || curriculum[0];
-
-  const isProjectLocked = (projectId: string) => {
-    // Override to leave all levels unlocked for now
-    return false;
-    
-    /* 
-    // Actual logic for when we want to lock levels:
-    const project = curriculum.find(p => p.id === projectId);
-    if (!project || project.level === 1) return false;
-    
-    // Check if ALL projects from the previous level are completed
-    const previousLevelProjects = curriculum.filter(p => p.level === project.level - 1);
-    const isPreviousLevelCompleted = previousLevelProjects.every(
-      p => progress.projectStatuses[p.id] === 'Completed'
-    );
-    
-    return !isPreviousLevelCompleted;
-    */
-  };
-
-  const handleStartProject = (projectId: string) => {
-    setProgress(prev => ({
-      ...prev,
-      projectStatuses: {
-        ...prev.projectStatuses,
-        [projectId]: prev.projectStatuses[projectId] === 'Not Started' ? 'In Progress' : prev.projectStatuses[projectId]
-      }
-    }));
-    setActiveProjectId(projectId);
-    setActiveTab('curriculum');
-    setIsMobileMenuOpen(false); // Close mobile menu when selecting a project
-  };
-
-  const handleCompleteProjectClick = (project: Project) => {
-    setProjectToComplete(project);
-    setIsLabModalOpen(true);
-  };
-
-  const handleSaveLabEntry = async (entry: Omit<LabEntry, 'id' | 'date'>) => {
-    if (!projectToComplete) return;
-
-    // Try to create entry via backend; fall back to a local UUID if unavailable
-    const backendEntry = await createLabEntry(entry);
-    const newEntry: LabEntry = backendEntry ?? {
-      ...entry,
-      id: crypto.randomUUID(),
-      date: new Date().toISOString()
+  // If a phone is rotated into the desktop layout, release the mobile overlay.
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) setIsMobileMenuOpen(false);
     };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, []);
 
-    setProgress(prev => {
-      const newBadges = prev.badges.includes(projectToComplete.badgeEarned) 
-        ? prev.badges 
-        : [...prev.badges, projectToComplete.badgeEarned];
+  useEffect(() => {
+    // Restore focus only after React has removed inert from the workspace.
+    if (menuWasOpen.current && !isMobileMenuOpen)
+      menuButtonRef.current?.focus();
+    menuWasOpen.current = isMobileMenuOpen;
+  }, [isMobileMenuOpen]);
 
-      return {
-        ...prev,
-        projectStatuses: {
-          ...prev.projectStatuses,
-          [projectToComplete.id]: 'Completed'
-        },
-        badges: newBadges,
-        labNotebook: [...prev.labNotebook, newEntry]
-      };
-    });
+  function closeMenu() {
+    setIsMobileMenuOpen(false);
+  }
 
-    setIsLabModalOpen(false);
+  function navigate(tab: AppTab) {
+    setActiveTab(tab);
+    if (isMobileMenuOpen) closeMenu();
+  }
+
+  function openProject(projectId: string) {
+    startProject(projectId);
+    setActiveProjectId(projectId);
+    navigate("curriculum");
+  }
+
+  async function saveLabEntry(entry: Omit<LabEntry, "id" | "date">) {
+    if (!projectToComplete) return;
+    await completeProject(projectToComplete, entry);
     setProjectToComplete(null);
-  };
+  }
 
   return (
-    <div className="flex h-screen bg-[var(--picklePi-bg-app)] text-slate-100 font-sans">
-
-      {/* ── Theme toggle button ── fixed top-right, visible in all views ── */}
-      <button
-        onClick={toggleTheme}
-        className="fixed top-4 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-600/60 text-slate-200 text-sm font-medium shadow-lg transition-colors"
-        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      >
-        {isDark
-          ? <Sun  size={16} className="text-amber-400" />
-          : <Moon size={16} className="text-indigo-400" />}
-        <span className="hidden sm:inline select-none">{isDark ? 'Light' : 'Dark'}</span>
-      </button>
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+    <div className="app-shell">
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={navigate}
         progress={progress}
         activeProjectId={activeProjectId}
-        onSelectProject={handleStartProject}
-        isProjectLocked={isProjectLocked}
+        onSelectProject={openProject}
         isMobileMenuOpen={isMobileMenuOpen}
-        onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
+        onCloseMobileMenu={closeMenu}
         isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+        onToggleCollapse={() => setIsSidebarCollapsed((previous) => !previous)}
       />
-      
-      <main className="flex-1 overflow-y-auto">
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMobileMenuOpen(true)}
-          className="lg:hidden fixed top-4 left-4 z-40 bg-slate-700 text-white p-3 rounded-lg shadow-lg hover:bg-slate-600 transition-colors border border-slate-600"
-          aria-label="Open menu"
+      <div className="workspace" inert={isMobileMenuOpen}>
+        <header className="workspace-header">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              ref={menuButtonRef}
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="icon-button lg:hidden"
+              aria-label="Open menu"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="workshop-sidebar"
+            >
+              <Menu size={21} />
+            </button>
+            <span className="header-brand hidden sm:inline">WORKSPACE</span>
+            <ChevronRight size={14} className="muted hidden sm:block" />
+            <span className="text-sm font-semibold truncate">
+              {currentNavigation.label}
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="header-note hidden md:flex">
+              <Sprout size={15} /> A little curiosity goes a long way.
+            </span>
+            <button
+              onClick={toggleTheme}
+              className="theme-button"
+              aria-label={
+                isDark ? "Switch to light mode" : "Switch to dark mode"
+              }
+            >
+              {isDark ? <Sun size={17} /> : <Moon size={17} />}
+              <span className="hidden sm:inline">
+                {isDark ? "Light" : "Dark"}
+              </span>
+            </button>
+          </div>
+        </header>
+        <main
+          id="main-content"
+          ref={mainRef}
+          tabIndex={-1}
+          className="workspace-main"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-
-        <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-          {storageWarning && <p role="status" className="mb-4 rounded-lg bg-amber-900 p-4 text-amber-100">Your browser cannot save progress. Keep this tab open; progress will be lost when you close or reload it.</p>}
-          {activeTab === 'home' && (
-            <LandingView
-              progress={progress}
-              onSelectProject={(id) => {
-                handleStartProject(id);
-                setActiveTab('curriculum');
-              }}
-            />
-          )}
-          {activeTab === 'curriculum' && (
-            <ProjectView
-              key={activeProject.id}
-              project={activeProject}
-              status={progress.projectStatuses[activeProject.id]}
-              isLocked={isProjectLocked(activeProject.id)}
-              onComplete={() => handleCompleteProjectClick(activeProject)}
-            />
-          )}
-          {activeTab === 'progress' && (
-            <ProgressTracker progress={progress} />
-          )}
-          {activeTab === 'notebook' && (
-            <LabNotebookView entries={progress.labNotebook} />
-          )}
-          {activeTab === 'dictionary' && (
-            <DictionaryView />
-          )}
-          {activeTab === 'pinout' && (
-            <PinoutView />
-          )}
-        </div>
-      </main>
-
-      {isLabModalOpen && projectToComplete && (
-        <LabNotebookModal 
+          <div
+            className={`page-container ${activeTab === "curriculum" ? "lesson-container" : ""}`}
+          >
+            {storageWarning && (
+              <p role="status" className="storage-warning">
+                Your browser cannot save progress. Keep this tab open; progress
+                will be lost when you close or reload it.
+              </p>
+            )}
+            <Suspense
+              fallback={
+                <p role="status" className="muted py-12">
+                  Opening your workshop…
+                </p>
+              }
+            >
+              {activeTab === "home" && (
+                <LandingView
+                  progress={progress}
+                  onSelectProject={openProject}
+                  onNavigate={navigate}
+                />
+              )}
+              {activeTab === "curriculum" && (
+                <ProjectView
+                  key={activeProject.id}
+                  project={activeProject}
+                  status={progress.projectStatuses[activeProject.id]}
+                  isLocked={false}
+                  onComplete={() => setProjectToComplete(activeProject)}
+                />
+              )}
+              {activeTab === "progress" && (
+                <ProgressTracker progress={progress} />
+              )}
+              {activeTab === "notebook" && (
+                <LabNotebookView
+                  entries={progress.labNotebook}
+                  onStartProject={() => openProject(curriculum[0].id)}
+                />
+              )}
+              {activeTab === "dictionary" && <DictionaryView />}
+              {activeTab === "pinout" && <PinoutView />}
+            </Suspense>
+          </div>
+        </main>
+      </div>
+      {projectToComplete && (
+        <LabNotebookModal
           project={projectToComplete}
-          onSave={handleSaveLabEntry}
-          onClose={() => setIsLabModalOpen(false)}
+          onSave={saveLabEntry}
+          onClose={() => setProjectToComplete(null)}
         />
       )}
     </div>

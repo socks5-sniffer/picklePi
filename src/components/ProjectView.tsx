@@ -1,8 +1,31 @@
-import { Key, ReactNode, useId, useRef, useState } from 'react';
-import { Project, ProjectStatus } from '../types';
-import { Clock, AlertTriangle, CheckCircle2, Code2, Lightbulb, FlaskConical, Wrench, Award, Copy, Check, BookOpen, ChevronLeft, ChevronRight, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import InteractiveText from './InteractiveText';
-import { dictionary } from '../data/dictionary';
+import { Key, ReactNode, useEffect, useId, useRef, useState } from "react";
+import { Project, ProjectStatus } from "../types";
+import {
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
+  Code2,
+  Lightbulb,
+  FlaskConical,
+  Wrench,
+  Award,
+  Copy,
+  Check,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import InteractiveText from "./InteractiveText";
+import { dictionary } from "../data/dictionary";
+import HardwareStepsList from "./lesson/HardwareSteps";
+import {
+  availableSections,
+  clampPageIndex,
+  getLessonPage,
+} from "../lib/learning";
 
 interface ProjectViewProps {
   project: Project;
@@ -18,20 +41,32 @@ interface PageNavProps {
   onNext: () => void;
   onGoTo: (index: number) => void;
   onHelp?: () => void;
-  position: 'top' | 'bottom';
+  position: "top" | "bottom";
 }
 
-function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, position }: PageNavProps) {
-  const isTop = position === 'top';
+function PageNav({
+  pages,
+  currentPageIndex,
+  onPrevious,
+  onNext,
+  onGoTo,
+  onHelp,
+  position,
+}: PageNavProps) {
+  const isTop = position === "top";
   return (
-    <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${isTop ? 'pb-4 border-b' : 'pt-8 border-t'} border-slate-700`}>
+    <nav
+      aria-label={`${isTop ? "Top" : "Bottom"} lesson page navigation`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${isTop ? "pb-4 border-b" : "pt-8 border-t"} border-slate-700`}
+    >
       <button
         onClick={onPrevious}
+        aria-label="Previous page"
         disabled={currentPageIndex === 0}
         className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
           currentPageIndex === 0
-            ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
-            : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
+            ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500"
+            : "bg-slate-800 text-emerald-400 hover:bg-slate-700"
         }`}
       >
         <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
@@ -39,16 +74,22 @@ function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, 
         <span className="sm:hidden">Prev</span>
       </button>
 
-      <div className="flex items-center gap-1.5 sm:gap-2 order-first sm:order-none">
+      <div className="flex flex-wrap justify-center items-center gap-1 sm:gap-2 order-first sm:order-none">
         {pages.map((page, index) => (
           <button
             key={index}
             onClick={() => onGoTo(index)}
-            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
-              index === currentPageIndex ? 'bg-emerald-400' : 'bg-slate-600 hover:bg-slate-500'
+            className={`min-w-10 h-10 px-2 rounded-lg text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 ${
+              index === currentPageIndex
+                ? "bg-emerald-400 text-slate-950"
+                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
             }`}
+            aria-label={`Page ${index + 1}: ${page.title}`}
+            aria-current={index === currentPageIndex ? "page" : undefined}
             title={`Go to page ${index + 1}: ${page.title}`}
-          />
+          >
+            {index + 1}
+          </button>
         ))}
       </div>
 
@@ -56,6 +97,7 @@ function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, 
         {onHelp && currentPageIndex !== pages.length - 1 && (
           <button
             onClick={onHelp}
+            aria-label="Get help or troubleshooting"
             className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium bg-slate-800/50 text-blue-400 hover:bg-slate-700/50 transition-colors border border-slate-700 text-sm"
             title="Get help or troubleshooting"
           >
@@ -69,202 +111,15 @@ function PageNav({ pages, currentPageIndex, onPrevious, onNext, onGoTo, onHelp, 
           disabled={currentPageIndex === pages.length - 1}
           className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
             currentPageIndex === pages.length - 1
-              ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500'
-              : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
+              ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500"
+              : "bg-slate-800 text-emerald-400 hover:bg-slate-700"
           }`}
         >
           Next
           <ChevronRight size={18} className="sm:w-5 sm:h-5" />
         </button>
       </div>
-    </div>
-  );
-}
-
-// ── Hardware Step Accordion ──────────────────────────────────────────────────
-
-interface HardwareStepItemProps {
-  key?: Key;
-  step: string;
-  index: number;
-  isOpen: boolean;
-  isDone: boolean;
-  onToggleOpen: () => void;
-  onToggleDone: () => void;
-}
-
-function HardwareStepItem({ step, index, isOpen, isDone, onToggleOpen, onToggleDone }: HardwareStepItemProps) {
-  const panelId = `step-panel-${index}`;
-  const toggleId = `step-toggle-${index}`;
-  return (
-    <div className={`rounded-xl border overflow-hidden transition-colors ${
-      isDone ? 'border-emerald-700/50 bg-emerald-900/10' : 'border-slate-700 bg-slate-800/50'
-    }`}>
-      <div className="flex items-center gap-3 px-4 py-3">
-        {/* Circular checkbox */}
-        <button
-          onClick={onToggleDone}
-          aria-label="Toggle step done"
-          aria-pressed={isDone}
-          className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-            isDone
-              ? 'border-emerald-500 bg-emerald-500 text-white'
-              : 'border-slate-500 hover:border-emerald-400 text-transparent'
-          }`}
-        >
-          <Check size={12} />
-        </button>
-
-        {/* Step number + preview */}
-        <button
-          id={toggleId}
-          className="flex-1 text-left min-w-0"
-          onClick={onToggleOpen}
-          aria-expanded={isOpen}
-          aria-controls={panelId}
-        >
-          <span className={`text-xs font-bold uppercase tracking-wider ${isDone ? 'text-emerald-500' : 'text-amber-400'}`}>
-            Step {index + 1}
-          </span>
-          {!isOpen && (
-            <p className={`text-sm mt-0.5 truncate ${isDone ? 'line-through text-slate-500' : 'text-slate-300'}`}>
-              {step}
-            </p>
-          )}
-        </button>
-
-        {/* Expand chevron */}
-        <button
-          onClick={onToggleOpen}
-          aria-expanded={isOpen}
-          aria-controls={panelId}
-          aria-label="Toggle step details"
-          className="shrink-0 ml-2 text-slate-500 hover:text-slate-300 transition-colors"
-        >
-          {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-      </div>
-
-      {isOpen && (
-        <div id={panelId} role="region" aria-labelledby={toggleId} className="px-4 pb-4 pt-2 border-t border-slate-700/40">
-          <p className={`text-sm sm:text-base leading-relaxed ${isDone ? 'text-slate-400' : 'text-slate-200'}`}>
-            {step}
-          </p>
-          <button
-            onClick={onToggleDone}
-            className={`mt-3 flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-              isDone
-                ? 'bg-emerald-900/40 text-emerald-400 hover:bg-slate-700'
-                : 'bg-slate-700 text-slate-300 hover:bg-emerald-900/40 hover:text-emerald-400'
-            }`}
-          >
-            {isDone ? <><Check size={12} /> Completed</> : <><CheckCircle2 size={12} /> Mark as done</>}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface HardwareStepsListProps {
-  key?: Key;
-  steps: string[];
-}
-
-function HardwareStepsList({ steps }: HardwareStepsListProps) {
-  const [openSteps, setOpenSteps] = useState<Set<number>>(new Set([0]));
-  const [doneSteps, setDoneSteps] = useState<Set<number>>(new Set());
-
-  const toggleOpen = (i: number) => {
-    setOpenSteps(prev => {
-      const next = new Set(prev);
-      if (next.has(i)) next.delete(i); else next.add(i);
-      return next;
-    });
-  };
-
-  const toggleDone = (i: number) => {
-    setDoneSteps(prev => {
-      const next = new Set(prev);
-      if (next.has(i)) {
-        next.delete(i);
-      } else {
-        next.add(i);
-        // Auto-close the step when marking it done
-        setOpenSteps(prev2 => {
-          const next2 = new Set(prev2);
-          next2.delete(i);
-          return next2;
-        });
-      }
-      return next;
-    });
-  };
-
-  // Ensure doneCount and total are always numbers
-  const doneCountRaw = doneSteps?.size;
-  const totalRaw = steps?.length;
-  const doneCount = typeof doneCountRaw === 'number' && !isNaN(doneCountRaw) ? doneCountRaw : 0;
-  const total = typeof totalRaw === 'number' && !isNaN(totalRaw) ? totalRaw : 0;
-  const allDone = doneCount === total && total > 0;
-
-  return (
-    <div className="space-y-3">
-      {/* Progress tracker */}
-      <div className="flex items-center justify-between text-sm mb-1">
-        <span className="text-slate-400">{doneCount} of {total} steps completed</span>
-        {allDone && (
-          <span className="text-emerald-400 font-semibold flex items-center gap-1">
-            <CheckCircle2 size={14} /> All done!
-          </span>
-        )}
-      </div>
-      <div
-        className="h-2 bg-slate-700 rounded-full overflow-hidden"
-        role="progressbar"
-        aria-valuenow={doneCount}
-        aria-valuemin={0}
-        aria-valuemax={total}
-        aria-label="Progress bar"
-      >
-        {(() => {
-          const percent = total > 0 ? (doneCount / total) : 0;
-          let widthClass = "w-0";
-          if (percent >= 0.99) widthClass = "w-full";
-          else if (percent >= 0.9) widthClass = "w-11/12";
-          else if (percent >= 0.83) widthClass = "w-10/12";
-          else if (percent >= 0.75) widthClass = "w-9/12";
-          else if (percent >= 0.66) widthClass = "w-8/12";
-          else if (percent >= 0.58) widthClass = "w-7/12";
-          else if (percent >= 0.5) widthClass = "w-6/12";
-          else if (percent >= 0.41) widthClass = "w-5/12";
-          else if (percent >= 0.33) widthClass = "w-4/12";
-          else if (percent >= 0.25) widthClass = "w-3/12";
-          else if (percent >= 0.16) widthClass = "w-2/12";
-          else if (percent > 0) widthClass = "w-1/12";
-          return (
-            <div
-              className={`h-full bg-emerald-500 rounded-full transition-all duration-500 ${widthClass}`}
-            />
-          );
-        })()}
-      </div>
-
-      {/* Step items */}
-      <div className="space-y-2 mt-4">
-        {steps.map((step, i) => (
-          <HardwareStepItem
-            key={i}
-            step={step}
-            index={i}
-            isOpen={openSteps.has(i)}
-            isDone={doneSteps.has(i)}
-            onToggleOpen={() => toggleOpen(i)}
-            onToggleDone={() => toggleDone(i)}
-          />
-        ))}
-      </div>
-    </div>
+    </nav>
   );
 }
 
@@ -278,22 +133,37 @@ interface CollapsibleItemProps {
   accentColor?: string;
 }
 
-function CollapsibleItem({ header, children, defaultOpen = false, accentColor = 'text-slate-300' }: CollapsibleItemProps) {
+function CollapsibleItem({
+  header,
+  children,
+  defaultOpen = false,
+  accentColor = "text-slate-300",
+}: CollapsibleItemProps) {
   const [open, setOpen] = useState(defaultOpen);
   const panelId = useId();
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-800/50 overflow-hidden">
       <button
         className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-700/30 transition-colors"
-        onClick={() => setOpen(o => !o)}
+        onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls={panelId}
       >
-        <span className={`font-medium text-sm sm:text-base ${accentColor}`}>{header}</span>
-        {open ? <ChevronUp size={16} className="shrink-0 text-slate-500" /> : <ChevronDown size={16} className="shrink-0 text-slate-500" />}
+        <span className={`font-medium text-sm sm:text-base ${accentColor}`}>
+          {header}
+        </span>
+        {open ? (
+          <ChevronUp size={16} className="shrink-0 text-slate-500" />
+        ) : (
+          <ChevronDown size={16} className="shrink-0 text-slate-500" />
+        )}
       </button>
       {open && (
-        <div id={panelId} role="region" className="px-4 pb-4 pt-2 border-t border-slate-700/40 text-sm sm:text-base text-slate-300 leading-relaxed">
+        <div
+          id={panelId}
+          role="region"
+          className="px-4 pb-4 pt-2 border-t border-slate-700/40 text-sm sm:text-base text-slate-300 leading-relaxed"
+        >
           {children}
         </div>
       )}
@@ -301,17 +171,41 @@ function CollapsibleItem({ header, children, defaultOpen = false, accentColor = 
   );
 }
 
-export default function ProjectView({ project, status, isLocked, onComplete }: ProjectViewProps) {
+export default function ProjectView({
+  project,
+  status,
+  isLocked,
+  onComplete,
+}: ProjectViewProps) {
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const topRef = useRef<HTMLDivElement>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copyRequest = useRef(0);
+
+  useEffect(() => {
+    setCurrentPageIndex(0);
+  }, [project.id]);
+
+  useEffect(() => {
+    copyRequest.current += 1;
+    setCopied(false);
+    setCopyError(false);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    return () => {
+      copyRequest.current += 1;
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+    };
+  }, [project.id, currentPageIndex]);
 
   if (isLocked) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-slate-500 py-20">
         <FlaskConical size={48} className="mb-4 text-slate-300" />
-        <h2 className="text-2xl font-semibold mb-2">Level {project.level} Locked</h2>
+        <h2 className="text-2xl font-semibold mb-2">
+          Level {project.level} Locked
+        </h2>
         <p>Complete previous levels to unlock this project.</p>
       </div>
     );
@@ -331,60 +225,68 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
   const pages = content.pages ?? [];
   const hasPages = pages.length > 0;
   const currentPage = pages[currentPageIndex] ?? null;
-  const currentContent = currentPage ? currentPage.content : content;
+  const currentContent = getLessonPage(content, currentPageIndex);
+  const sections = availableSections(currentContent);
 
   const handleCopyCode = async () => {
+    setCopied(false);
+    setCopyError(false);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    const request = ++copyRequest.current;
     try {
       await navigator.clipboard.writeText(currentContent.code);
+      if (request !== copyRequest.current) return;
       setCopyError(false);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      copyTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
+      if (request !== copyRequest.current) return;
+      setCopied(false);
       setCopyError(true);
     }
   };
 
+  const scrollToTop = () => {
+    const reduceMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    topRef.current?.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  };
+
   const handleNextPage = () => {
     if (hasPages && currentPageIndex < pages.length - 1) {
-      setCurrentPageIndex(currentPageIndex + 1);
-      topRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setCurrentPageIndex(clampPageIndex(currentPageIndex + 1, pages.length));
+      scrollToTop();
     }
   };
 
   const handlePreviousPage = () => {
     if (hasPages && currentPageIndex > 0) {
-      setCurrentPageIndex(currentPageIndex - 1);
-      topRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setCurrentPageIndex(clampPageIndex(currentPageIndex - 1, pages.length));
+      scrollToTop();
     }
   };
 
   const handleGetHelp = () => {
     // Find the first page whose id includes 'troubleshooting'
     if (hasPages) {
-      const troubleshootingPageIndex = pages.findIndex(
-        page => page.id.includes('troubleshooting')
+      const troubleshootingPageIndex = pages.findIndex((page) =>
+        page.id.includes("troubleshooting"),
       );
       if (troubleshootingPageIndex !== -1) {
         setCurrentPageIndex(troubleshootingPageIndex);
-        topRef.current?.scrollIntoView({ behavior: 'smooth' });
+        scrollToTop();
       }
     }
   };
 
   return (
-    <div ref={topRef} className="space-y-12 pb-20 animate-in fade-in duration-500">
-      {/* Top Page Navigation for multi-page projects */}
-      {hasPages && pages.length > 1 && (
-        <PageNav
-          pages={pages}
-          currentPageIndex={currentPageIndex}
-          onPrevious={handlePreviousPage}
-          onNext={handleNextPage}
-          onGoTo={(index) => { setCurrentPageIndex(index); topRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
-          position="top"
-        />
-      )}
-
+    <div
+      ref={topRef}
+      className="space-y-12 pb-20 animate-in fade-in duration-500"
+    >
       {/* Header */}
       <header className="space-y-4">
         <div className="flex items-center gap-3 text-emerald-600 font-semibold tracking-wide uppercase text-sm">
@@ -392,15 +294,20 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           <span className="w-1 h-1 rounded-full bg-emerald-600"></span>
           <span>{project.levelName}</span>
         </div>
-        <h1 className="text-2xl sm:text-4xl font-bold text-slate-100 tracking-tight">{project.title}</h1>
-        
+        <h1 className="text-2xl sm:text-4xl font-bold text-slate-100 tracking-tight">
+          {project.title}
+        </h1>
+
         {/* Page indicator for multi-page projects */}
         {hasPages && currentPage && (
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <span><span aria-hidden="true">📄</span> Page {currentPageIndex + 1} of {pages.length}: {currentPage.title}</span>
+            <span>
+              <span aria-hidden="true">📄</span> Page {currentPageIndex + 1} of{" "}
+              {pages.length}: {currentPage.title}
+            </span>
           </div>
         )}
-        
+
         <div className="flex flex-wrap gap-4 text-sm text-slate-400">
           <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 shadow-sm">
             <Clock size={16} className="text-slate-400" />
@@ -408,32 +315,85 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           </div>
           <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 shadow-sm">
             <span className="text-slate-400 font-medium">Difficulty:</span>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className={`w-2 h-2 rounded-full ${i <= content.overview.difficulty ? 'bg-amber-400' : 'bg-slate-600'}`} />
+            <div
+              className="flex gap-1"
+              role="img"
+              aria-label={`${content.overview.difficulty} out of 5`}
+            >
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full ${i <= content.overview.difficulty ? "bg-amber-400" : "bg-slate-600"}`}
+                />
               ))}
             </div>
           </div>
         </div>
-
       </header>
+
+      {/* Top Page Navigation for multi-page projects */}
+      {hasPages && pages.length > 1 && (
+        <PageNav
+          pages={pages}
+          currentPageIndex={currentPageIndex}
+          onPrevious={handlePreviousPage}
+          onNext={handleNextPage}
+          onGoTo={(index) => {
+            setCurrentPageIndex(index);
+            scrollToTop();
+          }}
+          position="top"
+        />
+      )}
+
+      {currentPageIndex === 0 && (
+        <aside
+          className="rounded-2xl border border-emerald-700/60 bg-emerald-950/30 p-5 sm:p-6"
+          aria-label="How to use this lesson"
+        >
+          <h2 className="font-bold text-emerald-200 text-lg">
+            Your learning path
+          </h2>
+          <p className="mt-2 text-slate-300 leading-relaxed">
+            Start with the overview, then follow the steps at your own pace. Use
+            the code and walkthrough when you need them. If something does not
+            work, check Troubleshooting; experimenting is part of learning.
+          </p>
+          <p className="mt-2 text-sm text-slate-300">
+            <strong>Read here, run on your Pi:</strong> This page is your guide.
+            Run the project code on your Raspberry Pi.
+          </p>
+          <p className="mt-2 text-sm text-slate-400">
+            New to a word? Select a highlighted term to explore its meaning. The
+            deep dive and challenges are there when you are ready for more.
+          </p>
+        </aside>
+      )}
 
       {/* Overview */}
       {currentContent.overview.description && (
         <section className="bg-slate-800/50 rounded-2xl p-4 sm:p-8 shadow-sm border border-slate-700">
           <h2 className="text-xl font-bold text-slate-100 mb-4 flex items-center gap-2">
             <BookOpen size={20} className="text-indigo-400" />
-            Project Overview
+            Quick explanation
           </h2>
           <p className="text-slate-300 leading-relaxed mb-6 text-lg">
-            <InteractiveText text={currentContent.overview.description} dictionary={dictionary} />
+            <InteractiveText
+              text={currentContent.overview.description}
+              dictionary={dictionary}
+            />
           </p>
           {currentContent.overview.concepts.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Concepts Introduced</h3>
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                Concepts Introduced
+              </h3>
               <div className="flex flex-wrap gap-2">
-                {currentContent.overview.concepts.map(concept => (
-                  <span key={concept} className="bg-indigo-900/50 text-indigo-300 px-3 py-1 rounded-full text-sm font-medium border border-indigo-700">
+                {currentContent.overview.concepts.map((concept) => (
+                  <span
+                    key={concept}
+                    className="bg-indigo-900/50 text-indigo-300 px-3 py-1 rounded-full text-sm font-medium border border-indigo-700"
+                  >
                     <InteractiveText text={concept} dictionary={dictionary} />
                   </span>
                 ))}
@@ -444,13 +404,13 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
       )}
 
       {/* Hardware Setup */}
-      {currentContent.hardwareSetup.steps.length > 0 && (
+      {sections.hardware && (
         <section className="space-y-6">
           <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2 border-b border-slate-700 pb-4">
             <Wrench size={24} className="text-amber-500" />
             Hardware Setup
           </h2>
-          
+
           {currentContent.hardwareSetup.warnings.length > 0 && (
             <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
               <div className="flex gap-3">
@@ -459,7 +419,13 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
                   <h3 className="text-amber-800 font-bold">Safety Warnings</h3>
                   <ul className="list-disc list-inside text-amber-700 space-y-1 text-sm">
                     {currentContent.hardwareSetup.warnings.map((warning, i) => (
-                      <li key={i}><InteractiveText text={warning} dictionary={dictionary} variant="light" /></li>
+                      <li key={i}>
+                        <InteractiveText
+                          text={warning}
+                          dictionary={dictionary}
+                          variant="light"
+                        />
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -468,15 +434,22 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           )}
 
           <div className="bg-slate-800/50 rounded-2xl p-4 sm:p-8 shadow-sm border border-slate-700">
-            <HardwareStepsList
-              key={`${project.id}-${currentPageIndex}`}
-              steps={currentContent.hardwareSetup.steps}
-            />
+            {currentContent.hardwareSetup.steps.length > 0 && (
+              <HardwareStepsList
+                key={`${project.id}-${currentPageIndex}`}
+                steps={currentContent.hardwareSetup.steps}
+              />
+            )}
             {currentContent.hardwareSetup.explanation && (
               <div className="mt-6 pt-6 border-t border-slate-700">
                 <p className="text-sm text-slate-400 italic">
-                  <span className="font-semibold not-italic text-slate-300">What's happening: </span>
-                  <InteractiveText text={currentContent.hardwareSetup.explanation} dictionary={dictionary} />
+                  <span className="font-semibold not-italic text-slate-300">
+                    What's happening:{" "}
+                  </span>
+                  <InteractiveText
+                    text={currentContent.hardwareSetup.explanation}
+                    dictionary={dictionary}
+                  />
                 </p>
               </div>
             )}
@@ -485,38 +458,57 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
       )}
 
       {/* Code Section */}
-      {currentContent.code && (
+      {sections.code && (
         <section className="space-y-6">
           <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2 border-b border-slate-700 pb-4">
             <Code2 size={24} className="text-blue-500" />
             The Code
           </h2>
-          
-          {copyError && <p role="status" className="text-amber-300">Clipboard access is unavailable. Select the code below and copy it manually.</p>}
+
+          <p
+            role="status"
+            aria-live="polite"
+            className="text-sm text-amber-300"
+          >
+            {copyError
+              ? "Clipboard access is unavailable. Select the code below and copy it manually."
+              : copied
+                ? "Code copied to clipboard."
+                : ""}
+          </p>
           <div className="relative group">
             <div className="absolute right-4 top-4 z-10">
-              <button 
+              <button
                 onClick={handleCopyCode}
                 className="p-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-md transition-colors flex items-center gap-2 text-sm font-medium shadow-lg"
               >
-                {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
-                {copied ? 'Copied!' : 'Copy'}
+                {copied ? (
+                  <Check size={16} className="text-emerald-400" />
+                ) : (
+                  <Copy size={16} />
+                )}
+                {copied ? "Copied!" : "Copy"}
               </button>
             </div>
             <pre className="bg-[#1a1f2e] text-[#e2e8f0] p-4 sm:p-6 rounded-2xl text-xs sm:text-sm font-mono leading-relaxed shadow-inner border border-slate-700 overflow-x-auto">
-              <code className="whitespace-pre-wrap break-words">{currentContent.code}</code>
+              <code className="whitespace-pre-wrap break-words">
+                {currentContent.code}
+              </code>
             </pre>
           </div>
         </section>
       )}
 
       {/* Code Walkthrough */}
-      {currentContent.codeWalkthrough.length > 0 && (
+      {sections.walkthrough && (
         <section className="space-y-6">
           <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2 border-b border-slate-700 pb-4">
             <Code2 size={24} className="text-blue-500" />
             Code Walkthrough
           </h2>
+          <p className="text-slate-400">
+            Curious how the code works? Open each part for an explanation.
+          </p>
           <div className="space-y-2">
             {currentContent.codeWalkthrough.map((item, i) => (
               <CollapsibleItem
@@ -527,7 +519,10 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
                   </span>
                 }
               >
-                <InteractiveText text={item.explanation} dictionary={dictionary} />
+                <InteractiveText
+                  text={item.explanation}
+                  dictionary={dictionary}
+                />
               </CollapsibleItem>
             ))}
           </div>
@@ -535,29 +530,53 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
       )}
 
       {/* Concept Deep Dive */}
-      {(currentContent.conceptDeepDive.hardware || currentContent.conceptDeepDive.software || currentContent.conceptDeepDive.connection) && (
+      {sections.deepDive && (
         <section className="bg-gradient-to-br from-slate-800 to-emerald-950 rounded-2xl p-4 sm:p-8 text-white shadow-lg border border-slate-700">
           <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2">
             <Lightbulb size={24} className="text-amber-400" />
             Concept Deep Dive
           </h2>
+          <p className="text-slate-300 mb-6">
+            Want to understand more? Explore the ideas behind this project.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
             {currentContent.conceptDeepDive.hardware && (
               <div className="space-y-3">
-                <h3 className="text-indigo-300 font-semibold uppercase tracking-wider text-sm">Hardware</h3>
-                <p className="text-slate-300 text-sm leading-relaxed"><InteractiveText text={currentContent.conceptDeepDive.hardware} dictionary={dictionary} /></p>
+                <h3 className="text-indigo-300 font-semibold uppercase tracking-wider text-sm">
+                  Hardware
+                </h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  <InteractiveText
+                    text={currentContent.conceptDeepDive.hardware}
+                    dictionary={dictionary}
+                  />
+                </p>
               </div>
             )}
             {currentContent.conceptDeepDive.software && (
               <div className="space-y-3">
-                <h3 className="text-indigo-300 font-semibold uppercase tracking-wider text-sm">Software</h3>
-                <p className="text-slate-300 text-sm leading-relaxed"><InteractiveText text={currentContent.conceptDeepDive.software} dictionary={dictionary} /></p>
+                <h3 className="text-indigo-300 font-semibold uppercase tracking-wider text-sm">
+                  Software
+                </h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  <InteractiveText
+                    text={currentContent.conceptDeepDive.software}
+                    dictionary={dictionary}
+                  />
+                </p>
               </div>
             )}
             {currentContent.conceptDeepDive.connection && (
               <div className="space-y-3">
-                <h3 className="text-indigo-300 font-semibold uppercase tracking-wider text-sm">Connection</h3>
-                <p className="text-slate-300 text-sm leading-relaxed"><InteractiveText text={currentContent.conceptDeepDive.connection} dictionary={dictionary} /></p>
+                <h3 className="text-indigo-300 font-semibold uppercase tracking-wider text-sm">
+                  Connection
+                </h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  <InteractiveText
+                    text={currentContent.conceptDeepDive.connection}
+                    dictionary={dictionary}
+                  />
+                </p>
               </div>
             )}
           </div>
@@ -565,7 +584,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
       )}
 
       {/* Experiment Mode */}
-      {(currentContent.experimentMode.tweak || currentContent.experimentMode.logic || currentContent.experimentMode.creative) && (
+      {sections.experiments && (
         <section className="space-y-6">
           <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2 border-b border-slate-700 pb-4">
             <FlaskConical size={24} className="text-emerald-400" />
@@ -575,19 +594,36 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
             {currentContent.experimentMode.tweak && (
               <div className="bg-slate-800/50 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-emerald-400">
                 <h3 className="font-bold text-slate-100 mb-2">Small Tweak</h3>
-                <p className="text-sm text-slate-400"><InteractiveText text={currentContent.experimentMode.tweak} dictionary={dictionary} /></p>
+                <p className="text-sm text-slate-400">
+                  <InteractiveText
+                    text={currentContent.experimentMode.tweak}
+                    dictionary={dictionary}
+                  />
+                </p>
               </div>
             )}
             {currentContent.experimentMode.logic && (
               <div className="bg-slate-800/50 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-blue-400">
                 <h3 className="font-bold text-slate-100 mb-2">Logic Change</h3>
-                <p className="text-sm text-slate-400"><InteractiveText text={currentContent.experimentMode.logic} dictionary={dictionary} /></p>
+                <p className="text-sm text-slate-400">
+                  <InteractiveText
+                    text={currentContent.experimentMode.logic}
+                    dictionary={dictionary}
+                  />
+                </p>
               </div>
             )}
             {currentContent.experimentMode.creative && (
               <div className="bg-slate-800/50 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-700 border-t-4 border-t-purple-400">
-                <h3 className="font-bold text-slate-100 mb-2">Creative Challenge</h3>
-                <p className="text-sm text-slate-400"><InteractiveText text={currentContent.experimentMode.creative} dictionary={dictionary} /></p>
+                <h3 className="font-bold text-slate-100 mb-2">
+                  Creative Challenge
+                </h3>
+                <p className="text-sm text-slate-400">
+                  <InteractiveText
+                    text={currentContent.experimentMode.creative}
+                    dictionary={dictionary}
+                  />
+                </p>
               </div>
             )}
           </div>
@@ -595,18 +631,22 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
       )}
 
       {/* Troubleshooting */}
-      {currentContent.troubleshooting.length > 0 && (
+      {sections.troubleshooting && (
         <section className="bg-slate-800/30 rounded-2xl p-4 sm:p-8 border border-slate-700">
           <h2 className="text-xl font-bold text-slate-100 mb-2 flex items-center gap-2">
             <AlertTriangle size={20} className="text-rose-400" />
             Troubleshooting
           </h2>
-          <p className="text-xs text-slate-500 mb-5">Click a problem to reveal the solution.</p>
+          <p className="text-xs text-slate-500 mb-5">
+            Click a problem to reveal the solution.
+          </p>
           <div className="space-y-2">
             {currentContent.troubleshooting.map((item, i) => (
               <CollapsibleItem
                 key={`${project.id}-${currentPageIndex}-${i}-${item.issue}`}
-                header={<InteractiveText text={item.issue} dictionary={dictionary} />}
+                header={
+                  <InteractiveText text={item.issue} dictionary={dictionary} />
+                }
                 accentColor="text-rose-400"
               >
                 <InteractiveText text={item.solution} dictionary={dictionary} />
@@ -623,7 +663,10 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
           currentPageIndex={currentPageIndex}
           onPrevious={handlePreviousPage}
           onNext={handleNextPage}
-          onGoTo={(index) => { setCurrentPageIndex(index); topRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
+          onGoTo={(index) => {
+            setCurrentPageIndex(index);
+            scrollToTop();
+          }}
           onHelp={handleGetHelp}
           position="bottom"
         />
@@ -632,7 +675,7 @@ export default function ProjectView({ project, status, isLocked, onComplete }: P
       {/* Completion Action - only show on last page */}
       {(!hasPages || currentPageIndex === pages.length - 1) && (
         <div className="pt-8 flex justify-center">
-          {status === 'Completed' ? (
+          {status === "Completed" ? (
             <div className="flex items-center gap-3 text-emerald-400 bg-emerald-900/30 px-6 py-4 rounded-2xl border border-emerald-700 font-bold text-lg">
               <CheckCircle2 size={28} />
               Project Completed & Badge Earned!

@@ -1047,7 +1047,7 @@ export const dictionary: DictionaryEntry[] = [
   {
     term: 'RGB LED',
     category: 'Electronics',
-    definition: 'An LED with three colour channels — Red, Green, and Blue — that can be mixed to produce any colour.',
+    definition: 'An LED with red, green, and blue channels. On/off control gives seven color combinations; PWM can vary each channel\'s brightness to make many more shades.',
     example: 'Setting R=255, G=0, B=0 via PWM makes the RGB LED fully red'
   },
   {
@@ -1264,13 +1264,13 @@ export const dictionary: DictionaryEntry[] = [
     term: 'Module',
     category: 'Beginner',
     definition: 'A small electronic part that is ready to use — like a sensor or LED — often already mounted on a little board with pins you can plug into your breadboard.',
-    example: 'The RGB LED module from your kit has the resistors already built in!'
+    example: 'Some LED modules have current-limiting resistors on the board; check before wiring. A bare LED needs a suitable resistor on each color channel.'
   },
   {
     term: 'Kit',
     category: 'Beginner',
-    definition: 'A collection of electronic parts bundled together for learning. Your Inland 37-in-1 Sensor Kit has buttons, LEDs, sensors, and more!',
-    example: 'The Inland kit includes an RGB LED, button, buzzer, and many sensors'
+    definition: 'A collection of electronic parts bundled together for learning. The parts included vary by kit, so check its parts list against the lesson.',
+    example: 'A lesson may use an RGB LED, button, buzzer, or sensor; check that your kit includes the listed parts.'
   },
   {
     term: 'Digital',
@@ -1449,7 +1449,7 @@ export const dictionary: DictionaryEntry[] = [
     term: 'mA (Milliamp)',
     category: 'Electronics',
     definition: 'One-thousandth of an Amp. A small unit of electrical current. Most LEDs use about 10–20 mA.',
-    example: 'A typical LED draws 15 mA — the Raspberry Pi GPIO can safely provide up to 16 mA per pin'
+    example: 'Raspberry Pi guidance lists up to 16 mA for an individual GPIO pin and 50 mA total across GPIO pins; treat these as limits, not targets. Use a suitable current-limiting resistor and check your Pi model\'s guidance.'
   },
   {
     term: 'VCC',
@@ -1544,14 +1544,14 @@ export const dictionary: DictionaryEntry[] = [
   {
     term: 'Fail-Safe',
     category: 'Security',
-    definition: 'Designing a system so that if something goes wrong (like power loss), it goes to a safe state automatically — not a dangerous one.',
-    example: 'A relay wired as Normally-Open is fail-safe: if the Pi crashes, the relay opens and the heater turns OFF'
+    definition: 'Designing a system to move toward a safer state if something goes wrong, such as a power loss. What counts as safe depends on the system and how it is built.',
+    example: 'A normally-open relay contact is open when its coil is not energized; this alone does not prove that the whole system is fail-safe.'
   },
   {
     term: 'Normally Open (NO)',
     category: 'Electronics',
-    definition: 'A relay or switch contact that is disconnected (open) when not activated. Power flows only when you energize the relay. Safer for most applications.',
-    example: 'Wire the heater to the Normally Open terminal so it turns OFF if the relay loses power'
+    definition: 'A relay or switch contact that is disconnected (open) when not activated. Power flows only when you energize the relay. Whether this is safe depends on the application.',
+    example: 'A small indicator circuit can be connected through NO to turn on only while the relay coil is energized'
   },
   {
     term: 'Normally Closed (NC)',
