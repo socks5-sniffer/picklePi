@@ -34,14 +34,15 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.0.5",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.9",
     "lucide-react": "^1.41.0",
-    "motion": "^12.43.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "motion": "^14.7.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
-    "@google/genai": "^2.21.0",
+    "@google/genai": "^2.31.0",
+    "@playwright/test": "^1.64.0",
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
@@ -55,8 +56,7 @@
     "tsx": "^4.23.11",
     "typescript": "~6.0.3",
     "vite": "^8.2.0",
-    "vite-plugin-mkcert": "^2.1.0",
-    "@playwright/test": "^1.64.0"
+    "vite-plugin-mkcert": "^2.1.0"
   },
   "engines": {
     "node": ">=22.19.0"
