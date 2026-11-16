@@ -261,7 +261,14 @@ jobs:
     needs: [dependency-security-scan, owasp-dependency-check, eslint-security, security-headers-check, secrets-scan, typescript-security]
     if: always()
     steps:
+      - name: Require successful security scans
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
+        run: |
+          echo "::error::One or more required security scans did not pass."
+          exit 1
+
       - name: Generate security summary
+        if: always()
         run: |
           echo "# OWASP Top 10 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
